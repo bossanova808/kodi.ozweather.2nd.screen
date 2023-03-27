@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow">
+    <title>Kodi Dash v1.0.0</title>
+    <!-- Imports Tailwind & let Vite know about it -->
+    <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body>
+
+<!-- Make the rest of this file reactive to changes to these components -->
+<!-- Each component has an init() method that will be called automatically for us -->
+<!-- (...there does not seem to be an easy way to consolidate this to just one div)-->
+<div x-data="clock" class="bg-black h-screen">
+    <div x-data="weather" class="weather">
+        <div x-data="kodi" class="kodi">
+
+<!-- This is the fallback if no network / weather / kodi - just show a centralised full-screen clock -->
+
+            <div x-show="$store.isAvailable.weather === false && $store.isAvailable.kodi === false" x-transition.duration.800ms>
+
+                <!-- Clock -->
+                <div class="z-50 flex items-center justify-center h-screen">
+                    <div class="align-bottom">
+                        <span :class="$store.config.textSoloClock" class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTimeShort()"></span>
+                        <span :class="$store.config.textSoloClockSeconds" class="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500 via-purple-500 font-mono whitespace-nowrap" x-text="getSeconds()"></span>
+                    </div>
+                </div>
+
+            </div>
+
+<!-- Weather is available, but Kodi is not actively playing -->
+
+            <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false" x-transition.duration.500ms>
+
+                <!-- Forthcoming High / Low -->
+                <div class="absolute top-0 left-0 mt-3 ml-4" >
+                    <div :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap" x-text="`↑${forecastHigh}`"></div>
+                    <div :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`↓${forecastLow}`"></div>
+                </div>
+
+                <!-- Rain forecast & info -->
+                <div x-show="$store.config.size!=='small'" class="absolute top-0 right-0 mt-5 mr-5 max-w-3xl">
+                    <div class="grid grid-cols-1 text-right">
+                        <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`🌧   ${rainChance}% of ${rainAmount}`"></div>
+                        <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`(${rainSince9am}mm since 9am)`"></div>
+                    </div>
+                </div>
+
+                <!-- Outlook inc. icon -->
+                <div x-show="$store.config.size!=='small'" class="absolute bottom-0 left-0 mb-2">
+                    <div class="grid grid-cols-1 justify-items-center">
+                        <img class="mb-14 pb-4 ml-6" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
+                        <div :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -75px;" x-text="outlook"></div>
+                    </div>
+                </div>
+
+                <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
+                <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
+                    <div :class="$store.config.textLarge" class="pb-5 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="`${currentTemperature}`"></div>
+                    <div :class="$store.config.textSmall" class="pb-10 font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
+                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                </div>
+
+            </div>
+
+<!-- If Kodi is actively playing something -->
+
+            <div x-show="$store.isAvailable.kodi === true" x-transition.duration.500ms>
+
+                <!-- Artwork -->
+                <div class="absolute top-0 left align-middle max-w-lg">
+                    <img class="object-contain h-screen"  :src="artwork" />
+                </div>
+
+                <!-- Time Remaining -->
+                <div class="z-50 absolute top-0 right-0 mt-5 mr-5" >
+                    <span :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></span>
+                </div>
+
+                <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
+                <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
+                    <div :class="$store.config.textLarge" class="pb-5 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
+                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
+                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                </div>
+
+            </div>
+
+<!-- Close off the three component containers           -->
+
+        </div>
+    </div>
+</div>
+
+<!-- Kick off Alpine -->
+<script type="module" src="/src/js/main.js"></script>
+
+</body>
+</html>
+
