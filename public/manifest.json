@@ -1,0 +1,7 @@
+{
+  "short_name": "Kodi Dash",
+  "name": "Kodi Dash",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "landscape"
+}
