@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedReference
+
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 function sendKodiMessageOverWebSocket(rws, method, params) {
