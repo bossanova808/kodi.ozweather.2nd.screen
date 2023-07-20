@@ -6,7 +6,7 @@ A companion project to my Kodi [OzWeather](https://github.com/bossanova808/weath
 
 This is a '2nd screen' project - i.e. provides a simple (web based) GUI dashboard system to display the current time, basic current & upcoming weather information (sourced, of course, from the Australian Bureau of Meteorology), and simple Kodi 'Now Playing' information (Time Remaining and Poster/Thumbnail Artwork).  All of this is '10ft' interface size - i.e. you should be able to see & read it comfortably, from a normal viewing position.
 
-The idea is that you use pretty much any old tablet or smartphone for this, or a Raspberry Pi + screen (really - just about anything you have really, as long as it can run a browser with some basic features).
+The idea is that you use pretty much any old tablet or smartphone for this, or a Raspberry Pi with a screen (really - just about anything you have really, as long as it can run a browser with some basic, albeit modern, features).
 
 Here's a few photos / screenshots to give you an idea.
 
@@ -39,9 +39,11 @@ Display Kodi Now Playing info:
 
 ![Kodi OzWeather 2nd Screen - Kodi Now Playing Screenshot](/other_images/Screenshot_Kodi.png?raw=true "Kodi Now Playing Information")
 
-For my own lounge-room, I am using a [Blackview 6](https://www.blackview.hk/products/item/tab6) - an 8 inch Android tablet for about AU $125, via eBay.  
+For my own lounge-room, I am using a ~~[Blackview 6](https://www.blackview.hk/products/item/tab6) - an 8 inch Android tablet for about AU $125, via eBay~~. (that turned out to be complete crap, constant spontaneous reboots and any _awful_ company to deal with re: returing it)...I am now using a Samsung A7 Lite (about $185 from Officeworks IIRC) - which is a much much better 8 inch tablet, and runs for weeks/months at a time, with completely stability.  (With my [Kodi-a-go-go travelling setup](https://github.com/bossanova808/MediaCopier), I use a much older Samsung A6 7 inch tablet and that also works very well). 
 
-I use a Play store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the URL - but really any tablet and browser should work.  Fully Kiosk is just a very handy app helps with things like keeping the screen permanently on, and re-starting the app should there be a network connection issue, and so on.  I bought a license for it (AU $15) because I am use it extensively, but the free version is all you actually need to get going with this.
+I use a Play store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the URL - but really any tablet and browser should work (including iOS devices).  
+
+Fully Kiosk is just a very handy app helps with things like keeping the screen permanently on, and re-starting the app should there be a network connection issue, and so on.  I bought a license for it (AU $15) because I am using it extensively, but the free version is all you actually need to get going with this.  If you want more advanced features like on/off schedules, you do need the paid version.
 
 ## Tech Stack
 
@@ -54,7 +56,7 @@ This project uses, and sends thanks to, these particular giants:
 * [Tailwind CSS](https://tailwindcss.com/) for CSS
 * [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
 * [Meteocons](https://bas.dev/work/meteocons) for the weather icons
-* [Kodi](https://kodi.tv/) - media player of choice
+* [Kodi](https://kodi.tv/) - my media player of choice (since 2008!)
 
 ## Support
 
@@ -80,7 +82,7 @@ This is the basic URL to visit:
 
 ...however, you will almost certainly need to provide some configuration to get things working as you want it.  
 
-(N.B. this app is deliberately served over HTTP, not HTTPS - specifically to avoid mixed content warnings/errors that would otherwise result - as Kodi provides artwork etc. to this app, without SSL, using its internal webserver).
+(N.B. **this app is deliberately served over HTTP, i.e. NOT HTTPS** - specifically to avoid mixed content warnings/errors that would otherwise result - this is ultimately a Kodi limitation - Kodi provides artwork etc. to this app, without SSL, using its internal webserver, and there is no cross platform support for SSL with the Kodi internal webserver).
 
 
 ### Kodi IP & Auth
