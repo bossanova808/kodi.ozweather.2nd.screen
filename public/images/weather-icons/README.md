@@ -10,7 +10,7 @@ in `WeatherComponent.js` there is an object `bomConditionToWeatherIcon` that map
 
 ## BOM Icons & Description
 
-From page 24 of the BOM [adfdUserGuide.pdf]('/notes/adfdUserGuide.pdf')
+From page 24 of the BOM [adfdUserGuide.pdf](/notes/BOM/adfdUserGuide.pdf)
 
 Number, Description, BOM API `icon_descriptor` 
 
