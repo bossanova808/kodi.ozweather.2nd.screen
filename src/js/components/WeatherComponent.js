@@ -110,7 +110,7 @@ window.weather = () => {
             // set by updateForecast()
             this.icon = "";
             this.iconAlt = "";
-            this.rainIcon = svgAnimatedPath +'/raindrop.svg',
+            this.rainIcon = svgAnimatedPath +'/raindrop.svg';
             this.outlook = "";
             this.forecastHigh = "";
             this.forecastHighText = "";
