@@ -1,18 +1,17 @@
 {
   "name": "dash.vite.alpine.tailwind",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vite build"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.4",
-    "vite": "^4.0.0"
+    "vite": "^4.3.9"
   },
   "dependencies": {
     "alpinejs": "^3.11.1",

@@ -1,6 +1,6 @@
 # Kodi OzWeather '2nd Screen'
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bossanova808)
+y[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bossanova808)
 
 A companion project to my Kodi [OzWeather](https://github.com/bossanova808/weather.ozweather) add-on (which provides accurate Australian BOM weather & animated radars on Kodi).
 
@@ -156,6 +156,8 @@ To get going for local development/tweaking, all you need to do is:
 `npm install`
 
 `npm run dev`
+
+**IMPORTANT** Do not use the `vite` or `vite build` things directly!
 
 Click on the URL Vite will then show in your terminal window, and you should have an HMR dev setup up and running (i.e. Hot Module Reload - which will automatically reload whenever you make changes). 
 
