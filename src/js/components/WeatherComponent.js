@@ -287,7 +287,7 @@ window.weather = () => {
                         this.iconAlt = this.forecast.data['0'].icon_descriptor;
                         console.log(`Mapped BOM Icon Descriptor [${this.iconAlt}] -> [${bomIconDescriptor}] -> to actual icon ${this.icon}`)
                     }
-                    // Clan up the outlook text
+                    // Clean up the outlook text
 
 
                     // Rain
@@ -297,7 +297,9 @@ window.weather = () => {
                         this.rainAmount = this.forecast.data['0'].rain.amount.min + "-" + this.forecast.data['0'].rain.amount.max + "mm";
                     }
                     else {
-                        this.rainAmount = 'none';
+                        // Instead of 5% of none, present it as 95% chance of no rain
+                        this.rainAmount = 'no rain';
+                        this.rainChance = 100 - this.rainChance;
                     }
                     // UV Max
                     this.forecastUVMax = this.forecast.data['0'].uv.max_index;

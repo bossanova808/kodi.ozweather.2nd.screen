@@ -47,7 +47,7 @@
                 <!-- Rain forecast & info -->
                 <div x-show="$store.config.size!=='small'" class="absolute top-0 right-0 mt-5 mr-5 max-w-3xl">
                     <div class="grid grid-cols-1 text-right">
-                        <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`🌧   ${rainChance}% of ${rainAmount}`"></div>
+                        <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`🌧   ${rainChance}% chance of ${rainAmount}`"></div>
                         <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`(${rainSince9am}mm since 9am)`"></div>
                     </div>
                 </div>
