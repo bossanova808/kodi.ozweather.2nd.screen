@@ -1,3 +1,6 @@
+echo "This is not in use anymore - manual FPT to infinityfree for now..."
+exit
+
 @echo off
 
 call npm install
