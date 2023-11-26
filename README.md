@@ -2,7 +2,11 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bossanova808)
 
-A companion project to my Kodi [OzWeather](https://github.com/bossanova808/weather.ozweather) add-on (which provides accurate Australian BOM weather & animated radars on Kodi itself).
+[[_TOC_]]
+
+## Introduction (...i.e. what this is...)
+
+This is a sort of companion project to my Kodi [OzWeather](https://github.com/bossanova808/weather.ozweather) add-on (which provides accurate Australian BOM weather & animated radars on Kodi itself).  Note they are independent projects, of course - you can use just one or both - they don't depend on each other in any way).
 
 This is a '2nd screen' project - i.e. provides a simple (web based) GUI dashboard system to display the current time, basic current & upcoming weather information (sourced, of course, from the Australian Bureau of Meteorology), and simple Kodi 'Now Playing' information (Time Remaining and Poster/Thumbnail Artwork).  All of this with a '10ft' interface size - i.e. you should be able to see & read your screen comfortably, from a normal viewing position.
 
