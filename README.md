@@ -2,7 +2,7 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bossanova808)
 
-## Introduction (...i.e. what this is...)
+## Introduction
 
 This is a companion project to my Kodi [OzWeather add-on](https://github.com/bossanova808/weather.ozweather)  (which provides accurate **Australian** Bureau of Meteorology (BOM) weather data & animated radars, within Kodi itself).  
 
