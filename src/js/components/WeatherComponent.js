@@ -55,6 +55,7 @@ const mapBOMConditionToWeatherIcon = {
     "windy-night": "windsock.svg",
 }
 
+
 window.weather = () => {
     return {
         // These hold the full JSON returned
@@ -142,10 +143,17 @@ window.weather = () => {
                 result = this.updateWeather(false)
             }, this.updateWeatherEveryMinutes * 60 * 1000);
             // & check that it remains fresh (e.g. network dropout or whatever).
-            // Check for everty third weather update
+            // Check for every third weather update
             setInterval(() => {
                 this.checkWeatherRecentlyUpdated();
             }, this.updateWeatherEveryMinutes * 3 * 60 * 1000);
+
+            console.log("Pre-caching weather icons")
+            for (const [key, value] of Object.entries(mapBOMConditionToWeatherIcon)) {
+                this.preload_image(value).then();
+            }
+
+
         },
 
         // Check if Weather was actually retrieved recently
@@ -159,6 +167,13 @@ window.weather = () => {
                 this._clearProperties();
                 Alpine.store('isAvailable').weather = false;
             }
+        },
+
+        // Utility function to pre-cache all the weather icons after initial load
+        async preload_image(img_svg) {
+            let img = new Image();
+            img.src = `${svgAnimatedPath}${img_svg}`;
+            console.log(`Pre-cached ${img.src}`);
         },
 
         // 'Parent' function to trigger the various stages of updating the weather data.
