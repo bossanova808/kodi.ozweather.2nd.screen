@@ -4,7 +4,7 @@ Animated SVG Weather Icons from:
 
 https://bas.dev/work/meteocons
 
-2023-04-02 Used 'Download (Pre-release)', copied `svg` and `svg-static` folders from production.
+2023-04-02 Used 'Download (Pre-release)', copied `svg` folder from `production\fill\svg`
 
 in `WeatherComponent.js` there is an object `bomConditionToWeatherIcon` that maps the BOM condition (as `condition-day` or `condition-night`) to an actual icon.
 

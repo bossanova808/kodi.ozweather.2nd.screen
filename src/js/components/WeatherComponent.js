@@ -1,6 +1,5 @@
 
 const svgAnimatedPath = "images/weather-icons/svg/";
-const svgStaticPath = "images/weather-icons/svg-static/";
 
 const mapUVValueToText = {
     1: 'Very Low',

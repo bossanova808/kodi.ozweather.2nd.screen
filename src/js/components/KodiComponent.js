@@ -1,6 +1,6 @@
 // noinspection JSUnresolvedReference
 
-import ReconnectingWebSocket from 'reconnecting-websocket';
+import { WebSocket } from "partysocket";
 
 function sendKodiMessageOverWebSocket(rws, method, params) {
     let msg = {
@@ -61,7 +61,7 @@ window.kodi = () => {
                 minReconnectionDelay: 500,
                 maxReconnectionDelay: 5000,
                 reconnectionDelayGrowFactor: 1.3,
-                maxEnqueuedMessages: 2,
+                maxEnqueuedMessages: 0,
                 debug: false,
             };
 
@@ -69,7 +69,7 @@ window.kodi = () => {
             setTimeout(() => {
                 console.log("kodiComponentInit");
 
-                const rws = new ReconnectingWebSocket(kodiWebsocketUrl, [], options);
+                const rws = new WebSocket(kodiWebsocketUrl, [], options);
 
                 rws.addEventListener('open', () => {
                     console.log("Connection opened to Kodi at: ", kodiWebsocketUrl)
@@ -263,6 +263,7 @@ window.kodi = () => {
                             this._clearProperties();
                         }, 2000);
                     }
+                    Alpine.store('isAvailable').kodi = false;
                 });
 
                 rws.addEventListener('close', (event) => {
