@@ -20,12 +20,13 @@ function calculateTotalSeconds(kodiTimeObject){
 }
 
 function secondsToTimeFormat(seconds){
-    if (seconds < 3600){
-        return new Date(seconds * 1000).toISOString().substring(14, 19);
-    }
-    else {
-        return new Date(seconds * 1000).toISOString().substring(11, 16)
-    }
+    return new Date(seconds * 1000).toISOString().substring(11, 19);
+    // if (seconds < 3600){
+    //     return new Date(seconds * 1000).toISOString().substring(14, 19);
+    // }
+    // else {
+    //     return new Date(seconds * 1000).toISOString().substring(11, 16)
+    // }
 }
 
 window.kodi = () => {
@@ -185,7 +186,7 @@ window.kodi = () => {
                         this.elapsedInSeconds = calculateTotalSeconds(results.time);
                         this.elapsedAsTime = secondsToTimeFormat(this.elapsedInSeconds);
                         this.timeRemainingInSeconds = this.durationInSeconds - this.elapsedInSeconds;
-                        this.timeRemainingAsTime = "-" + secondsToTimeFormat(this.timeRemainingInSeconds);
+                        this.timeRemainingAsTime = "-" + secondsToTimeFormat(this.timeRemainingInSeconds).replace(/^0(?:0:0?)?/, '');
                         this.percentageElapsed = results.percentage.toFixed(0);
                     }
 
