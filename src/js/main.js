@@ -19,11 +19,11 @@ Alpine.store('config', {
         this.kodiJsonUrl = `${this.kodi}:${kodiJson}`;
         this.kodiWebUrl = `${this.kodi}:${kodiWeb}`;
 
-        console.log("Kodi IP (&kodi) is", this.kodi);
-        console.log("Kodi JSON URL (&kodi-json to specify port) is", this.kodiJsonUrl);
-        console.log("Kodi Web URL (&kodi-web to specify port) is", this.kodiWebUrl);
-        console.log("BOM Weather Location ID (&bom) is", this.bom);
-        console.log("Display Size (&size=small|medium|large) is", this.size);
+        console.log("Kodi IP (&kodi, default 127.0.0.1) is", this.kodi);
+        console.log("Kodi JSON Port (&kodi-json, default 9090) is", this.kodiJsonUrl);
+        console.log("Kodi Web Port (&kodi-web, default 8080) is", this.kodiWebUrl);
+        console.log("BOM Weather Location ID (&bom, default r1r11df - Ascot Vale, Victoria) is", this.bom);
+        console.log("Display Size (&size=small|medium|large, default large) is", this.size);
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4
         if (this.size === "small") {
