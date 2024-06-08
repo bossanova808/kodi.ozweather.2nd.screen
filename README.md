@@ -103,9 +103,14 @@ Of course, it must be able to contact the BOM to retrieve the weather info, and 
 
 This is the basic URL to visit:
 
-`http://bossanova808.free.nf/`
+_(important - must be `http` NOT `https` or communication with Kodi will not work!)_
 
-...however, you will almost certainly also need to provide some configuration to get things working as you want it.  All configuration is done via URL parameters.  
+
+`http://dash.bossanova808.net/`
+
+By default you will see a large clock and then some weather info.
+
+Now, you need to provide some configuration.  All configuration is done via URL parameters.  
 
 To use the default value, just don't supply the parameter.  You can supply the parameters in any order.
 
@@ -133,9 +138,9 @@ e.g. `kodi-json=9999`
 
 `bom=` BOM location ID.  Default is `r1r11df` (Ascot Vale, Melbourne). 
 
-You get this by querying the BOM localities API - change the search string on this: `https://api.weather.bom.gov.au/v1/locations/?search=kyneton`
+You get this by querying the BOM localities API - just change the search string on the end of this url: `https://api.weather.bom.gov.au/v1/locations/?search=kyneton`
 
-You get back some JSON, e.g. 
+You'll get back some JSON, e.g. 
 
 ```
 {"metadata":{"response_timestamp":"2023-03-27T00:33:04Z"},"data":[{"geohash":"r1qsp5d","id":"Kyneton-r1qsp5d","name":"Kyneton","postcode":"3444","state":"VIC"},{"geohash":"r1qeyek","id":"Kyneton South-r1qeyek","name":"Kyneton South","postcode":"3444","state":"VIC"}]}
@@ -147,9 +152,9 @@ E.g. `bom=r1r11df`
 
 #### UI Size
 
-`size=` UI size.  Default is `large`. One of `small` `medium` or `large`.  
+`size=` UI size.  One of `small` `medium` or `large`.  Default is `large`. 
 
-(Large is for tablets in the 7 to 10 inch range, and small is e.g. for phones)
+(Large is for tablets in the 7+ inch range, and small is e.g. for phones)
 
 E.g. `size=small`
 
@@ -161,9 +166,9 @@ From the above, you build a full URL for your local deployment.
 
 I.e. you start with the base URL (followed by a question mark to being the parameter list, i.e.:
 
-`http://bossanova808.free.nf/?`
+`http://dash.bossanova808.net/?`
 
-...and follow that with the rest of your parameters, each separated by an ampersand (`&`).
+...and follow that with the rest of your parameters, with each separated by an ampersand (`&`).
 
 Of course once everything is working, you will just bookmark this URL (and e.g. set it as the URL in your Kiosk app) - so you don't have to remember all this stuff!
 
@@ -171,11 +176,11 @@ Some full examples:
 
 Supplying your local Kodi machine's IP, the geohash for Kyneton, and setting the UI size to small:
 
-`http://bossanova808.free.nf/?kodi=192.168.1.51&bom=r1qsp5d&size=small`
+`http://dash.bossanova808.net/?kodi=192.168.1.51&bom=r1qsp5d&size=small`
 
 Similar, but with auth for the Kodi webserver, and specifying a non-standard port (9999) for the Kodi JSON-rpc:
 
-`http://bossanova808.free.nf/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&bom=r1qsp5d`
+`http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&bom=r1qsp5d`
 
 ## Development
 
