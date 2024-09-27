@@ -188,7 +188,7 @@ Similar, but with auth for the Kodi webserver, and specifying a non-standard por
 
 To get going for local development/tweaking for your particular need, all you need to do is:
 
-`npm install`
+`npm install` (or 'npm update' if you want to update dependencies)
 
 `npm run dev`
 
