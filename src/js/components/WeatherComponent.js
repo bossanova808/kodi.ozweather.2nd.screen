@@ -128,7 +128,12 @@ window.weather = () => {
 
 
         init() {
-            console.log("weatherComponentInit");
+            console.log("WeatherComponent init");
+
+            console.log("Pre-caching weather icons")
+            for (const [key, value] of Object.entries(mapBOMConditionToWeatherIcon)) {
+                this.preload_image(value).then();
+            }
 
             let result = null;
             // Get the initial location & weather data
@@ -146,12 +151,6 @@ window.weather = () => {
             setInterval(() => {
                 this.checkWeatherRecentlyUpdated();
             }, this.updateWeatherEveryMinutes * 3 * 60 * 1000);
-
-            console.log("Pre-caching weather icons")
-            for (const [key, value] of Object.entries(mapBOMConditionToWeatherIcon)) {
-                this.preload_image(value).then();
-            }
-
 
         },
 
