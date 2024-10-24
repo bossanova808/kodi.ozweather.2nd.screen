@@ -33,7 +33,7 @@ window.weatherOpenMeteo = () => {
                 "latitude": -37.814,
                 "longitude": 144.9633,
                 "current": ["temperature_2m", "apparent_temperature", "precipitation", "weather_code"],
-                "daily": ["precipitation_sum", "precipitation_probability_max"],
+                "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "precipitation_probability_max"],
                 "timezone": "Australia/Sydney",
                 "forecast_days": 1
             };
@@ -70,8 +70,10 @@ window.weatherOpenMeteo = () => {
                     time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
                         (t) => new Date((t + utcOffsetSeconds) * 1000)
                     ),
-                    precipitationSum: daily.variables(0).valuesArray(),
-                    precipitationProbabilityMax: daily.variables(1).valuesArray(),
+                    temperature2mMax: daily.variables(0).valuesArray(),
+                    temperature2mMin: daily.variables(1).valuesArray(),
+                    precipitationSum: daily.variables(2).valuesArray(),
+                    precipitationProbabilityMax: daily.variables(3).valuesArray(),
                 },
 
             };
@@ -86,7 +88,10 @@ window.weatherOpenMeteo = () => {
             }
 
             console.table(weatherData);
-
+            this.rainChance = weatherData.daily.precipitationProbabilityMax[0];
+            this.rainAmount = weatherData.daily.precipitationSum[0] + 'mm';
+            this.forecastHigh = weatherData.daily.temperature2mMax[0].toFixed(0) + "°";
+            this.forecastLow = weatherData.daily.temperature2mMin[0].toFixed(0) + "°";
             this.currentTemperature = weatherData.current.temperature2m.toFixed(1) + "°";
             this.currentFeelsLike = weatherData.current.apparentTemperature.toFixed(1) + "°";
         }
