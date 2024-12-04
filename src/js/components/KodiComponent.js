@@ -72,7 +72,7 @@ window.kodi = () => {
 
             // Kick this off two seconds after we fire up, just to give time for things to settle a bit...
             setTimeout(() => {
-                console.log("kodiComponentInit");
+                console.log("KodiComponent init");
 
                 rws = openKodiWebSocket()
 
