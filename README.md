@@ -135,7 +135,7 @@ e.g. `kodi-web=8088`
 e.g. `kodi-json=9999`
 
 
-#### (EITHER) OpenMeteo Latitude, Longitude, and Timezone 
+#### (_EITHER_) OpenMeteo Latitude, Longitude, and Timezone 
 
 If you're *not* in Australia, then you will need to provide OpenMeteo data - the latitude, longitude and timezone.
 
@@ -145,7 +145,7 @@ https://open-meteo.com/en/docs
 And build URL arguments from those values, e.g.:
 `latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
 
-#### (OR) BOM Location ID (geohash)
+#### (_OR_) BOM Location ID (geohash)
 
 If you *ARE* in Australia, then definitely use this approach - the BOM weather data is much more accurate, and it's easier to set up.
 
@@ -193,7 +193,9 @@ Supplying your local Kodi machine's IP, the geohash for Kyneton, and setting the
 
 Similar, but with auth for the Kodi webserver, and specifying a non-standard port (9999) for the Kodi JSON-rpc, and using OpenMeteo weather information:
 
-`http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
+```
+http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
+```
 
 ## Development
 
