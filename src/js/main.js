@@ -6,6 +6,9 @@ import "./components/WeatherComponent";
 import "./components/WeatherComponentOpenMeteo";
 import "./components/KodiComponent";
 
+
+// Utility function to pre-cache all the weather icons after initial load
+
 // Config from URL parameters
 Alpine.store('config', {
     init() {
@@ -13,10 +16,11 @@ Alpine.store('config', {
 
         this.kodi = params.has('kodi') ? params.get('kodi') : '127.0.0.1';
         this.bom = params.has('bom') ? params.get('bom') : false;
-        this.lat = params.has('lat') ? params.get('lat') : false;
-        this.lon = params.has('lon') ? params.get('lon') : false;
+        this.latitude = params.has('latitude') ? params.get('latitude') : false;
+        this.longitude = params.has('longitude') ? params.get('longitude') : false;
+        this.timezone = params.has('timezone') ? params.get('timezone') : false;
         // Fall back to BOM weather for Ascot Vale if no weather location info provided
-        if (!this.bom && !this.lat){
+        if (!this.bom && !this.latitude){
             this.bom = 'r1r11df';
         }
         this.size = params.has('size') ? params.get('size') : 'large';
@@ -69,8 +73,9 @@ Alpine.store('config', {
     kodiJsonUrl: false,
     kodiWebUrl: false,
     bom: false,
-    lat: false,
-    lon: false,
+    latitude: false,
+    longitude: false,
+    timezone: false,
     size: false,
     textSoloClock: null,
     textSoloClockSeconds: null,
@@ -78,6 +83,7 @@ Alpine.store('config', {
     textSmall: null,
     weatherIconSize: null,
     iconMarginCorrection: null,
+    svgAnimatedPath: "images/weather-icons/svg/",
 });
 
 // These control the conditional visibility of the Weather and Kodi components

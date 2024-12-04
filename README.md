@@ -1,20 +1,20 @@
-# Kodi OzWeather '2nd Screen'
+# Kodi '2nd Screen'
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bossanova808)
 
 ## Introduction
 
-This is a companion project to my Kodi [OzWeather add-on](https://github.com/bossanova808/weather.ozweather)  (which provides accurate **Australian** Bureau of Meteorology (BOM) weather data & animated radars, within Kodi itself).  
-
-_Note the two projects are related in spirit, but are independent projects - i.e. you can use just one or both - they don't depend on each other in any way)._
-
-This is a Kodi '2nd screen' project - i.e. for a second screen that runs alongside your main Kodi display, and which displays useful/related information.  
+This is a Kodi '2nd screen' project - i.e. for a second screen that runs alongside/below your main Kodi display, and which displays useful/related information about what is playing etc.  
 
 _(Actually, if you_ just _want a nice clock with some handy key weather data, you can just ignore the Kodi side of this altogether!)._
 
-This app provides a simple GUI dashboard which displays the current time, basic current & upcoming weather information (sourced, of course, from the Australian Bureau of Meteorology), and (if Kodi is active), some simple Kodi 'Now Playing' information (Time Remaining and Poster/Thumbnail Artwork).  All of this with an easy to read '10ft' interface size - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
+This app provides a simple GUI dashboard which displays the current time, basic current & upcoming weather information, and - if Kodi is playing something - some simple Kodi 'Now Playing' information (Time Remaining and Poster/Thumbnail Artwork).
 
-The idea is that you can use pretty much any old tablet or smartphone for this (most of us have a few of those in the cupboard by now..).  You could also use a Raspberry Pi with a screen.   Really - just about anything you have really, as long as it can run a browser with some basic, albeit somewhat modern, features, and you can connect it to the same local network your Kodi is running).
+All of this with an easy to read '10ft' interface size - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
+
+The weather data is sourced from either OpenMeteo or, if you're in Australia, from the Australian Bureau of Meteorology.
+
+The idea is that you can use pretty much any old tablet or smartphone for this (most of us have a few of those in the cupboard by now..).  You could also use a Raspberry Pi with a screen.   Really - just about anything you have really, as long as it can run a browser with some basic, albeit somewhat modern, features, and you can connect it to the same local network on which your Kodi is running).
 
 Here's a few photos / screenshots to give you an idea.
 
@@ -50,13 +50,13 @@ Above, displaying Kodi 'Now Playing' information:
 * (Current 'Feels Like' Temperature)
 * Current Time
 
-For my own lounge-room, I am using a ~~[Blackview 6](https://www.blackview.hk/products/item/tab6) - an 8-inch Android tablet for about AU $125, via eBay~~. (that turned out to be complete crap, constant spontaneous reboots and any _awful_ company to deal with re: returning it)...I am _now_ instead using a Samsung A7 Lite (about $185 from OfficeWorks IIRC) - which is a much, much better 8-inch tablet, and runs for weeks/months at a time, with completely stability.  
+For my own lounge-room, I am using a Samsung A7 Lite (about $185 from OfficeWorks IIRC) - which is simple but high quality 8-inch tablet, and runs for weeks/months at a time, with complete stability.  
 
 (With my mobile [Kodi-a-go-go travelling setup](https://github.com/bossanova808/MediaCopier), I use a much older Samsung A6 7-inch tablet, and that also works very well). 
 
-In practise, I use a Google Play store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the app URL - but really any tablet and basic browser should work (including iOS devices).  
+In practise, I use a Google Play store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the 2nd Screen app URL - but really any tablet and basic browser should work (including iOS devices).  
 
-_(Fully Kiosk is just a very handy app helps with things like keeping the screen always on, and automatically re-starting the app should there be a network connection issue, and so on.  I bought a license for it (AU $15) because I am using it extensively, but the free version is all you actually need to get going with this.  If you want more advanced features like on/off schedules, you do need the paid version.)_
+_(Fully Kiosk is just a very handy app helps with things like keeping the screen always on, and automatically re-starting the app should there be a network connection issue, and so on.  I bought a license for it (AU $15) because I am using it extensively, but the free version is all you actually need to get going with this.  If you want more advanced features like on/off schedules for the tablet, you do need the paid version.)_
 
 ## Tech Stack
 
@@ -67,7 +67,8 @@ This project uses, and sends thanks to, these particular giants:
 * [Vite](https://vitejs.dev/) for dev/building/packaging
 * [Alpine.js](https://alpinejs.dev/) for reactivity
 * [Tailwind CSS](https://tailwindcss.com/) for CSS
-* [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
+* (Either) [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
+* (Or) [OpenMeteo](https://open-meteo.com/) for weather data
 * [Meteocons](https://bas.dev/work/meteocons) for the weather icons
 * [Kodi](https://kodi.tv/) - my media player of choice (since 2008!)
 
@@ -97,7 +98,7 @@ _All of this is fine and essentially completely safe to do **as long as your Kod
 
 Note, the whole app runs entirely locally in your browser - the app (which is just a web pages and some relatively basic JS code) - is completely downloaded to your browser, and then runs entirely within that.  
 
-Of course, it must be able to contact the BOM to retrieve the weather info, and must also be able to reach your Kodi installation on your local network (your wi-fi should be more than adequate for this).
+Of course, it must be able to contact the weather provider you choose to retrieve the weather info, and must also be able to reach your Kodi installation on your local network (via your wi-fi should be more than adequate for this).
 
 ### The URL
 
@@ -134,7 +135,19 @@ e.g. `kodi-web=8088`
 e.g. `kodi-json=9999`
 
 
-#### BOM Location ID (geohash)
+#### (EITHER) OpenMeteo Latitude, Longitude, and Timezone 
+
+If you're *not* in Australia, then you will need to provide OpenMeteo data - the latitude, longitude and timezone.
+
+You can search for these at the top of this page:
+https://open-meteo.com/en/docs
+
+And build URL arguments from those values, e.g.:
+`latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
+
+#### (OR) BOM Location ID (geohash)
+
+If you *ARE* in Australia, then definitely use this approach - the BOM weather data is much more accurate, and it's easier to set up.
 
 `bom=` BOM location ID.  Default is `r1r11df` (Ascot Vale, Melbourne). 
 
@@ -178,9 +191,9 @@ Supplying your local Kodi machine's IP, the geohash for Kyneton, and setting the
 
 `http://dash.bossanova808.net/?kodi=192.168.1.51&bom=r1qsp5d&size=small`
 
-Similar, but with auth for the Kodi webserver, and specifying a non-standard port (9999) for the Kodi JSON-rpc:
+Similar, but with auth for the Kodi webserver, and specifying a non-standard port (9999) for the Kodi JSON-rpc, and using OpenMeteo weather information:
 
-`http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&bom=r1qsp5d`
+`http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
 
 ## Development
 

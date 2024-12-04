@@ -1,6 +1,4 @@
 
-const svgAnimatedPath = "images/weather-icons/svg/";
-
 const mapUVValueToText = {
     1: 'Very Low',
     2: 'Low',
@@ -76,7 +74,7 @@ window.weather = () => {
         // set by updateForecast()
         icon: null,
         iconAlt: null,
-        rainIcon: svgAnimatedPath +'/raindrop.svg',
+        rainIcon: Alpine.store('config').svgAnimatedPath +'/raindrop.svg',
         outlook: null,
         forecastHigh: null,
         forecastHighText: null,
@@ -87,6 +85,7 @@ window.weather = () => {
         rainChance: null,
         rainAmount: null,
         rainSince9am: null,
+        showRainSince9am: true,
         // set by updateUV() - but note this is not finished/disabled
         uvNow: null,
         uvIcon: null,
@@ -110,7 +109,7 @@ window.weather = () => {
             // set by updateForecast()
             this.icon = "";
             this.iconAlt = "";
-            this.rainIcon = svgAnimatedPath +'/raindrop.svg';
+            this.rainIcon = Alpine.store('config').svgAnimatedPath +'/raindrop.svg';
             this.outlook = "";
             this.forecastHigh = "";
             this.forecastHighText = "";
@@ -170,7 +169,7 @@ window.weather = () => {
         // Utility function to pre-cache all the weather icons after initial load
         async preload_image(img_svg) {
             let img = new Image();
-            img.src = `${svgAnimatedPath}${img_svg}`;
+            img.src = `${Alpine.store('config').svgAnimatedPath}${img_svg}`;
             console.log(`Pre-cached ${img.src}`);
         },
 
@@ -285,18 +284,18 @@ window.weather = () => {
                     this.outlook = this.outlook.replace(/\.$/, '')
 
                     // Save the icon - we convert the short text and use that to get the icon, if we can
-                    // os sometimes the BOM will return an outlook of 'Sunny' but an icon of 'shower' if there is even
+                    // as sometimes the BOM will return an outlook of 'Sunny' but an icon of 'shower' if there is even
                     // a small percentage of 0mm of rain or whatever.
                     let iconFromShortText = this.outlook.toLowerCase().replace(" ","_").replace(".","").trim() + dayOrNight;
                     console.log(`iconFromShortText is ${iconFromShortText}`);
                     if (mapBOMConditionToWeatherIcon[iconFromShortText] !== undefined){
-                        this.icon = svgAnimatedPath + mapBOMConditionToWeatherIcon[iconFromShortText];
+                        this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[iconFromShortText];
                         this.iconAlt = iconFromShortText;
                         console.log(`Mapped BOM Short Text [${this.outlook}] -> [${iconFromShortText}] -> to actual icon ${this.icon}`)
                     }
                     else {
                         let bomIconDescriptor = this.forecast.data['0'].icon_descriptor + dayOrNight;
-                        this.icon = svgAnimatedPath + mapBOMConditionToWeatherIcon[bomIconDescriptor];
+                        this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[bomIconDescriptor];
                         this.iconAlt = this.forecast.data['0'].icon_descriptor;
                         console.log(`Mapped BOM Icon Descriptor [${this.iconAlt}] -> [${bomIconDescriptor}] -> to actual icon ${this.icon}`)
                     }
