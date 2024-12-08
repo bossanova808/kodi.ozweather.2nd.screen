@@ -82,13 +82,15 @@ PRs welcome, of course.  See [Development](#development) below.
 
 ## Installation
 
-There is no 'installation' as such - this is just a basic web app that runs in your local browser.  To get it, you just go to the app's URL (see below) - and the app should then just come up in your browser.  
+There is no 'installation' as such - this is just a basic web app that runs in a  browser.  To get it, you just go to the app's URL (see below) - and the app should then just come up in your browser.  
 
-The app code is initially served to your device this way.  From them on, the app runs locally and only communicates within your local network.
-
-_(N.B. this app is deliberately served over **HTTP, i.e. NOT HTTPS** - specifically to avoid 'mixed content' warnings/errors that would otherwise result. This is a Kodi limitation - Kodi provides artwork etc. to this app, without SSL, using its internal webserver - and there is no cross platform support for SSL with the Kodi internal webserver)._
+_(If you wish, you can download the app and use it offline and/or install it as a PWA (i.e. Progressive Web App, via 'Add to Home Screen').  If you download/install it, then from them on, the app runs locally and only communicates within your local network.  But note PWA support can be a bit hit and miss and you may e.g. struggle to get things working correctly (e.g. in nice clean fullscreen view, without any menu bars)...the best way I have found is to use a Kiosk app, e.g. Fully Kiosk, as described above)_.
 
 _(You can also easily set up your own version to host, locally or otherwise, with any http server, should you wish - either by cloning this repo and building locally or just by downloading my hosted version)._
+
+_(N.B. if using the default approach, i.e. just visiting the app url, note that this app is deliberately and necessarily served over **HTTP, i.e. NOT HTTPS** - specifically to avoid 'mixed content' warnings/errors that would otherwise result. This is a Kodi limitation - Kodi provides artwork etc. to this app, without SSL, using its internal webserver - and there is no cross-platform support for SSL with the Kodi internal webserver)._
+
+
 
 ### Setup Kodi
 
