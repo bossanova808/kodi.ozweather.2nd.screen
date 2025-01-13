@@ -203,7 +203,7 @@ http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitud
 
 (PRs will certainly be looked at but if you're going to add something you think might be generally useful perhaps open an issue here for initial discussion). 
 
-To get going for local development/tweaking for your particular need, all you need to do is:
+To get going for local development/tweaking for your particular need, all you really need to do is:
 
 `npm install` (or 'npm update' if you want to update dependencies)
 
@@ -217,3 +217,4 @@ To build for deployment if you want to host this yourself somewhere:
 
 `npm run build`
 
+Note that if you're not deploying to the root of your site, i.e. you're using a sub-folder for you deployment (something like `http://your.site/kodidash`), then you will need to modify the `vite.config.js` `base` property (https://vite.dev/config/shared-options.html#base).  See the commented out [example](https://github.com/bossanova808/kodi.ozweather.2nd.screen/blob/d8356a0659e84db7c386df7aed85cc080837b35f/vite.config.js#L6).
