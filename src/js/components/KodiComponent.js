@@ -52,6 +52,7 @@ window.kodi = () => {
         title: null,
         season: null,
         episode: null,
+        finishTime: null,
         timeRemainingAsTime: null,
 
         // 'Private' data
@@ -64,6 +65,7 @@ window.kodi = () => {
             this.artwork = "";
             this.season = "";
             this.episode = "";
+            this.finishTime = "";
             this.timeRemainingAsTime = "";
         },
 
@@ -197,6 +199,7 @@ window.kodi = () => {
                                 sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', {
                                     labels: [
                                         'VideoPlayer.TimeRemaining',
+                                        'Player.FinishTime',
                                     ],
                                 })
                             }, 1000);
@@ -212,7 +215,7 @@ window.kodi = () => {
                     // Basic way we get and update Time Remaining
                     if (json_result.id === "XBMC.GetInfoLabels") {
                         let results = json_result.result;
-                        //console.log("Processing result for: XBMC.GetInfoLabels");
+                        console.log("Processing result for: XBMC.GetInfoLabels");
                         // https://stackoverflow.com/questions/42879023/remove-leading-zeros-from-time-format
                         if (results["VideoPlayer.TimeRemaining"]===""){
                             console.log("(Empty time remaining, do nothing)");
@@ -220,6 +223,19 @@ window.kodi = () => {
                         else {
                             let temp = results["VideoPlayer.TimeRemaining"].replace(/^0(?:0:0?)?/, '');
                             (temp !== "") ? this.timeRemainingAsTime = "-" + temp : this.timeRemainingAsTime = "";
+                        }
+                        if (results["Player.FinishTime"]===""){
+                            console.log("(Empty finish time, do nothing)");
+                        }
+                        else {
+                            console.log("Kodi finish time is " + results["Player.FinishTime"])
+                            // Convert Kodi 24hr 18:00 to 12hr 6:00
+                            const finishTime12hr = new Date('1970-01-01T' + results["Player.FinishTime"] + ':00Z')
+                              .toLocaleTimeString('en-US',
+                                {timeZone:'UTC',hour12:true,hour:'numeric',minute:'numeric'}
+                              );
+                            this.finishTime = finishTime12hr.replace(/^0(?:0:0?)?/, '').replace(' PM','pm').replace(' AM','am');
+                            console.log("Finish time is now " + this.finishTime);
                         }
                     }
 

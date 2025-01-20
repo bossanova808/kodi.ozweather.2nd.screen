@@ -205,7 +205,7 @@ http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitud
 
 To get going for local development/tweaking for your particular need, all you really need to do is:
 
-`npm install` (or 'npm update' if you want to update dependencies)
+`npm install` (or `npm update` if you want to update dependencies)
 
 `npm run dev`
 
