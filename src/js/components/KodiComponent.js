@@ -229,12 +229,7 @@ window.kodi = () => {
                         }
                         else {
                             console.log("Kodi finish time is " + results["Player.FinishTime"])
-                            // Convert Kodi 24hr 18:00 to 12hr 6:00
-                            const finishTime12hr = new Date('1970-01-01T' + results["Player.FinishTime"] + ':00Z')
-                              .toLocaleTimeString('en-US',
-                                {timeZone:'UTC',hour12:true,hour:'numeric',minute:'numeric'}
-                              );
-                            this.finishTime = finishTime12hr.replace(/^0(?:0:0?)?/, '').replace(' PM','pm').replace(' AM','am');
+                            this.finishTime = results["Player.FinishTime"].replace(' PM','pm').replace(' AM','am');
                             console.log("Finish time is now " + this.finishTime);
                         }
                     }
