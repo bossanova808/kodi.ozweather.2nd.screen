@@ -27,8 +27,8 @@
                 <!-- Clock -->
                 <div class="z-50 flex items-center justify-center h-screen">
                     <div class="align-bottom">
-                        <span :class="$store.config.textSoloClock" class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTimeShort()"></span>
-                        <span :class="$store.config.textSoloClockSeconds" class="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500 via-purple-500 font-mono whitespace-nowrap" x-text="getSeconds()"></span>
+                        <span :class="$store.config.textSoloClock" class="bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTimeShort()"></span>
+                        <span :class="$store.config.textSoloClockSeconds" class="bg-clip-text text-transparent bg-linear-to-r from-green-500 to-blue-500 via-purple-500 font-mono whitespace-nowrap" x-text="getSeconds()"></span>
                     </div>
                 </div>
 
@@ -62,9 +62,9 @@
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
-                    <div :class="$store.config.textLarge" class="pb-5 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="`${currentTemperature}`"></div>
-                    <div :class="$store.config.textSmall" class="pb-10 font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
-                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                    <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="`${currentTemperature}`"></div>
+                    <div :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
+                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
                 </div>
 
             </div>
@@ -80,15 +80,15 @@
 
                 <!-- Time Remaining -->
                 <div class="z-50 absolute top-0 right-0 mt-5 mr-5 text-right" >
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></div>
+                    <div :class="$store.config.textLarge" class="pb-4 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></div>
                     <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 pr-4 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`⬩${finishTime}`"></div>
                 </div>
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
-                    <div :class="$store.config.textLarge" class="pb-5 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
-                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
-                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                    <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
+                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
+                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
                 </div>
 
             </div>
