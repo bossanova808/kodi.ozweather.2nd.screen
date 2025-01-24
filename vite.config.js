@@ -7,6 +7,7 @@ export default {
     // base: '/deploy.kodidash',
     build: {
         manifest: true,
+        minify: 'terser', // Slower, but trying for older iOS support - https://github.com/vitejs/vite/issues/6506
     },
     plugins: [
         tailwindcss(),
