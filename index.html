@@ -74,7 +74,7 @@
             <div x-show="$store.isAvailable.kodi === true" x-transition.duration.500ms>
 
                 <!-- Artwork -->
-                <div class="absolute top-0 left align-middle max-w-lg">
+                <div :class="$store.config.kodiArtworkScale" class="absolute top-0 left align-middle">
                     <img class="object-contain h-screen"  :src="artwork" />
                 </div>
 

@@ -62,11 +62,11 @@ window.kodi = () => {
         // 'Private' methods
         _clearProperties() {
             console.log("Clearing Kodi Properties");
-            this.artwork = "";
-            this.season = "";
-            this.episode = "";
-            this.finishTime = "";
-            this.timeRemainingAsTime = "";
+            this.artwork = null;
+            this.season = null;
+            this.episode = null;
+            this.finishTime = null;
+            this.timeRemainingAsTime = null;
         },
 
         init() {
@@ -165,6 +165,8 @@ window.kodi = () => {
                         if (artworkUrl) {
                             let artworkFromKodi = artworkUrl;
                             console.log("Kodi returned:", artworkFromKodi);
+                            // remove a trailing slash if there is one
+                            artworkFromKodi = artworkFromKodi.replace(/\/$/, '');
                             let kodiArtworkUrl;
                             if (artworkFromKodi.startsWith("http")) {
                                 console.log("Kodi artwork url starts with http (i.e. link to external service, like PVR server) - use directly");
@@ -180,30 +182,20 @@ window.kodi = () => {
                         // & Kick off the update of time remaining every x milliseconds
                         let type = results.item.type;
 
-                        // PVR is different, need to calculate the TimeRemaining as the Kodi label is not set
-                        if (type === 'channel') {
-                            this._updateTimeRemainingInterval = setInterval(function () {
-                                sendKodiMessageOverWebSocket(rws, 'Player.GetProperties', {
-                                    properties: [
-                                        'percentage',
-                                        'time',
-                                        'totaltime'
-                                    ],
-                                    playerid: 1, // (Player ID is 1 here, as we know we're playing a video)
-                                })
-                            }, 500);
+                        let labels = [];
+                        // For PVR we get this info from the EPG...
+                        if (type === 'channel'){
+                            labels = ['PVR.EpgEventRemainingTime', 'PVR.EpgEventFinishTime']
                         }
-                        // Otherwise we can just use the Kodi calculated time remaining
+                        // Otherwise, from the standard labels...
                         else {
-                            this._updateTimeRemainingInterval = setInterval(function () {
-                                sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', {
-                                    labels: [
-                                        'VideoPlayer.TimeRemaining',
-                                        'Player.FinishTime',
-                                    ],
-                                })
-                            }, 1000);
+                            labels = ['VideoPlayer.TimeRemaining', 'Player.FinishTime']
                         }
+                        this._updateTimeRemainingInterval = setInterval(function () {
+                            sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', {
+                                labels: labels,
+                            })
+                        }, 1000);
 
                         // Kodi is playing and info will soon be available, so show our component, but give it a moment...
                         setTimeout(() => {
@@ -212,40 +204,19 @@ window.kodi = () => {
 
                     }
 
-                    // Basic way we get and update Time Remaining
+                    // Get Time Remaining and Finish time - varies for PVR vs. other types of playback...
                     if (json_result.id === "XBMC.GetInfoLabels") {
                         let results = json_result.result;
                         console.log("Processing result for: XBMC.GetInfoLabels");
-                        // https://stackoverflow.com/questions/42879023/remove-leading-zeros-from-time-format
-                        if (results["VideoPlayer.TimeRemaining"]===""){
-                            console.log("(Empty time remaining, do nothing)");
-                        }
-                        else {
-                            let temp = results["VideoPlayer.TimeRemaining"].replace(/^0(?:0:0?)?/, '');
-                            (temp !== "") ? this.timeRemainingAsTime = "-" + temp : this.timeRemainingAsTime = "";
-                        }
-                        if (results["Player.FinishTime"]===""){
-                            console.log("(Empty finish time, do nothing)");
-                        }
-                        else {
-                            console.log("Kodi finish time is " + results["Player.FinishTime"])
-                            this.finishTime = results["Player.FinishTime"].replace(' PM','pm').replace(' AM','am');
-                            console.log("Finish time is now " + this.finishTime);
-                        }
-                    }
-
-                    // If not traditionally available (PVR), we calculate it instead...
-                    if (json_result.id === "Player.GetProperties") {
-                        let results = json_result.result;
-                        console.log("Processing result for: Player.GetProperties");
-
-                        this.durationInSeconds = calculateTotalSeconds(results.totaltime);
-                        this.durationAsTime = secondsToTimeFormat(this.durationInSeconds);
-                        this.elapsedInSeconds = calculateTotalSeconds(results.time);
-                        this.elapsedAsTime = secondsToTimeFormat(this.elapsedInSeconds);
-                        this.timeRemainingInSeconds = this.durationInSeconds - this.elapsedInSeconds;
-                        this.timeRemainingAsTime = "-" + secondsToTimeFormat(this.timeRemainingInSeconds).replace(/^0(?:0:0?)?/, '');
-                        this.percentageElapsed = results.percentage.toFixed(0);
+                        // Remaining time
+                        let remainingTime = results["PVR.EpgEventRemainingTime"] ? results["PVR.EpgEventRemainingTime"] : results["VideoPlayer.TimeRemaining"];
+                        let temp = remainingTime.replace(/^0(?:0:0?)?/, '');
+                        (temp !== "") ? this.timeRemainingAsTime = "-" + temp : this.timeRemainingAsTime = "";
+                        // Finish time
+                        let finishTime = results["PVR.EpgEventFinishTime"] ? results["PVR.EpgEventFinishTime"] : results["Player.FinishTime"];
+                        console.log("Kodi finish time is " + finishTime)
+                        this.finishTime = finishTime.replace(' PM','pm').replace(' AM','am');
+                        console.log("Finish time is now " + this.finishTime);
                     }
 
                     //////////////////////////////////////////////////////
@@ -300,6 +271,7 @@ window.kodi = () => {
                                 'title',
                                 'season',
                                 'episode',
+                                'endtime',
                             ],
                             playerid: playerId,
                         })

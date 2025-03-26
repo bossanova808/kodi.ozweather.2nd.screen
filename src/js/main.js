@@ -49,6 +49,7 @@ Alpine.store('config', {
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
             this.weatherIconSize = 375;
+            this.kodiArtworkScale = "max-w-sm"
         }
         // 'medium' = Smaller tablets, ~7" screens - FF: Responsive, 920x570, DPR 2, Zoom to 67%
         else if (this.size === "medium") {
@@ -58,6 +59,7 @@ Alpine.store('config', {
             this.textMedium = 'text-6xl';
             this.textSmall = 'text-5xl';
             this.weatherIconSize = 375;
+            this.kodiArtworkScale = "max-w-md"
         }
         // 'large' = Default, 8 inch or bigger tablets - FF: Responsive, 960x580, DPR 1, Zoom to 80%
         else {
@@ -67,6 +69,7 @@ Alpine.store('config', {
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
             this.weatherIconSize = 375;
+            this.kodiArtworkScale = "max-w-lg"
         }
     },
     kodi: false,
@@ -82,6 +85,7 @@ Alpine.store('config', {
     textLarge: null,
     textSmall: null,
     weatherIconSize: null,
+    kodiArtworkScale: null,
     iconMarginCorrection: null,
     svgAnimatedPath: "images/weather-icons/svg/",
 });
