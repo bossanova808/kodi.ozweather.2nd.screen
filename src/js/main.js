@@ -14,7 +14,7 @@ Alpine.store('config', {
     init() {
         let params = new URLSearchParams(window.location.search)
 
-        this.kodi = params.has('kodi') ? params.get('kodi') : '127.0.0.1';
+        this.kodi = params.has('kodi') ? params.get('kodi') : 'kodi:kodi@127.0.0.1';
         this.bom = params.has('bom') ? params.get('bom') : false;
         this.latitude = params.has('latitude') ? params.get('latitude') : false;
         this.longitude = params.has('longitude') ? params.get('longitude') : false;

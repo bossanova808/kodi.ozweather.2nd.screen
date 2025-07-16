@@ -142,24 +142,28 @@ window.kodi = () => {
                         let artworkUrl = null;
 
                         if (results.item.art["album.thumb"] !== undefined) {
-                            console.log("Artwork: found album.thumb")
+                            console.log("Artwork: using [album.thumb]")
                             artworkUrl = results.item.art["album.thumb"];
                         }
-                        else if (results.item.art["tvshow.poster"] !== undefined) {
-                            console.log("Artwork: found tvshow.poster")
+                        else if (results.item.art["tvshow.poster]"] !== undefined) {
+                            console.log("Artwork: using [tvshow.poster]")
                             artworkUrl = results.item.art["tvshow.poster"];
                         }
                         else if (results.item.art["movie.poster"] !== undefined) {
-                            console.log("Artwork: found movie.poster")
+                            console.log("Artwork: using [movie.poster]")
                             artworkUrl = results.item.art["movie.poster"];
                         }
                         else if (results.item.art["poster"] !== undefined) {
-                            console.log("Artwork: found poster")
+                            console.log("Artwork: using [poster]")
                             artworkUrl = results.item.art["poster"];
                         }
                         else if (results.item.art["thumb"] !== undefined) {
-                            console.log("Artwork: found thumb")
+                            console.log("Artwork: using [thumb]")
                             artworkUrl = results.item.art["thumb"];
+                        }
+                        else if (results.item.art["icon"] !== undefined) {
+                            console.log("Artwork: using [icon]")
+                            artworkUrl = results.item.art["icon"];
                         }
 
                         if (artworkUrl) {
@@ -173,7 +177,8 @@ window.kodi = () => {
                                 kodiArtworkUrl = artworkFromKodi;
                             }
                             else {
-                                kodiArtworkUrl = "http://" + Alpine.store('config').kodiWebUrl + "/image/" + encodeURIComponent(artworkFromKodi);
+                                // noinspection HttpUrlsUsage
+                                kodiArtworkUrl = `http://${Alpine.store('config').kodiWebUrl}/image/${encodeURIComponent(artworkFromKodi)}`;
                             }
                             console.log("Final artwork URL:", kodiArtworkUrl);
                             this.artwork = kodiArtworkUrl;
