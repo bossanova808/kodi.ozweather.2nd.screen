@@ -145,7 +145,7 @@ window.kodi = () => {
                             console.log("Artwork: using [album.thumb]")
                             artworkUrl = results.item.art["album.thumb"];
                         }
-                        else if (results.item.art["tvshow.poster]"] !== undefined) {
+                        else if (results.item.art["tvshow.poster"] !== undefined) {
                             console.log("Artwork: using [tvshow.poster]")
                             artworkUrl = results.item.art["tvshow.poster"];
                         }
