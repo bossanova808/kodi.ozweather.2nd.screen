@@ -120,9 +120,9 @@ To use the default value, just don't supply the parameter.  You can supply the p
 ### URL Parameters
 
 #### Kodi IP & Auth
-`kodi=` Kodi IP address.  Default is `kodi:kodi@127.0.0.1` (i.e. user `kodi` password `kodi`, at localhost).  (You may see issues with some images not loading if you don't add your auth info).
+`kodi=` Kodi IP address.  Default is `127.0.0.1` (which assumes you have auth turned off in Kodi's settings as you're not exposing your Kodi to the internet..).
 
-.e.g.  `kodi=user:password@127.0.0.1`
+.e.g.  `kodi=192.168.1.100` or `kodi=user:password@ip.address`
 
 #### Kodi Webserver Port
 
