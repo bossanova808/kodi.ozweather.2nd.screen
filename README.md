@@ -12,7 +12,7 @@ This app provides a simple GUI dashboard which displays the current time, basic 
 
 All of this with an easy to read '10ft' interface size - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
 
-The weather data is sourced from either OpenMeteo or, if you're in Australia, from the Australian Bureau of Meteorology.
+The weather data is sourced from either OpenMeteo or, if you're in Australia, you get the much more accurate weather data directly from the Australian Bureau of Meteorology.
 
 The idea is that you can use pretty much any old tablet or smartphone for this (most of us have a few of those in the cupboard by now..).  You could also use a Raspberry Pi with a screen.   Really - just about anything you have really, as long as it can run a browser with some basic, albeit somewhat modern, features, and you can connect it to the same local network on which your Kodi is running).
 
@@ -46,13 +46,14 @@ Above, displaying Kodi 'Now Playing' information:
 
 * Kodi Artwork - e.g. poster / thumbnail / channel logo / album cover etc
 * Time Remaining
+* (not shown, added later) Programme End Time
 * Current Temperature
 * (Current 'Feels Like' Temperature)
 * Current Time
 
-For my own lounge-room, I am using a Samsung A7 Lite (about $185 from OfficeWorks IIRC) - which is simple but high quality 8-inch tablet, and runs for weeks/months at a time, with complete stability.  
+For my own lounge-room, I am using a Samsung A7 Lite (about AU$185 from OfficeWorks IIRC) - which is simple but high quality 8-inch tablet, and runs for weeks/months at a time, with complete stability.  
 
-(With my mobile [Kodi-a-go-go travelling setup](https://github.com/bossanova808/MediaCopier), I use a much older Samsung A6 7-inch tablet, and that also works very well). 
+(With my mobile [Kodi-a-go-go travelling setup](https://github.com/bossanova808/MediaCopier), I use a much older Samsung A6 7-inch tablet, and that also works very well, although it's wireless has always been a bit flakey...). 
 
 In practise, I use a Google Play store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the 2nd Screen app URL - but really any tablet and basic browser should work (including iOS devices).  
 
@@ -84,13 +85,9 @@ PRs welcome, of course.  See [Development](#development) below.
 
 There is no 'installation' as such - this is just a basic web app that runs in a  browser.  To get it, you just go to the app's URL (see below) - and the app should then just come up in your browser.  
 
-_(If you wish, you can download the app and use it offline and/or install it as a PWA (i.e. Progressive Web App, via 'Add to Home Screen').  If you download/install it, then from them on, the app runs locally and only communicates within your local network.  But note PWA support can be a bit hit and miss and you may e.g. struggle to get things working correctly (e.g. in nice clean fullscreen view, without any menu bars)...the best way I have found is to use a Kiosk app, e.g. Fully Kiosk, as described above)_.
+_(If you wish, you can download the app locally and use it offline and/or install it as a PWA (i.e. Progressive Web App, via 'Add to Home Screen').  If you download/install it, then from them on, the app runs locally and only communicates within your local network.  But note PWA support can be a bit hit and miss and you may e.g. struggle to get things working correctly (e.g. in nice clean fullscreen view, without any menu bars)...the best way I have found is to use a Kiosk app, e.g. Fully Kiosk, as described above)_.
 
 _(You can also easily set up your own version to host, locally or otherwise, with any http server, should you wish - either by cloning this repo and building locally or just by downloading my hosted version)._
-
-_(N.B. if using the default approach, i.e. just visiting the app url, note that this app is deliberately and necessarily served over **HTTP, i.e. NOT HTTPS** - specifically to avoid 'mixed content' warnings/errors that would otherwise result. This is a Kodi limitation - Kodi provides artwork etc. to this app, without SSL, using its internal webserver - and there is no cross-platform support for SSL with the Kodi internal webserver)._
-
-
 
 ### Setup Kodi
 
@@ -98,18 +95,13 @@ In your Kodi installation's settings, you must enable the Webserver, and JSON-RP
 
 _All of this is fine and essentially completely safe to do **as long as your Kodi player is (as it almost always would be) hidden behind a router's NAT**.  Do **_not_** do this if your Kodi box is corrected directly to the internet (but that would be **_bad_** anyway, for a lot of reasons...)._
 
-Note, the whole app runs entirely locally in your browser - the app (which is just a web pages and some relatively basic JS code) - is completely downloaded to your browser, and then runs entirely within that.  
-
-Of course, it must be able to contact the weather provider you choose to retrieve the weather info, and must also be able to reach your Kodi installation on your local network (via your wi-fi should be more than adequate for this).
+Of course, it must be able to contact the weather provider you choose to retrieve the weather info, and must also be able to reach your Kodi installation on your local network (wi-fi should be more than adequate for this).
 
 ### The URL
 
 This is the basic URL to visit:
 
-_(important - must be `http` NOT `https` or communication with Kodi will not work!)_
-
-
-`http://dash.bossanova808.net/`
+`https://dash.bossanova808.net/`
 
 By default you will see a large clock and then some weather info.
 
@@ -181,7 +173,7 @@ From the above, you build a full URL for your local deployment.
 
 I.e. you start with the base URL (followed by a question mark to being the parameter list, i.e.:
 
-`http://dash.bossanova808.net/?`
+`https://dash.bossanova808.net/?`
 
 ...and follow that with the rest of your parameters, with each separated by an ampersand (`&`).
 
@@ -191,12 +183,12 @@ Some full examples:
 
 Supplying your local Kodi machine's IP, the geohash for Kyneton, and setting the UI size to small:
 
-`http://dash.bossanova808.net/?kodi=192.168.1.51&bom=r1qsp5d&size=small`
+`https://dash.bossanova808.net/?kodi=192.168.1.51&bom=r1qsp5d&size=small`
 
 Similar, but with auth for the Kodi webserver, and specifying a non-standard port (9999) for the Kodi JSON-rpc, and using OpenMeteo weather information:
 
 ```
-http://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
+https://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
 ```
 
 ## Development
@@ -217,4 +209,4 @@ To build for deployment if you want to host this yourself somewhere:
 
 `npm run build`
 
-Note that if you're not deploying to the root of your site, i.e. you're using a sub-folder for you deployment (something like `http://your.site/kodidash`), then you will need to modify the `vite.config.js` `base` property (https://vite.dev/config/shared-options.html#base).  See the commented out [example](https://github.com/bossanova808/kodi.ozweather.2nd.screen/blob/d8356a0659e84db7c386df7aed85cc080837b35f/vite.config.js#L6).
+Note that if you're not deploying to the root of your site, i.e. you're using a sub-folder for you deployment (something like `https://your.site/kodidash`), then you will need to modify the `vite.config.js` `base` property (https://vite.dev/config/shared-options.html#base).  See the commented out [example](https://github.com/bossanova808/kodi.ozweather.2nd.screen/blob/d8356a0659e84db7c386df7aed85cc080837b35f/vite.config.js#L6).
