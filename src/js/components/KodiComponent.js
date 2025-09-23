@@ -139,10 +139,10 @@ window.kodi = () => {
 
                     rws.addEventListener('open', () => {
                         console.log("Websocket [open]: Connection opened to Kodi")
-                        Alpine.store('isAvailable').kodi = true;
+                        // DON'T set kodi available here - wait for actual playback
                         reconnectAttempts = 0;
                         connectionStrategy = 0;
-                        startHealthCheck(); // Workaround 2: Start health check
+                        startHealthCheck();
                         // Check if Kodi is already playing, as soon as we connect...
                         sendKodiMessageOverWebSocket(rws, 'Player.GetActivePlayers', {});
                     });
