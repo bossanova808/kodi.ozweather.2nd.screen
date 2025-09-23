@@ -95,7 +95,7 @@ window.kodi = () => {
                 } catch (error) {
                     console.log('Health check ping failed:', error);
                     if (rws) {
-                        rws.close(1006, 'Health check failed');
+                        rws.close(1011, 'Health check failed');
                     }
                 }
             }
@@ -123,7 +123,7 @@ window.kodi = () => {
             // Workaround 1: Force close existing connection with abnormal closure
             if (rws && rws.readyState !== WebSocket.CLOSED) {
                 console.log('Force closing existing WebSocket connection');
-                rws.close(1006, 'Force reset for server cleanup');
+                rws.close(1011, 'Force reset for server cleanup');
                 rws = null;
                 if (pingInterval) {
                     clearInterval(pingInterval);
@@ -154,6 +154,10 @@ window.kodi = () => {
                             }, 2000);
                         }
                         Alpine.store('isAvailable').kodi = false;
+                        if (this._updateTimeRemainingInterval) {
+                            clearInterval(this._updateTimeRemainingInterval);
+                            this._updateTimeRemainingInterval = null;
+                        }
                     });
 
                     rws.addEventListener('offline', (event) => {
@@ -173,6 +177,10 @@ window.kodi = () => {
                             clearInterval(pingInterval);
                             pingInterval = null;
                         }
+                        if (this._updateTimeRemainingInterval) {
+                            clearInterval(this._updateTimeRemainingInterval);
+                            this._updateTimeRemainingInterval = null;
+                        }
 
                         // Workaround 3: Escalate connection strategy on repeated failures
                         if (event.code !== 1000 && event.code !== 1001) {
@@ -188,7 +196,11 @@ window.kodi = () => {
                             const escalatedDelay = Math.min(baseDelay * Math.pow(1.5, Math.floor(reconnectAttempts / 3)), 30000);
                             console.log(`Retrying connection in ${escalatedDelay}ms`);
 
-                            setTimeout(() => {
+                            if (reconnectTimeout) {
+                                clearTimeout(reconnectTimeout);
+                            }
+                            reconnectTimeout = setTimeout(() => {
+                                reconnectTimeout = null;
                                 this.createEnhancedKodiWebSocket(); // Use this.
                             }, escalatedDelay);
                         } else {
@@ -303,14 +315,15 @@ window.kodi = () => {
                             let results = json_result.result;
                             console.log("Processing result for: XBMC.GetInfoLabels");
                             // Remaining time
-                            let remainingTime = results["PVR.EpgEventRemainingTime"] ? results["PVR.EpgEventRemainingTime"] : results["VideoPlayer.TimeRemaining"];
-                            let temp = remainingTime.replace(/^0(?:0:0?)?/, '');
-                            (temp !== "") ? this.timeRemainingAsTime = "-" + temp : this.timeRemainingAsTime = "";
+                            const remainingTime = results["PVR.EpgEventRemainingTime"] || results["VideoPlayer.TimeRemaining"] || '';
+                            const temp = typeof remainingTime === 'string' ? remainingTime.replace(/^0(?:0:0?)?/, '') : '';
+                            this.timeRemainingAsTime = temp !== '' ? '-' + temp : '';
                             // Finish time
-                            let finishTime = results["PVR.EpgEventFinishTime"] ? results["PVR.EpgEventFinishTime"] : results["Player.FinishTime"];
-                            console.log("Kodi finish time is " + finishTime)
-                            this.finishTime = finishTime.replace(' PM','pm').replace(' AM','am');
-                            console.log("Finish time is now " + this.finishTime);
+                            const finishTime = results["PVR.EpgEventFinishTime"] || results["Player.FinishTime"] || '';
+                            console.log("Kodi finish time is " + finishTime);
+                            this.finishTime = typeof finishTime === 'string'
+                                ? finishTime.replace(' PM','pm').replace(' AM','am')
+                                : '';
                         }
 
                         //////////////////////////////////////////////////////
@@ -400,10 +413,10 @@ window.kodi = () => {
         _clearProperties() {
             console.log("Clearing Kodi Properties");
             this.artwork = null;
-            this.season = null;
-            this.episode = null;
-            this.finishTime = null;
-            this.timeRemainingAsTime = null;
+            this.season = '';
+            this.episode = '';
+            this.finishTime = '';
+            this.timeRemainingAsTime = '';
         },
 
         // Add cleanup method for the workarounds
@@ -411,6 +424,11 @@ window.kodi = () => {
             if (pingInterval) {
                 clearInterval(pingInterval);
                 pingInterval = null;
+            }
+
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
             }
 
             if (this._updateTimeRemainingInterval) {
