@@ -56,39 +56,39 @@ const mapBOMConditionToWeatherIcon = {
 window.weather = () => {
     return {
         // These hold the full JSON returned
-        location: null,
-        forecast: null,
-        observations: null,
-        observationsFetchedAt: null,
-        uv: null,
+        location: "",
+        forecast: "",
+        observations: "",
+        observationsFetchedAt: "",
+        uv: "",
         // How often to update weather (n minutes)
         updateWeatherEveryMinutes: 5,
         weatherConsideredStaleAtMinutes: 60,
         // set by updateLocation()
-        locationName: null,
-        locationLatitude: null,
-        locationLongitude: null,
+        locationName: "",
+        locationLatitude: "",
+        locationLongitude: "",
         // set by updateObservations()
-        currentTemperature: null,
-        currentFeelsLike: null,
+        currentTemperature: "",
+        currentFeelsLike: "",
         // set by updateForecast()
-        icon: null,
-        iconAlt: null,
+        icon: "",
+        iconAlt: "",
         rainIcon: Alpine.store('config').svgAnimatedPath +'/raindrop.svg',
-        outlook: null,
-        forecastHigh: null,
-        forecastHighText: null,
-        forecastLow: null,
-        forecastLowText: null,
-        forecastUVMax: null,
-        forecastUVMaxText: null,
-        rainChance: null,
-        rainAmount: null,
-        rainSince9am: null,
+        outlook: "",
+        forecastHigh: "",
+        forecastHighText: "",
+        forecastLow: "",
+        forecastLowText: "",
+        forecastUVMax: "",
+        forecastUVMaxText: "",
+        rainChance: "",
+        rainAmount: "",
+        rainSince9am: "",
         showRainSince9am: true,
         // set by updateUV() - but note this is not finished/disabled
-        uvNow: null,
-        uvIcon: null,
+        uvNow: "",
+        uvIcon: "",
 
         // 'Private' methods
         _clearProperties() {

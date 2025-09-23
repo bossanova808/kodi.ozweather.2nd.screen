@@ -83,18 +83,17 @@ const mapOpenMeteoWeatherCodeToWeatherIcon = {
 
 window.weatherOpenMeteo = () => {
     return {
-
-        forecastHigh: null,
-        forecastLow: null,
-        rainChance: null,
-        rainAmount: null,
-        rainSince9am: null,
+        forecastHigh: "",
+        forecastLow: "",
+        rainChance: "",
+        rainAmount: "",
+        rainSince9am: "",
         showRainSince9am: false,
-        outlook: null,
-        icon: null,
-        iconAlt: null,
-        currentTemperature: null,
-        currentFeelsLike: null,
+        outlook: "",
+        icon: "",
+        iconAlt: "",
+        currentTemperature: "",
+        currentFeelsLike: "",
 
         init() {
             console.log("WeatherComponentOpenMeteo init");

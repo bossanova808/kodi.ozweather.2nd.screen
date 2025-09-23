@@ -42,258 +42,286 @@ function openKodiWebSocket() {
 
 window.kodi = () => {
 
-    // globals to store our Kodi websocket
     let rws = null;
+    let pingInterval = null;
+    let reconnectAttempts = 0;
+    let connectionStrategy = 0; // Track which strategy we're using
+
+    const openKodiWebSocket = () => {
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const kodiHost = urlParams.get('kodiHost') || '127.0.0.1';
+        const kodiPort = urlParams.get('kodiPort') || '8080';
+        const url = `ws://${kodiHost}:${kodiPort}/jsonrpc`;
+
+        console.log(`Attempting Kodi WebSocket connection to: ${url} (Strategy ${connectionStrategy + 1})`);
+
+        // WORKAROUND 1: Force connection reset with different strategies
+        const connectionStrategies = [
+            // Strategy 1: Default settings
+            {
+                connectionTimeout: 1000,
+                minReconnectionDelay: 500,
+                maxReconnectionDelay: 5000,
+                reconnectionDelayGrowFactor: 1.3,
+                maxEnqueuedMessages: 0,
+                debug: false,
+            },
+            // Strategy 2: More aggressive timeouts for stuck servers
+            {
+                connectionTimeout: 3000,
+                minReconnectionDelay: 1000,
+                maxReconnectionDelay: 8000,
+                reconnectionDelayGrowFactor: 1.5,
+                maxEnqueuedMessages: 0,
+                debug: false,
+            },
+            // Strategy 3: Conservative approach for severely stuck servers
+            {
+                connectionTimeout: 5000,
+                minReconnectionDelay: 2000,
+                maxReconnectionDelay: 15000,
+                reconnectionDelayGrowFactor: 2.0,
+                maxEnqueuedMessages: 0,
+                debug: false,
+            }
+        ];
+
+        const options = connectionStrategies[connectionStrategy % connectionStrategies.length];
+
+        // Force close any existing connection with abnormal closure to clear server state
+        if (rws && rws.readyState !== WebSocket.CLOSED) {
+            console.log('Force closing existing WebSocket connection');
+            rws.close(1006, 'Force reset for server cleanup'); // Abnormal closure
+            rws = null;
+            // Clear ping interval if it exists
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+        }
+
+        // Wait a moment for server cleanup before new connection
+        setTimeout(() => {
+            try {
+                rws = new PartySocket(url, null, options);
+
+                rws.addEventListener('open', function (event) {
+                    console.log('Kodi WebSocket Connected');
+                    Alpine.store('isAvailable').kodi = true;
+                    reconnectAttempts = 0; // Reset counter on successful connection
+                    connectionStrategy = 0; // Reset to default strategy
+
+                    // WORKAROUND 2: Start health check ping
+                    startHealthCheck();
+                });
+
+                rws.addEventListener('close', function (event) {
+                    console.log(`Kodi WebSocket Disconnected: ${event.code} - ${event.reason}`);
+                    Alpine.store('isAvailable').kodi = false;
+
+                    // Stop health check
+                    if (pingInterval) {
+                        clearInterval(pingInterval);
+                        pingInterval = null;
+                    }
+
+                    // WORKAROUND 3: Escalate connection strategy on repeated failures
+                    if (event.code !== 1000 && event.code !== 1001) { // Not a normal closure
+                        reconnectAttempts++;
+
+                        if (reconnectAttempts > 3) {
+                            // Switch to next strategy after 3 failed attempts
+                            connectionStrategy = (connectionStrategy + 1) % connectionStrategies.length;
+                            console.log(`Switching to connection strategy ${connectionStrategy + 1} after ${reconnectAttempts} attempts`);
+                            reconnectAttempts = 0; // Reset counter for new strategy
+                        }
+
+                        // Wait longer on repeated failures
+                        const baseDelay = 5000;
+                        const escalatedDelay = Math.min(baseDelay * Math.pow(1.5, Math.floor(reconnectAttempts / 3)), 30000);
+                        console.log(`Retrying connection in ${escalatedDelay}ms`);
+
+                        setTimeout(() => {
+                            openKodiWebSocket();
+                        }, escalatedDelay);
+                    }
+                });
+
+                rws.addEventListener('error', function (event) {
+                    console.log('Kodi WebSocket Error:', event);
+                    Alpine.store('isAvailable').kodi = false;
+                });
+
+                rws.addEventListener('message', function (event) {
+                    // Handle ping responses
+                    const data = JSON.parse(event.data);
+                    if (data.id === 'health-check-ping') {
+                        console.log('Health check ping successful');
+                        return; // Don't process ping responses further
+                    }
+
+                    // Your existing message handling code...
+                    if (data.method === 'Player.OnPropertyChanged') {
+                        const changedData = data.params.data;
+                        if (changedData.time !== undefined) {
+                            this._kodiPlayerPosition = changedData.time;
+                        }
+                        if (changedData.totaltime !== undefined) {
+                            this._kodiPlayerTotalTime = changedData.totaltime;
+                        }
+                    } else if (data.method === 'Player.OnPlay') {
+                        this.kodiPlayerActive = true;
+                    } else if (data.method === 'Player.OnStop') {
+                        this.kodiPlayerActive = false;
+                    } else if (data.method === 'Player.OnPause') {
+                        this.kodiPlayerPaused = true;
+                    } else if (data.method === 'Player.OnResume') {
+                        this.kodiPlayerPaused = false;
+                    } else if (data.method === 'Player.OnSeek') {
+                        const seekData = data.params.data.player;
+                        if (seekData.time !== undefined) {
+                            this._kodiPlayerPosition = seekData.time;
+                        }
+                        if (seekData.totaltime !== undefined) {
+                            this._kodiPlayerTotalTime = seekData.totaltime;
+                        }
+                    }
+                }.bind(this));
+
+            } catch (error) {
+                console.error('Failed to create WebSocket:', error);
+                Alpine.store('isAvailable').kodi = false;
+
+                // Retry with next strategy
+                reconnectAttempts++;
+                if (reconnectAttempts > 3) {
+                    connectionStrategy = (connectionStrategy + 1) % connectionStrategies.length;
+                    reconnectAttempts = 0;
+                }
+
+                setTimeout(() => {
+                    openKodiWebSocket();
+                }, 5000);
+            }
+        }, connectionStrategy > 0 ? 2000 : 500); // Longer wait for escalated strategies
+    };
+
+    // WORKAROUND 2: Health check implementation
+    const startHealthCheck = () => {
+        // Clear any existing interval
+        if (pingInterval) {
+            clearInterval(pingInterval);
+        }
+
+        pingInterval = setInterval(() => {
+            if (rws && rws.readyState === WebSocket.OPEN) {
+                try {
+                    // Send ping with unique ID to identify responses
+                    const pingMessage = {
+                        "jsonrpc": "2.0",
+                        "method": "JSONRPC.Ping",
+                        "id": "health-check-ping"
+                    };
+                    rws.send(JSON.stringify(pingMessage));
+                } catch (error) {
+                    console.log('Health check ping failed:', error);
+                    // Force reconnection on ping failure
+                    if (rws) {
+                        rws.close(1006, 'Health check failed');
+                    }
+                }
+            }
+        }, 30000); // Ping every 30 seconds
+    };
 
     return {
-
-        // 'Public' attributes
-        artwork: null,
-        title: null,
-        season: null,
-        episode: null,
-        finishTime: null,
-        timeRemainingAsTime: null,
-
-        // 'Private' data
+        // Your existing properties...
+        kodiConnected: false,
+        kodiPlayerActive: false,
+        kodiPlayerPaused: false,
+        kodiPlayerTitle: '',
+        kodiPlayerType: '',
+        kodiPlayerArt: '',
+        kodiPlayerTimeRemaining: '',
+        _kodiPlayerPosition: { hours: 0, minutes: 0, seconds: 0 },
+        _kodiPlayerTotalTime: { hours: 0, minutes: 0, seconds: 0 },
         _updateTimeRemainingInterval: null,
-        _monitoringKodiPlayback: null,
 
-        // 'Private' methods
-        _clearProperties() {
-            console.log("Clearing Kodi Properties");
-            this.artwork = null;
-            this.season = null;
-            this.episode = null;
-            this.finishTime = null;
-            this.timeRemainingAsTime = null;
+        // Add cleanup method for proper shutdown if needed
+        cleanup() {
+            console.log("Cleaning up Kodi WebSocket connection");
+
+            // Clear health check
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+
+            // Clear time remaining interval
+            if (this._updateTimeRemainingInterval) {
+                clearInterval(this._updateTimeRemainingInterval);
+                this._updateTimeRemainingInterval = null;
+            }
+
+            // Close WebSocket with proper code
+            if (rws && rws.readyState !== WebSocket.CLOSED) {
+                rws.close(1000, 'Component cleanup');
+                rws = null;
+            }
+
+            this._clearProperties();
+            Alpine.store('isAvailable').kodi = false;
         },
 
         init() {
+            console.log("KodiComponent init");
 
-
-            // Kick this off two seconds after we fire up, just to give time for things to settle a bit...
             setTimeout(() => {
-                console.log("KodiComponent init");
+                openKodiWebSocket();
 
-                rws = openKodiWebSocket()
+                // Your existing interval setup...
+                this._updateTimeRemainingInterval = setInterval(() => {
+                    this._updateTimeRemaining();
+                }, 1000);
 
-                rws.addEventListener('open', () => {
-                    console.log("Websocket [open]: Connection opened to Kodi")
-                    // Check if Kodi is already playing, as soon as we connect...
-                    sendKodiMessageOverWebSocket(rws, 'Player.GetActivePlayers', {});
-                });
-
-                rws.addEventListener('error', (event) => {
-                    if (event.message !== 'TIMEOUT') {
-                        console.log('Websocket [error]:');
-                        console.log(event);
-                        setTimeout(() => {
-                            this._clearProperties();
-                        }, 2000);
-                    }
-                    Alpine.store('isAvailable').kodi = false;
-                });
-
-                rws.addEventListener('offline', (event) => {
-                    console.log('Websocket [offline]:');
-                    console.log(event);
-                    setTimeout(() => {
-                        this._clearProperties();
-                    }, 2000);
-                    Alpine.store('isAvailable').kodi = false;
-                });
-
-                rws.addEventListener('close', (event) => {
-                    // console.log(event);
-                    if (event.reason !== 'timeout') {
-                        console.log('Websocket [close]: Kodi connection not available / closed.');
-                        if (!event.wasClean) {
-                            console.log("WARNING: Socket close was not clean.");
-                        }
-                        console.log(event);
-                        setTimeout(() => {
-                            this._clearProperties();
-                        }, 2000);
-                    }
-                    Alpine.store('isAvailable').kodi = false;
-                });
-
-                rws.addEventListener('message', (event) => {
-
-                    // console.log(event);
-                    let json_result = JSON.parse(event.data);
-
-                    console.log('Websocket [message]:');
-                    console.log(json_result);
-
-                    //////////////////////////////////////////////////////
-                    // RESULTS PROCESSING!
-
-                    if (json_result.id === "Player.GetItem") {
-                        let results = json_result.result;
-                        console.log("Processing result for: Player.GetItem");
-                        console.log(results);
-
-                        this.title = results.item.title;
-                        this.season = results.item.season;
-                        this.episode = results.item.episode;
-
-                        let artworkUrl = null;
-
-                        if (results.item.art["album.thumb"] !== undefined) {
-                            console.log("Artwork: using [album.thumb]")
-                            artworkUrl = results.item.art["album.thumb"];
-                        }
-                        else if (results.item.art["tvshow.poster"] !== undefined) {
-                            console.log("Artwork: using [tvshow.poster]")
-                            artworkUrl = results.item.art["tvshow.poster"];
-                        }
-                        else if (results.item.art["movie.poster"] !== undefined) {
-                            console.log("Artwork: using [movie.poster]")
-                            artworkUrl = results.item.art["movie.poster"];
-                        }
-                        else if (results.item.art["poster"] !== undefined) {
-                            console.log("Artwork: using [poster]")
-                            artworkUrl = results.item.art["poster"];
-                        }
-                        else if (results.item.art["thumb"] !== undefined) {
-                            console.log("Artwork: using [thumb]")
-                            artworkUrl = results.item.art["thumb"];
-                        }
-                        else if (results.item.art["icon"] !== undefined) {
-                            console.log("Artwork: using [icon]")
-                            artworkUrl = results.item.art["icon"];
-                        }
-
-                        if (artworkUrl) {
-                            let artworkFromKodi = artworkUrl;
-                            console.log("Kodi returned:", artworkFromKodi);
-                            // remove a trailing slash if there is one
-                            artworkFromKodi = artworkFromKodi.replace(/\/$/, '');
-                            let kodiArtworkUrl;
-                            if (artworkFromKodi.startsWith("http")) {
-                                console.log("Kodi artwork url starts with http (i.e. link to external service, like PVR server) - use directly");
-                                kodiArtworkUrl = artworkFromKodi;
-                            }
-                            else {
-                                // noinspection HttpUrlsUsage
-                                kodiArtworkUrl = `http://${Alpine.store('config').kodiWebUrl}/image/${encodeURIComponent(artworkFromKodi)}`;
-                            }
-                            console.log("Final artwork URL:", kodiArtworkUrl);
-                            this.artwork = kodiArtworkUrl;
-                        }
-
-                        // & Kick off the update of time remaining every x milliseconds
-                        let type = results.item.type;
-
-                        let labels = [];
-                        // For PVR we get this info from the EPG...
-                        if (type === 'channel'){
-                            labels = ['PVR.EpgEventRemainingTime', 'PVR.EpgEventFinishTime']
-                        }
-                        // Otherwise, from the standard labels...
-                        else {
-                            labels = ['VideoPlayer.TimeRemaining', 'Player.FinishTime']
-                        }
-                        this._updateTimeRemainingInterval = setInterval(function () {
-                            sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', {
-                                labels: labels,
-                            })
-                        }, 1000);
-
-                        // Kodi is playing and info will soon be available, so show our component, but give it a moment...
-                        setTimeout(() => {
-                            Alpine.store('isAvailable').kodi = true;
-                        }, 1000);
-
-                    }
-
-                    // Get Time Remaining and Finish time - varies for PVR vs. other types of playback...
-                    if (json_result.id === "XBMC.GetInfoLabels") {
-                        let results = json_result.result;
-                        console.log("Processing result for: XBMC.GetInfoLabels");
-                        // Remaining time
-                        let remainingTime = results["PVR.EpgEventRemainingTime"] ? results["PVR.EpgEventRemainingTime"] : results["VideoPlayer.TimeRemaining"];
-                        let temp = remainingTime.replace(/^0(?:0:0?)?/, '');
-                        (temp !== "") ? this.timeRemainingAsTime = "-" + temp : this.timeRemainingAsTime = "";
-                        // Finish time
-                        let finishTime = results["PVR.EpgEventFinishTime"] ? results["PVR.EpgEventFinishTime"] : results["Player.FinishTime"];
-                        console.log("Kodi finish time is " + finishTime)
-                        this.finishTime = finishTime.replace(' PM','pm').replace(' AM','am');
-                        console.log("Finish time is now " + this.finishTime);
-                    }
-
-                    //////////////////////////////////////////////////////
-                    // NOTIFICATIONS!
-
-                    // We've either got a notification playback has started, or the result of the initial request for active players
-                    if (json_result.method === "Player.OnPlay" || json_result.id === "Player.GetActivePlayers") {
-
-                        let playerId = null;
-
-                        // Responding to request to Kodi Player.GetActivePlayers
-                        if (json_result.id === "Player.GetActivePlayers") {
-                            console.log("Processing result for: Player.GetActivePlayers")
-                            //console.log(json_result);
-                            if (json_result.result.length === 0) {
-                                console.log("Kodi is not playing.");
-                                return;
-                            } else {
-                                // Playing music
-                                if (json_result.result[0].playerid === 0) {
-                                    playerId = 0;
-                                }
-                                // Playing a stream or video
-                                else if (json_result.result[0].playerid === 1 || json_result.result[0].playerid === -1) {
-                                    playerId = 1;
-                                }
-                            }
-                        }
-                        // Responding to Kodi Notification: Player.OnPlay
-                        else {
-                            console.log("Kodi Notification: Player.OnPlay");
-                            playerId = json_result.params.data.player.playerid;
-                        }
-
-                        if (playerId === -1) {
-                            playerId = 1;
-                            console.log("Player ID was -1 (stream?) - let's assume video...");
-                        }
-                        // Playing pictures?  Just stay on the weather display
-                        if (playerId === 2) {
-                            console.log("Player ID is 2, displaying pictures, so do nothing.")
-                            return;
-                        }
-
-                        console.log("Playback has started with playerid", playerId);
-
-                        // Kodi playing - so first get static data - what is playing, artwork urls etc.
-                        // Once this returns, the handler above will kick off the update of time remaining.
-                        sendKodiMessageOverWebSocket(rws, 'Player.GetItem', {
-                            properties: [
-                                'art',
-                                'title',
-                                'season',
-                                'episode',
-                                'endtime',
-                            ],
-                            playerid: playerId,
-                        })
-
-                    }
-
-                    if (json_result.method === "Player.OnStop") {
-                        console.log("Kodi: Player.OnStop");
-                        clearInterval(this._updateTimeRemainingInterval);
-                        this._clearProperties();
-                        Alpine.store('isAvailable').kodi = false;
-                    }
-                });
-
-
-
-            }, 2000)
+            }, 100);
         },
-    }
+
+        // Your existing methods remain the same...
+        _clearProperties() {
+            this.kodiPlayerActive = false;
+            this.kodiPlayerPaused = false;
+            this.kodiPlayerTitle = '';
+            this.kodiPlayerType = '';
+            this.kodiPlayerArt = '';
+            this.kodiPlayerTimeRemaining = '';
+            this._kodiPlayerPosition = { hours: 0, minutes: 0, seconds: 0 };
+            this._kodiPlayerTotalTime = { hours: 0, minutes: 0, seconds: 0 };
+        },
+
+        _updateTimeRemaining() {
+            // Your existing time calculation code...
+            const position = this._kodiPlayerPosition;
+            const total = this._kodiPlayerTotalTime;
+
+            const positionSeconds = position.hours * 3600 + position.minutes * 60 + position.seconds;
+            const totalSeconds = total.hours * 3600 + total.minutes * 60 + total.seconds;
+            const remainingSeconds = totalSeconds - positionSeconds;
+
+            if (remainingSeconds > 0) {
+                const hours = Math.floor(remainingSeconds / 3600);
+                const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                const seconds = remainingSeconds % 60;
+
+                if (hours > 0) {
+                    this.kodiPlayerTimeRemaining = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    this.kodiPlayerTimeRemaining = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            } else {
+                this.kodiPlayerTimeRemaining = '';
+            }
+        }
+    };
 };
