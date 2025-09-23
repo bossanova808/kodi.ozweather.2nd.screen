@@ -104,11 +104,11 @@ window.kodi = () => {
 
     return {
         artwork: null,
-        title: null,
-        season: null,
-        episode: null,
-        finishTime: null,
-        timeRemainingAsTime: null,
+        title: '',
+        season: '',
+        episode: '',
+        finishTime: '',
+        timeRemainingAsTime: '',
 
         _updateTimeRemainingInterval: null,
         _monitoringKodiPlayback: null,
