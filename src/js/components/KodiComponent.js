@@ -48,34 +48,7 @@ window.kodi = () => {
     let pingInterval = null;
     let reconnectAttempts = 0;
     let connectionStrategy = 0;
-
-    // WebSocket workaround: Connection strategies
-    const connectionStrategies = [
-        {
-            connectionTimeout: 1000,
-            minReconnectionDelay: 500,
-            maxReconnectionDelay: 5000,
-            reconnectionDelayGrowFactor: 1.3,
-            maxEnqueuedMessages: 0,
-            debug: false,
-        },
-        {
-            connectionTimeout: 3000,
-            minReconnectionDelay: 1000,
-            maxReconnectionDelay: 8000,
-            reconnectionDelayGrowFactor: 1.5,
-            maxEnqueuedMessages: 0,
-            debug: false,
-        },
-        {
-            connectionTimeout: 5000,
-            minReconnectionDelay: 2000,
-            maxReconnectionDelay: 15000,
-            reconnectionDelayGrowFactor: 2.0,
-            maxEnqueuedMessages: 0,
-            debug: false,
-        }
-    ];
+    let reconnectTimeout = null;
 
     // WebSocket workaround: Health check implementation
     const startHealthCheck = () => {
@@ -116,15 +89,21 @@ window.kodi = () => {
         // Move createEnhancedKodiWebSocket inside as a method
         createEnhancedKodiWebSocket() {
             const kodiWebsocketUrl = 'ws://' + Alpine.store('config').kodiJsonUrl + '/jsonrpc';
-            const options = connectionStrategies[connectionStrategy % connectionStrategies.length];
+            const options = {
+                connectionTimeout: 1000,
+                minReconnectionDelay: 500,
+                maxReconnectionDelay: 5000,
+                reconnectionDelayGrowFactor: 1.3,
+                maxEnqueuedMessages: 0,
+                debug: false,
+            };
 
             console.log(`*** Opening new websocket connection to Kodi: ${kodiWebsocketUrl} (Strategy ${connectionStrategy + 1})`);
 
-            // Workaround 1: Force close existing connection with abnormal closure
-            if (rws && rws.readyState !== WebSocket.CLOSED) {
-                console.log('Force closing existing WebSocket connection');
-                rws.close(1011, 'Force reset for server cleanup');
-                rws = null;
+            // Workaround 1: Reset existing connection reference
+            if (rws) {
+                console.log('Resetting existing WebSocket reference');
+                rws = null; // Just clear the reference, don't try to close
                 if (pingInterval) {
                     clearInterval(pingInterval);
                     pingInterval = null;
@@ -138,8 +117,6 @@ window.kodi = () => {
                     rws.addEventListener('open', () => {
                         console.log("Websocket [open]: Connection opened to Kodi")
                         // DON'T set kodi available here - wait for actual playback
-                        reconnectAttempts = 0;
-                        connectionStrategy = 0;
                         startHealthCheck();
                         // Check if Kodi is already playing, as soon as we connect...
                         sendKodiMessageOverWebSocket(rws, 'Player.GetActivePlayers', {});
@@ -177,44 +154,15 @@ window.kodi = () => {
                             clearInterval(pingInterval);
                             pingInterval = null;
                         }
-                        if (this._updateTimeRemainingInterval) {
-                            clearInterval(this._updateTimeRemainingInterval);
-                            this._updateTimeRemainingInterval = null;
+
+                        // Clear any pending reconnect timeout
+                        if (reconnectTimeout) {
+                            clearTimeout(reconnectTimeout);
+                            reconnectTimeout = null;
                         }
 
-                        // Workaround 3: Escalate connection strategy on repeated failures
-                        if (event.code !== 1000 && event.code !== 1001) {
-                            reconnectAttempts++;
-
-                            if (reconnectAttempts > 3) {
-                                connectionStrategy = (connectionStrategy + 1) % connectionStrategies.length;
-                                console.log(`Switching to connection strategy ${connectionStrategy + 1} after ${reconnectAttempts} attempts`);
-                                reconnectAttempts = 0;
-                            }
-
-                            const baseDelay = 5000;
-                            const escalatedDelay = Math.min(baseDelay * Math.pow(1.5, Math.floor(reconnectAttempts / 3)), 30000);
-                            console.log(`Retrying connection in ${escalatedDelay}ms`);
-
-                            if (reconnectTimeout) {
-                                clearTimeout(reconnectTimeout);
-                            }
-                            reconnectTimeout = setTimeout(() => {
-                                reconnectTimeout = null;
-                                this.createEnhancedKodiWebSocket(); // Use this.
-                            }, escalatedDelay);
-                        } else {
-                            // Normal close or timeout
-                            if (event.reason !== 'timeout') {
-                                console.log('Websocket [close]: Kodi connection not available / closed.');
-                                if (!event.wasClean) {
-                                    console.log("WARNING: Socket close was not clean.");
-                                }
-                                setTimeout(() => {
-                                    this._clearProperties();
-                                }, 2000);
-                            }
-                        }
+                        // Don't add custom reconnection logic here - let PartySocket handle it
+                        console.log('WebSocket closed, PartySocket will handle reconnection automatically');
                     });
 
                     rws.addEventListener('message', function(event) {
@@ -396,16 +344,6 @@ window.kodi = () => {
                 } catch (error) {
                     console.error('Failed to create WebSocket:', error);
                     Alpine.store('isAvailable').kodi = false;
-
-                    reconnectAttempts++;
-                    if (reconnectAttempts > 3) {
-                        connectionStrategy = (connectionStrategy + 1) % connectionStrategies.length;
-                        reconnectAttempts = 0;
-                    }
-
-                    setTimeout(() => {
-                        this.createEnhancedKodiWebSocket(); // Use this.
-                    }, 5000);
                 }
             }, connectionStrategy > 0 ? 2000 : 500);
         },
@@ -436,8 +374,12 @@ window.kodi = () => {
                 this._updateTimeRemainingInterval = null;
             }
 
-            if (rws && rws.readyState !== WebSocket.CLOSED) {
-                rws.close(1000, 'Component cleanup');
+            if (rws && rws.readyState !== WebSocket.CLOSED && rws.readyState !== WebSocket.CLOSING) {
+                try {
+                    rws.close(1000, 'Component cleanup');
+                } catch (e) {
+                    console.log('WebSocket cleanup close failed:', e);
+                }
                 rws = null;
             }
 
