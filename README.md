@@ -191,6 +191,18 @@ Similar, but with auth for the Kodi webserver, and specifying a non-standard por
 https://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
 ```
 
+## Trouble Shooting - Mixed Content
+
+If you choose to self host this app, over HTTPS (e.g., via Cloudflare tunnel, reverse proxy, etc.) but your Kodi runs only HTTP (as it usually does), you may encounter "mixed content" issues where browsers block the Kodi artwork images.
+
+Solutions:
+
+    * Fully Kiosk users: Enable "Allow Mixed Content" in Advanced Web Settings → Content Blocking
+    * Standard browsers: Most will show a "shield" icon in the address bar - click it to allow mixed content for this site
+    * Alternative: Host the app over HTTP instead (avoids the issue entirely)
+
+This happens because browsers consider it a security risk to load HTTP images from HTTPS pages. Since Kodi doesn't support HTTPS out-of-the-box, the hardcoded http:// URLs for artwork are appropriate - you just need to tell your browser/app to allow them.
+
 ## Development
 
 (PRs will certainly be looked at but if you're going to add something you think might be generally useful perhaps open an issue here for initial discussion). 
@@ -210,3 +222,6 @@ To build for deployment if you want to host this yourself somewhere:
 `npm run build`
 
 Note that if you're not deploying to the root of your site, i.e. you're using a sub-folder for you deployment (something like `https://your.site/kodidash`), then you will need to modify the `vite.config.js` `base` property (https://vite.dev/config/shared-options.html#base).  See the commented out [example](https://github.com/bossanova808/kodi.ozweather.2nd.screen/blob/d8356a0659e84db7c386df7aed85cc080837b35f/vite.config.js#L6).
+
+
+
