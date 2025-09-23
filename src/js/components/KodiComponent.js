@@ -103,7 +103,6 @@ window.kodi = () => {
     };
 
     return {
-        // YOUR ORIGINAL 'Public' attributes - EXACTLY AS THEY WERE
         artwork: null,
         title: null,
         season: null,
@@ -111,7 +110,6 @@ window.kodi = () => {
         finishTime: null,
         timeRemainingAsTime: null,
 
-        // YOUR ORIGINAL 'Private' data - EXACTLY AS THEY WERE
         _updateTimeRemainingInterval: null,
         _monitoringKodiPlayback: null,
 
@@ -215,7 +213,6 @@ window.kodi = () => {
                             return;
                         }
 
-                        // YOUR ORIGINAL MESSAGE PROCESSING - RESTORED EXACTLY
                         let json_result = data;
                         console.log('Websocket [message]:');
                         console.log(json_result);
@@ -400,7 +397,6 @@ window.kodi = () => {
             }, connectionStrategy > 0 ? 2000 : 500);
         },
 
-        // YOUR ORIGINAL 'Private' methods - EXACTLY AS THEY WERE
         _clearProperties() {
             console.log("Clearing Kodi Properties");
             this.artwork = null;
