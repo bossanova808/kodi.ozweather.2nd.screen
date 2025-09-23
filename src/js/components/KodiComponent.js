@@ -23,22 +23,6 @@ function secondsToTimeFormat(seconds){
     return new Date(seconds * 1000).toISOString().substring(11, 19);
 }
 
-function openKodiWebSocket() {
-    const kodiWebsocketUrl = 'ws://' + Alpine.store('config').kodiJsonUrl + '/jsonrpc';
-
-    const options = {
-        connectionTimeout: 5000,    // Longer timeout
-        minReconnectionDelay: 5000, // Wait 5 seconds instead of 500ms
-        maxReconnectionDelay: 30000, // Max 30 seconds instead of 5
-        reconnectionDelayGrowFactor: 2.0, // Slower escalation
-        maxEnqueuedMessages: 0,
-        debug: false,
-    };
-
-    console.log("*** Opening new websocket connection to Kodi: " + kodiWebsocketUrl)
-    return new WebSocket(kodiWebsocketUrl, [], options);
-}
-
 window.kodi = () => {
 
     // globals to store our Kodi websocket
@@ -46,7 +30,6 @@ window.kodi = () => {
 
     // WebSocket workaround variables
     let pingInterval = null;
-    let reconnectTimeout = null;
 
     // WebSocket workaround: Health check implementation
     const startHealthCheck = () => {
@@ -55,7 +38,7 @@ window.kodi = () => {
         }
 
         pingInterval = setInterval(() => {
-            if (rws && rws.readyState === WebSocket.OPEN) {
+            if (rws && rws.readyState === 1) { // OPEN
                 try {
                     const pingMessage = {
                         "jsonrpc": "2.0",
@@ -83,10 +66,13 @@ window.kodi = () => {
 
         _updateTimeRemainingInterval: null,
         _monitoringKodiPlayback: null,
+        _offlineHandlerRegistered: false,
 
         // Move createEnhancedKodiWebSocket inside as a method
         createEnhancedKodiWebSocket() {
+
             const kodiWebsocketUrl = 'ws://' + Alpine.store('config').kodiJsonUrl + '/jsonrpc';
+
             const options = {
                 connectionTimeout: 1000,
                 minReconnectionDelay: 500,
@@ -101,7 +87,10 @@ window.kodi = () => {
             // Workaround 1: Reset existing connection reference
             if (rws) {
                 console.log('Resetting existing WebSocket reference');
-                rws = null; // Just clear the reference, don't try to close
+                try {
+                    if (rws.readyState < 2) rws.close(1000, 'Re-init'); // normal closure
+                } catch (_) { /* ignore */ }
+                rws = null;
                 if (pingInterval) {
                     clearInterval(pingInterval);
                     pingInterval = null;
@@ -136,13 +125,17 @@ window.kodi = () => {
                         }
                     });
 
-                    window.addEventListener('offline', () => {
-                        if (options.debug) console.log('Network offline');
-                        setTimeout(() => {
-                            this._clearProperties();
-                        }, 2000);
-                        Alpine.store('isAvailable').kodi = false;
-                    });
+                    // Register offline handler once
+                    if (!this._offlineHandlerRegistered) {
+                        this._offlineHandlerRegistered = true;
+                        window.addEventListener('offline', () => {
+                            if (options.debug) console.log('Network offline');
+                            setTimeout(() => {
+                                this._clearProperties();
+                            }, 2000);
+                            Alpine.store('isAvailable').kodi = false;
+                        });
+                    }
 
                     rws.addEventListener('close', (event) => {
                         console.log(`Kodi WebSocket Disconnected: ${event.code} - ${event.reason}`);
@@ -151,12 +144,6 @@ window.kodi = () => {
                         if (pingInterval) {
                             clearInterval(pingInterval);
                             pingInterval = null;
-                        }
-
-                        // Clear any pending reconnect timeout
-                        if (reconnectTimeout) {
-                            clearTimeout(reconnectTimeout);
-                            reconnectTimeout = null;
                         }
 
                         // Don't add custom reconnection logic here - let PartySocket handle it
@@ -189,29 +176,37 @@ window.kodi = () => {
 
                             let artworkUrl = null;
 
-                            if (results.item.art["album.thumb"] !== undefined) {
-                                console.log("Artwork: using [album.thumb]")
-                                artworkUrl = results.item.art["album.thumb"];
+                            if (results.item.art && typeof results.item.art === 'object') {
+                                const art = results.item.art;
+
+                                if (art["album.thumb"]) {
+                                    console.log("Artwork: using [album.thumb]")
+                                    artworkUrl = art["album.thumb"];
+                                }
+                                else if (art["tvshow.poster"]) {
+                                    console.log("Artwork: using [tvshow.poster]")
+                                    artworkUrl = art["tvshow.poster"];
+                                }
+                                else if (art["movie.poster"]) {
+                                    console.log("Artwork: using [movie.poster]")
+                                    artworkUrl = art["movie.poster"];
+                                }
+                                else if (art["poster"]) {
+                                    console.log("Artwork: using [poster]")
+                                    artworkUrl = art["poster"];
+                                }
+                                else if (art["thumb"]) {
+                                    console.log("Artwork: using [thumb]")
+                                    artworkUrl = art["thumb"];
+                                }
+                                else if (art["icon"]) {
+                                    console.log("Artwork: using [icon]")
+                                    artworkUrl = art["icon"];
+                                }
                             }
-                            else if (results.item.art["tvshow.poster"] !== undefined) {
-                                console.log("Artwork: using [tvshow.poster]")
-                                artworkUrl = results.item.art["tvshow.poster"];
-                            }
-                            else if (results.item.art["movie.poster"] !== undefined) {
-                                console.log("Artwork: using [movie.poster]")
-                                artworkUrl = results.item.art["movie.poster"];
-                            }
-                            else if (results.item.art["poster"] !== undefined) {
-                                console.log("Artwork: using [poster]")
-                                artworkUrl = results.item.art["poster"];
-                            }
-                            else if (results.item.art["thumb"] !== undefined) {
-                                console.log("Artwork: using [thumb]")
-                                artworkUrl = results.item.art["thumb"];
-                            }
-                            else if (results.item.art["icon"] !== undefined) {
-                                console.log("Artwork: using [icon]")
-                                artworkUrl = results.item.art["icon"];
+                            else if (results.item.thumbnail) {
+                                console.log("Artwork: using fallback thumbnail")
+                                artworkUrl = results.item.thumbnail;
                             }
 
                             if (artworkUrl) {
@@ -367,17 +362,12 @@ window.kodi = () => {
                 pingInterval = null;
             }
 
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-                reconnectTimeout = null;
-            }
-
             if (this._updateTimeRemainingInterval) {
                 clearInterval(this._updateTimeRemainingInterval);
                 this._updateTimeRemainingInterval = null;
             }
 
-            if (rws && rws.readyState !== WebSocket.CLOSED && rws.readyState !== WebSocket.CLOSING) {
+            if (rws && rws.readyState < 2) { // CONNECTING(0) or OPEN(1)
                 try {
                     rws.close(1000, 'Component cleanup');
                 } catch (e) {
