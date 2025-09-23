@@ -27,10 +27,10 @@ function openKodiWebSocket() {
     const kodiWebsocketUrl = 'ws://' + Alpine.store('config').kodiJsonUrl + '/jsonrpc';
 
     const options = {
-        connectionTimeout: 1000,
-        minReconnectionDelay: 500,
-        maxReconnectionDelay: 5000,
-        reconnectionDelayGrowFactor: 1.3,
+        connectionTimeout: 5000,    // Longer timeout
+        minReconnectionDelay: 5000, // Wait 5 seconds instead of 500ms
+        maxReconnectionDelay: 30000, // Max 30 seconds instead of 5
+        reconnectionDelayGrowFactor: 2.0, // Slower escalation
         maxEnqueuedMessages: 0,
         debug: false,
     };
@@ -46,8 +46,6 @@ window.kodi = () => {
 
     // WebSocket workaround variables
     let pingInterval = null;
-    let reconnectAttempts = 0;
-    let connectionStrategy = 0;
     let reconnectTimeout = null;
 
     // WebSocket workaround: Health check implementation
@@ -98,7 +96,7 @@ window.kodi = () => {
                 debug: false,
             };
 
-            console.log(`*** Opening new websocket connection to Kodi: ${kodiWebsocketUrl} (Strategy ${connectionStrategy + 1})`);
+            console.log(`*** Opening new websocket connection to Kodi: ${kodiWebsocketUrl}`);
 
             // Workaround 1: Reset existing connection reference
             if (rws) {
@@ -123,23 +121,23 @@ window.kodi = () => {
                     });
 
                     rws.addEventListener('error', (event) => {
-                        if (event.message !== 'TIMEOUT') {
-                            console.log('Websocket [error]:');
-                            console.log(event);
-                            setTimeout(() => {
-                                this._clearProperties();
-                            }, 2000);
-                        }
+                        if (options.debug) console.log('WebSocket [error]:', event);
+                        setTimeout(() => {
+                            this._clearProperties();
+                        }, 2000);
                         Alpine.store('isAvailable').kodi = false;
                         if (this._updateTimeRemainingInterval) {
                             clearInterval(this._updateTimeRemainingInterval);
                             this._updateTimeRemainingInterval = null;
                         }
+                        if (pingInterval) {
+                            clearInterval(pingInterval);
+                            pingInterval = null;
+                        }
                     });
 
-                    rws.addEventListener('offline', (event) => {
-                        console.log('Websocket [offline]:');
-                        console.log(event);
+                    window.addEventListener('offline', () => {
+                        if (options.debug) console.log('Network offline');
                         setTimeout(() => {
                             this._clearProperties();
                         }, 2000);
@@ -246,6 +244,10 @@ window.kodi = () => {
                             else {
                                 labels = ['VideoPlayer.TimeRemaining', 'Player.FinishTime']
                             }
+                            if (this._updateTimeRemainingInterval) {
+                                clearInterval(this._updateTimeRemainingInterval);
+                                this._updateTimeRemainingInterval = null;
+                            }
                             this._updateTimeRemainingInterval = setInterval(function () {
                                 sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', {
                                     labels: labels,
@@ -345,12 +347,13 @@ window.kodi = () => {
                     console.error('Failed to create WebSocket:', error);
                     Alpine.store('isAvailable').kodi = false;
                 }
-            }, connectionStrategy > 0 ? 2000 : 500);
+            }, 500);
         },
 
         _clearProperties() {
             console.log("Clearing Kodi Properties");
             this.artwork = null;
+            this.title = '';
             this.season = '';
             this.episode = '';
             this.finishTime = '';
