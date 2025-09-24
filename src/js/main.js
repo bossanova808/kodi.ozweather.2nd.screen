@@ -28,16 +28,17 @@ Alpine.store('config', {
         const kodiWeb = urlParams.get('kodi-web') || '8080';
         this.kodiJsonUrl = `${this.kodi}:${kodiJson}`;
         this.kodiWebUrl = `${this.kodi}:${kodiWeb}`;
-        this.kodSSL = urlParams.get('kodiSSL') === 'true';
+        this.kodiSSL = urlParams.get('kodi-ssl') === 'true';
         console.log("Kodi IP (&kodi, default 127.0.0.1) is", this.kodi);
-        console.log("Kodi JSON Port (&kodi-json, default 9090) is", this.kodiJsonUrl);
-        console.log("Kodi Web Port (&kodi-web, default 8080) is", this.kodiWebUrl);
+        console.log("Kodi JSON Port (&kodi-json, default 9090) is", kodiJson);
+        console.log("Kodi Web Port (&kodi-web, default 8080) is", kodiWeb);
+        console.log("Kodi SSL (&kodi-ssl, default false) is", this.kodiSSL);
         console.log("Display Size (&size=small|medium|large, default large) is", this.size);
         if (this.bom){
             console.log("BOM Weather Location ID (&bom, default r1r11df - Ascot Vale, Victoria) is", this.bom);
         }
         else {
-            console.log("OpenMeteo Weather Location Latitude: ", this.lat, " Longitude: ", this.lon);
+            console.log("OpenMeteo Weather Location Latitude: ", this.latitude, " Longitude: ", this.longitude);
         }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4

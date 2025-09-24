@@ -80,14 +80,12 @@ window.kodi = () => {
         _offlineHandlerRegistered: false,
         _initDelay: null,
         _connectTimeout: null,
-
+        _currentMediaType: null,
 
         createEnhancedKodiWebSocket() {
 
             const protocols = getKodiProtocols();
             const kodiWebsocketUrl = `${protocols.ws}${Alpine.store('config').kodiJsonUrl}/jsonrpc`;
-
-            console.log(`*** Opening WebSocket connection to Kodi: ${kodiWebsocketUrl}`);
 
             const options = {
                 connectionTimeout: 1000,
@@ -173,17 +171,27 @@ window.kodi = () => {
                             clearInterval(pingInterval);
                             pingInterval = null;
                         }
-                        this._updateTimeRemainingInterval = setInterval(() => {
-                            if (rws && rws.readyState === 1) {
-                                sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', { labels });
+                        this._updateTimeRemainingInterval = setInterval(function () {
+                            let labels;
+                            // For PVR we get this info from the EPG...
+                            if (this._currentMediaType === 'channel'){
+                                labels = ['PVR.EpgEventRemainingTime', 'PVR.EpgEventFinishTime'];
                             }
-                        }, 1000);
+                            // Otherwise, from the standard labels...
+                            else {
+                                labels = ['VideoPlayer.TimeRemaining', 'Player.FinishTime'];
+                            }
+
+                            sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', {
+                                labels: labels,
+                            });
+                        }.bind(this), 1000);
 
                         // Don't add custom reconnection logic here - let PartySocket handle it
                         console.log('WebSocket closed, PartySocket will handle reconnection automatically');
                     });
 
-                    rws.addEventListener('message', function(event) {
+                    rws.addEventListener('message', (event) => {
                         const data = JSON.parse(event.data);
 
                         // Handle ping responses (don't process further)
@@ -206,6 +214,7 @@ window.kodi = () => {
                             this.title = results.item.title;
                             this.season = results.item.season;
                             this.episode = results.item.episode;
+                            this._currentMediaType = results.item.type;
 
                             let artworkUrl = null;
 
@@ -369,7 +378,7 @@ window.kodi = () => {
                             Alpine.store('isAvailable').kodi = false;
                         }
 
-                    }.bind(this));
+                    });
 
                 } catch (error) {
                     console.error('Failed to create WebSocket:', error);
