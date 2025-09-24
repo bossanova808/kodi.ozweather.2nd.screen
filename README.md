@@ -191,6 +191,61 @@ Similar, but with auth for the Kodi webserver, and specifying a non-standard por
 https://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
 ```
 
+### SSL/HTTPS Support
+
+By default, the app connects to Kodi using HTTP and WebSocket (ws://) protocols, even when the web app itself is served over HTTPS. This supports the common scenario where the web app is served securely (e.g., via Cloudflare tunnel) but Kodi runs on the local network with HTTP only, i.e. without SSL support, as is the default Kodi behaviour.
+
+See below for examples with and without SSL.
+
+### Usage Examples
+
+#### Standard Usage (Mixed Content)
+
+`https://yourapp.com/?kodi=192.168.1.100&kodi-web=8080`
+
+- Web app itself served over HTTPS (Cloudflare tunnel, reverse proxy etc.)
+- Kodi communication uses `ws://192.168.1.100:9090/jsonrpc` (default; override via `kodi-json`)
+- Artwork URLs use `http://192.168.1.100:8080/image/...`
+- Works with Fully Kiosk Browser's "Allow Mixed Content" setting
+
+#### SSL-Enabled Kodi (Rare)
+
+(See: [Kodi SSL](https://kodi.wiki/view/SSL_certificates))
+
+`https://yourapp.com/?kodi=kodi.local&kodi-web=8443&kodi-ssl=true`
+
+- For rare Kodi installations with SSL certificates
+- Kodi communication uses `wss://kodi.local:9090/jsonrpc`
+- Artwork URLs use `https://kodi.local:8443/image/...`
+
+#### Local Development
+
+`http://localhost:5173/?kodi=127.0.0.1&kodi-web=8080`
+
+- Both web app and Kodi use HTTP protocols
+- No mixed content concerns
+
+#### URL Parameters controlling Kodi connection
+
+| Parameter  | Default | Description |
+|------------|---------|-------------|
+| `kodi`     | `127.0.0.1` | Kodi server IP address or hostname |
+| `kodi-web` | `8080` | Kodi web server port |
+| `kodi-json` | `9090` | Kodi JSON-RPC WebSocket port |
+| `kodi-ssl` | `false` | Set to `true` for HTTPS/WSS Kodi connections |
+
+#### Mixed Content Note
+
+Most Kodi installations use HTTP only. When serving this app over HTTPS but connecting to HTTP Kodi, browsers will block mixed content by default. 
+
+Solutions:
+
+* Fully Kiosk users: Enable "Allow Mixed Content" in Advanced Web Settings → Content Blocking
+* Standard browsers: Most will show a "shield" icon in the address bar — click it and allow mixed content, for this app
+* Host the app over HTTP instead (avoids the issue entirely). As this is likely to be an entirely internal app, this is an easy and appropriate solution
+* Set up [Kodi SSL](https://kodi.wiki/view/SSL_certificates)
+
+
 ## Development
 
 (PRs will certainly be looked at but if you're going to add something you think might be generally useful perhaps open an issue here for initial discussion). 
@@ -209,4 +264,4 @@ To build for deployment if you want to host this yourself somewhere:
 
 `npm run build`
 
-Note that if you're not deploying to the root of your site, i.e. you're using a sub-folder for you deployment (something like `https://your.site/kodidash`), then you will need to modify the `vite.config.js` `base` property (https://vite.dev/config/shared-options.html#base).  See the commented out [example](https://github.com/bossanova808/kodi.ozweather.2nd.screen/blob/d8356a0659e84db7c386df7aed85cc080837b35f/vite.config.js#L6).
+Note that if you're not deploying to the root of your site, i.e. you're using a sub‑folder for your deployment (something like `https://your.site/kodidash`), then you will need to modify the `vite.config.js` `base` property (see the [Vite docs](https://vite.dev/config/shared-options.html#base)). See the commented‑out [example](https://github.com/bossanova808/kodi.ozweather.2nd.screen/blob/d8356a0659e84db7c386df7aed85cc080837b35f/vite.config.js#L6).
