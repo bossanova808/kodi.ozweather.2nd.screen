@@ -195,28 +195,30 @@ https://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitu
 
 By default, the app connects to Kodi using HTTP and WebSocket (ws://) protocols, even when the web app itself is served over HTTPS. This supports the common scenario where the web app is served securely (e.g., via Cloudflare tunnel) but Kodi runs on the local network with HTTP only, i.e. without SSL support, as is the default Kodi behaviour.
 
-#### Usage Examples
+See below for examples with and without SSL.
 
-**Standard Usage (Mixed Content)**
+### Usage Examples
+
+#### Standard Usage (Mixed Content)
 
 `https://yourapp.com/?kodi=192.168.1.100&kodi-web=8080`
 
 - Web app itself served over HTTPS (Cloudflare tunnel, reverse proxy etc.)
-- Kodi communication uses `ws://192.168.1.100:8080/jsonrpc`
+- Kodi communication uses `ws://192.168.1.100:9090/jsonrpc` (default; override via `kodi-json`)
 - Artwork URLs use `http://192.168.1.100:8080/image/...`
 - Works with Fully Kiosk Browser's "Allow Mixed Content" setting
 
-**SSL-Enabled Kodi (Rare)**
+#### SSL-Enabled Kodi (Rare)
 
 (See: [Kodi SSL](https://kodi.wiki/view/SSL_certificates))
 
 `https://yourapp.com/?kodi=kodi.local&kodi-web=8443&kodi-ssl=true`
 
 - For rare Kodi installations with SSL certificates
-- Kodi communication uses `wss://kodi.local:8443/jsonrpc`
+- Kodi communication uses `wss://kodi.local:9090/jsonrpc`
 - Artwork URLs use `https://kodi.local:8443/image/...`
 
-**Local Development**
+#### Local Development
 
 `http://localhost:5173/?kodi=127.0.0.1&kodi-web=8080`
 
@@ -229,6 +231,7 @@ By default, the app connects to Kodi using HTTP and WebSocket (ws://) protocols,
 |------------|---------|-------------|
 | `kodi`     | `127.0.0.1` | Kodi server IP address or hostname |
 | `kodi-web` | `8080` | Kodi web server port |
+| `kodi-json` | `9090` | Kodi JSON-RPC WebSocket port |
 | `kodi-ssl` | `false` | Set to `true` for HTTPS/WSS Kodi connections |
 
 #### Mixed Content Note

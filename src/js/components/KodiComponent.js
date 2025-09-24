@@ -117,7 +117,7 @@ window.kodi = () => {
 
             this._connectTimeout = setTimeout(() => {
                 try {
-                    rws = new WebSocket(kodiWebsocketUrl, [], options);
+                    rws = new WebSocket(kodiWebsocketUrl, undefined, options);
 
                     rws.addEventListener('open', () => {
                         console.log("Websocket [open]: Connection opened to Kodi")
@@ -210,10 +210,9 @@ window.kodi = () => {
                             let results = json_result.result;
                             console.log("Processing result for: Player.GetItem");
                             console.log(results);
-
-                            this.title = results.item.title;
-                            this.season = results.item.season;
-                            this.episode = results.item.episode;
+                            this.title = results.item.title || '';
+                            this.season = (results.item.season ?? '');
+                            this.episode = (results.item.episode ?? '');
                             this._currentMediaType = results.item.type;
 
                             let artworkUrl = null;
