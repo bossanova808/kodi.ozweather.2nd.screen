@@ -191,17 +191,57 @@ Similar, but with auth for the Kodi webserver, and specifying a non-standard por
 https://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
 ```
 
-## Troubleshooting - Mixed Content
+### SSL/HTTPS Support
 
-If you choose to self host this app, over HTTPS (e.g., via Cloudflare tunnel, reverse proxy, etc.) but your Kodi runs only HTTP (as it usually does), you may encounter "mixed content" issues where browsers block the Kodi artwork images.
+By default, the app connects to Kodi using HTTP and WebSocket (ws://) protocols, even when the web app itself is served over HTTPS. This supports the common scenario where the web app is served securely (e.g., via Cloudflare tunnel) but Kodi runs on the local network with HTTP only, i.e. without SSL support, as is the default Kodi behaviour.
+
+#### Usage Examples
+
+**Standard Usage (Mixed Content)**
+
+`https://yourapp.com/?kodiHost=192.168.1.100&kodiPort=8080`
+
+- Web app itself served over HTTPS (Cloudflare tunnel, reverse proxy etc.)
+- Kodi communication uses `ws://192.168.1.100:8080/jsonrpc`
+- Artwork URLs use `http://192.168.1.100:8080/image/...`
+- Works with Fully Kiosk Browser's "Allow Mixed Content" setting
+
+**SSL-Enabled Kodi (Rare)**
+
+(See: [Kodi SSL](https://kodi.wiki/view/SSL_certificates))
+
+`https://yourapp.com/?kodiHost=kodi.local&kodiPort=8443&kodiSSL=true`
+
+- For rare Kodi installations with SSL certificates
+- Kodi communication uses `wss://kodi.local:8443/jsonrpc`
+- Artwork URLs use `https://kodi.local:8443/image/...`
+
+**Local Development**
+
+`http://localhost:5173/?kodiHost=127.0.0.1&kodiPort=8080`
+
+- Both web app and Kodi use HTTP protocols
+- No mixed content concerns
+
+#### URL Parameters controlling Kodi connection
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `kodiHost` | `127.0.0.1` | Kodi server IP address or hostname |
+| `kodiPort` | `8080` | Kodi web server port |
+| `kodiSSL` | `false` | Set to `true` for HTTPS/WSS Kodi connections |
+
+#### Mixed Content Note
+
+Most Kodi installations use HTTP only. When serving this app over HTTPS but connecting to HTTP Kodi, browsers will block mixed content by default. Solutions:
 
 Solutions:
 
 * Fully Kiosk users: Enable "Allow Mixed Content" in Advanced Web Settings → Content Blocking
-* Standard browsers: Most will show a "shield" icon in the address bar — click it to allow mixed content for this site
-* Alternative: Host the app over HTTP instead (avoids the issue entirely)
+* Standard browsers: Most will show a "shield" icon in the address bar — click it and allow mixed content, for this app
+* Host the app over HTTP instead (avoids the issue entirely). As this is likely to be an entirely internal app, this is an easy and appropriate solution
+* Set up [Kodi SSL](https://kodi.wiki/view/SSL_certificates)
 
-This happens because browsers consider it a security risk to load HTTP images from HTTPS pages. Since Kodi doesn't support HTTPS out-of-the-box, the hardcoded http:// URLs for artwork are appropriate - you just need to tell your browser/app to allow them.
 
 ## Development
 

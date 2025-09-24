@@ -12,24 +12,23 @@ import "./components/KodiComponent";
 // Config from URL parameters
 Alpine.store('config', {
     init() {
-        let params = new URLSearchParams(window.location.search)
+        const urlParams = new URLSearchParams(window.location.search);
 
-        this.kodi = params.has('kodi') ? params.get('kodi') : '127.0.0.1';
-        this.bom = params.has('bom') ? params.get('bom') : false;
-        this.latitude = params.has('latitude') ? params.get('latitude') : false;
-        this.longitude = params.has('longitude') ? params.get('longitude') : false;
-        this.timezone = params.has('timezone') ? params.get('timezone') : false;
+        this.kodi = urlParams.get('kodi') || '127.0.0.1';
+        this.bom = urlParams.get('bom') || false;
+        this.latitude = urlParams.get('latitude') || false;
+        this.longitude = urlParams.get('longitude') || false;
+        this.timezone = urlParams.get('timezone') || false;
         // Fall back to BOM weather for Ascot Vale if no weather location info provided
         if (!this.bom && !this.latitude){
             this.bom = 'r1r11df';
         }
-        this.size = params.has('size') ? params.get('size') : 'large';
-        let kodiJson = params.has('kodi-json') ? params.get('kodi-json') : '9090';
-        let kodiWeb = params.has('kodi-web') ? params.get('kodi-web') : '8080';
-
+        this.size = urlParams.get('size') || 'large';
+        const kodiJson = urlParams.get('kodi-json') || '9090';
+        const kodiWeb = urlParams.get('kodi-web') || '8080';
         this.kodiJsonUrl = `${this.kodi}:${kodiJson}`;
         this.kodiWebUrl = `${this.kodi}:${kodiWeb}`;
-
+        this.kodSSL = urlParams.get('kodiSSL') === 'true';
         console.log("Kodi IP (&kodi, default 127.0.0.1) is", this.kodi);
         console.log("Kodi JSON Port (&kodi-json, default 9090) is", this.kodiJsonUrl);
         console.log("Kodi Web Port (&kodi-web, default 8080) is", this.kodiWebUrl);
@@ -75,6 +74,7 @@ Alpine.store('config', {
     kodi: false,
     kodiJsonUrl: false,
     kodiWebUrl: false,
+    kodiSSL: false,
     bom: false,
     latitude: false,
     longitude: false,

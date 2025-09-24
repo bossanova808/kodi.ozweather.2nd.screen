@@ -2,6 +2,17 @@
 
 import { WebSocket } from "partysocket";
 
+function getKodiProtocols() {
+    // Read SSL setting from centralized config
+    const kodiSSL = Alpine.store('config').kodiSSL;
+
+    // Default to HTTP/WS even if web app itself is HTTPS (typical mixed content scenario as Kodi doesn't by default support SSL)
+    return {
+        http: kodiSSL ? 'https://' : 'http://',
+        ws: kodiSSL ? 'wss://' : 'ws://'
+    };
+}
+
 function sendKodiMessageOverWebSocket(rws, method, params) {
     let msg = {
         "jsonrpc": "2.0",
@@ -49,11 +60,11 @@ window.kodi = () => {
                 } catch (error) {
                     console.log('Health check ping failed:', error);
                     if (rws) {
-                        rws.close(1011, 'Health check failed');
+                        rws.close(1011, 'Closing WebSocket to Kodi as health check failed');
                     }
                 }
             }
-        }, 30000);
+        }, 30000);  // Ping every 30 seconds
     };
 
     return {
@@ -67,11 +78,16 @@ window.kodi = () => {
         _updateTimeRemainingInterval: null,
         _monitoringKodiPlayback: null,
         _offlineHandlerRegistered: false,
+        _initDelay: null,
+        _connectTimeout: null,
 
-        // Move createEnhancedKodiWebSocket inside as a method
+
         createEnhancedKodiWebSocket() {
 
-            const kodiWebsocketUrl = 'ws://' + Alpine.store('config').kodiJsonUrl + '/jsonrpc';
+            const protocols = getKodiProtocols();
+            const kodiWebsocketUrl = `${protocols.ws}${Alpine.store('config').kodiJsonUrl}/jsonrpc`;
+
+            console.log(`*** Opening WebSocket connection to Kodi: ${kodiWebsocketUrl}`);
 
             const options = {
                 connectionTimeout: 1000,
@@ -95,15 +111,19 @@ window.kodi = () => {
                     clearInterval(pingInterval);
                     pingInterval = null;
                 }
+                if (this._updateTimeRemainingInterval) {
+                    clearInterval(this._updateTimeRemainingInterval);
+                    this._updateTimeRemainingInterval = null;
+                }
             }
 
-            setTimeout(() => {
+            this._connectTimeout = setTimeout(() => {
                 try {
                     rws = new WebSocket(kodiWebsocketUrl, [], options);
 
                     rws.addEventListener('open', () => {
                         console.log("Websocket [open]: Connection opened to Kodi")
-                        // DON'T set kodi available here - wait for actual playback
+                        // (DON'T set Kodi available here - wait for actual playback)
                         startHealthCheck();
                         // Check if Kodi is already playing, as soon as we connect...
                         sendKodiMessageOverWebSocket(rws, 'Player.GetActivePlayers', {});
@@ -134,6 +154,14 @@ window.kodi = () => {
                                 this._clearProperties();
                             }, 2000);
                             Alpine.store('isAvailable').kodi = false;
+                            if (this._updateTimeRemainingInterval) {
+                                clearInterval(this._updateTimeRemainingInterval);
+                                this._updateTimeRemainingInterval = null;
+                            }
+                            if (pingInterval) {
+                                clearInterval(pingInterval);
+                                pingInterval = null;
+                            }
                         });
                     }
 
@@ -145,6 +173,11 @@ window.kodi = () => {
                             clearInterval(pingInterval);
                             pingInterval = null;
                         }
+                        this._updateTimeRemainingInterval = setInterval(() => {
+                            if (rws && rws.readyState === 1) {
+                                sendKodiMessageOverWebSocket(rws, 'XBMC.GetInfoLabels', { labels });
+                            }
+                        }, 1000);
 
                         // Don't add custom reconnection logic here - let PartySocket handle it
                         console.log('WebSocket closed, PartySocket will handle reconnection automatically');
@@ -212,16 +245,15 @@ window.kodi = () => {
                             if (artworkUrl) {
                                 let artworkFromKodi = artworkUrl;
                                 console.log("Kodi returned:", artworkFromKodi);
-                                // remove a trailing slash if there is one
                                 artworkFromKodi = artworkFromKodi.replace(/\/$/, '');
                                 let kodiArtworkUrl;
+
                                 if (artworkFromKodi.startsWith("http")) {
-                                    console.log("Kodi artwork url starts with http (i.e. link to external service, like PVR server) - use directly");
+                                    console.log("Artwork URL is absolute - using directly");
                                     kodiArtworkUrl = artworkFromKodi;
-                                }
-                                else {
-                                    // noinspection HttpUrlsUsage
-                                    kodiArtworkUrl = `http://${Alpine.store('config').kodiWebUrl}/image/${encodeURIComponent(artworkFromKodi)}`;
+                                } else {
+                                    const protocols = getKodiProtocols();
+                                    kodiArtworkUrl = `${protocols.http}${Alpine.store('config').kodiWebUrl}/image/${encodeURIComponent(artworkFromKodi)}`;
                                 }
                                 console.log("Final artwork URL:", kodiArtworkUrl);
                                 this.artwork = kodiArtworkUrl;
@@ -332,6 +364,7 @@ window.kodi = () => {
                         if (json_result.method === "Player.OnStop") {
                             console.log("Kodi: Player.OnStop");
                             clearInterval(this._updateTimeRemainingInterval);
+                            this._updateTimeRemainingInterval = null;
                             this._clearProperties();
                             Alpine.store('isAvailable').kodi = false;
                         }
@@ -357,6 +390,15 @@ window.kodi = () => {
 
         // Add cleanup method for the workarounds
         cleanup() {
+            if (this._initDelay) {
+                clearTimeout(this._initDelay);
+                this._initDelay = null;
+            }
+            if (this._connectTimeout) {
+                clearTimeout(this._connectTimeout);
+                this._connectTimeout = null;
+            }
+
             if (pingInterval) {
                 clearInterval(pingInterval);
                 pingInterval = null;
@@ -367,14 +409,16 @@ window.kodi = () => {
                 this._updateTimeRemainingInterval = null;
             }
 
-            if (rws && rws.readyState < 2) { // CONNECTING(0) or OPEN(1)
+            if (rws) {
                 try {
-                    rws.close(1000, 'Component cleanup');
+                    // CONNECTING(0) or OPEN(1)
+                    if (rws.readyState < 2) rws.close(1000, 'Component cleanup');
                 } catch (e) {
                     console.log('WebSocket cleanup close failed:', e);
                 }
                 rws = null;
             }
+
 
             this._clearProperties();
             this._monitoringKodiPlayback = false;
@@ -383,7 +427,7 @@ window.kodi = () => {
 
         init() {
             // Kick this off two seconds after we fire up, just to give time for things to settle a bit...
-            setTimeout(() => {
+            this._initDelay = setTimeout(() => {
                 console.log("KodiComponent init");
                 this.createEnhancedKodiWebSocket(); // Use this.createEnhancedKodiWebSocket()
             }, 2000)
