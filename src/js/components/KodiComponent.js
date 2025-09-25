@@ -88,10 +88,10 @@ window.kodi = () => {
             const kodiWebsocketUrl = `${protocols.ws}${Alpine.store('config').kodiJsonUrl}/jsonrpc`;
 
             const options = {
-                connectionTimeout: 1000,
-                minReconnectionDelay: 500,
-                maxReconnectionDelay: 5000,
-                reconnectionDelayGrowFactor: 1.3,
+                connectionTimeout: 2000,        // Increased slightly for network stability
+                minReconnectionDelay: 3000,     // Start with 3 seconds instead of 500ms
+                maxReconnectionDelay: 30000,    // 30 seconds to handle reboots gracefully
+                reconnectionDelayGrowFactor: 1.5, // Slightly more aggressive backoff
                 maxEnqueuedMessages: 0,
                 debug: false,
             };
@@ -129,18 +129,7 @@ window.kodi = () => {
 
                     rws.addEventListener('error', (event) => {
                         if (options.debug) console.log('WebSocket [error]:', event);
-                        setTimeout(() => {
-                            this._clearProperties();
-                        }, 2000);
-                        Alpine.store('isAvailable').kodi = false;
-                        if (this._updateTimeRemainingInterval) {
-                            clearInterval(this._updateTimeRemainingInterval);
-                            this._updateTimeRemainingInterval = null;
-                        }
-                        if (pingInterval) {
-                            clearInterval(pingInterval);
-                            pingInterval = null;
-                        }
+                        this._handleDisconnectCleanup();
                     });
 
                     // Register offline handler once
@@ -148,29 +137,20 @@ window.kodi = () => {
                         this._offlineHandlerRegistered = true;
                         window.addEventListener('offline', () => {
                             if (options.debug) console.log('Network offline');
-                            setTimeout(() => {
-                                this._clearProperties();
-                            }, 2000);
-                            Alpine.store('isAvailable').kodi = false;
-                            if (this._updateTimeRemainingInterval) {
-                                clearInterval(this._updateTimeRemainingInterval);
-                                this._updateTimeRemainingInterval = null;
-                            }
-                            if (pingInterval) {
-                                clearInterval(pingInterval);
-                                pingInterval = null;
-                            }
+                            this._handleDisconnectCleanup();
                         });
                     }
 
                     rws.addEventListener('close', (event) => {
-                        console.log(`Kodi WebSocket Disconnected: ${event.code} - ${event.reason}`);
-                        Alpine.store('isAvailable').kodi = false;
+                        console.log(`Kodi WebSocket Disconnected:`, JSON.stringify({
+                            code: event.code,
+                            reason: event.reason || 'No reason provided',
+                            wasClean: event.wasClean,
+                            type: event.type
+                        }, null, 4));
 
-                        if (pingInterval) {
-                            clearInterval(pingInterval);
-                            pingInterval = null;
-                        }
+                        this._handleDisconnectCleanup({ useTimeout: false });
+
                         this._updateTimeRemainingInterval = setInterval(function () {
                             let labels;
                             // For PVR we get this info from the EPG...
@@ -201,15 +181,16 @@ window.kodi = () => {
 
                         let json_result = data;
                         console.log('Websocket [message]:');
-                        console.log(json_result);
+                        // This logs the whole json response from Kodi nicely and means we don't need to log this individually below
+                        console.log(JSON.stringify(json_result, null, 4));
 
                         //////////////////////////////////////////////////////
                         // RESULTS PROCESSING!
 
                         if (json_result.id === "Player.GetItem") {
-                            let results = json_result.result;
                             console.log("Processing result for: Player.GetItem");
-                            console.log(results);
+
+                            let results = json_result.result;
                             this.title = results.item.title || '';
                             this.season = (results.item.season ?? '');
                             this.episode = (results.item.episode ?? '');
@@ -297,14 +278,16 @@ window.kodi = () => {
 
                         // Get Time Remaining and Finish time - varies for PVR vs. other types of playback...
                         if (json_result.id === "XBMC.GetInfoLabels") {
-                            let results = json_result.result;
                             console.log("Processing result for: XBMC.GetInfoLabels");
+
+                            let results = json_result.result;
                             // Remaining time
                             const remainingTime = results["PVR.EpgEventRemainingTime"] || results["VideoPlayer.TimeRemaining"] || '';
                             const temp = typeof remainingTime === 'string' ? remainingTime.replace(/^0(?:0:0?)?/, '') : '';
                             this.timeRemainingAsTime = temp !== '' ? '-' + temp : '';
                             // Finish time
                             const finishTime = results["PVR.EpgEventFinishTime"] || results["Player.FinishTime"] || '';
+                            console.log("Time Remaining is " + this.timeRemainingAsTime);
                             console.log("Kodi finish time is " + finishTime);
                             this.finishTime = typeof finishTime === 'string'
                                 ? finishTime.replace(' PM','pm').replace(' AM','am')
@@ -322,7 +305,7 @@ window.kodi = () => {
                             // Responding to request to Kodi Player.GetActivePlayers
                             if (json_result.id === "Player.GetActivePlayers") {
                                 console.log("Processing result for: Player.GetActivePlayers")
-                                //console.log(json_result);
+
                                 if (json_result.result.length === 0) {
                                     console.log("Kodi is not playing.");
                                     return;
@@ -344,8 +327,8 @@ window.kodi = () => {
                             }
 
                             if (playerId === -1) {
-                                playerId = 1;
                                 console.log("Player ID was -1 (stream?) - let's assume video...");
+                                playerId = 1;
                             }
                             // Playing pictures?  Just stay on the weather display
                             if (playerId === 2) {
@@ -371,10 +354,7 @@ window.kodi = () => {
 
                         if (json_result.method === "Player.OnStop") {
                             console.log("Kodi: Player.OnStop");
-                            clearInterval(this._updateTimeRemainingInterval);
-                            this._updateTimeRemainingInterval = null;
-                            this._clearProperties();
-                            Alpine.store('isAvailable').kodi = false;
+                            this._handleDisconnectCleanup({ useTimeout: false });
                         }
 
                     });
@@ -387,7 +367,7 @@ window.kodi = () => {
         },
 
         _clearProperties() {
-            console.log("Clearing Kodi Properties");
+            // console.log("Clearing Kodi properties");
             this.artwork = null;
             this.title = '';
             this.season = '';
@@ -396,41 +376,32 @@ window.kodi = () => {
             this.timeRemainingAsTime = '';
         },
 
-        // Add cleanup method for the workarounds
-        cleanup() {
-            if (this._initDelay) {
-                clearTimeout(this._initDelay);
-                this._initDelay = null;
-            }
-            if (this._connectTimeout) {
-                clearTimeout(this._connectTimeout);
-                this._connectTimeout = null;
+        _handleDisconnectCleanup(options = {}) {
+            const {
+                useTimeout = true,
+                clearUpdateInterval = true,
+                clearPingInterval = true
+            } = options;
+
+            if (useTimeout) {
+                setTimeout(() => {
+                    this._clearProperties();
+                }, 2000);
+            } else {
+                this._clearProperties();
             }
 
-            if (pingInterval) {
-                clearInterval(pingInterval);
-                pingInterval = null;
-            }
+            Alpine.store('isAvailable').kodi = false;
 
-            if (this._updateTimeRemainingInterval) {
+            if (clearUpdateInterval && this._updateTimeRemainingInterval) {
                 clearInterval(this._updateTimeRemainingInterval);
                 this._updateTimeRemainingInterval = null;
             }
 
-            if (rws) {
-                try {
-                    // CONNECTING(0) or OPEN(1)
-                    if (rws.readyState < 2) rws.close(1000, 'Component cleanup');
-                } catch (e) {
-                    console.log('WebSocket cleanup close failed:', e);
-                }
-                rws = null;
+            if (clearPingInterval && pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
             }
-
-
-            this._clearProperties();
-            this._monitoringKodiPlayback = false;
-            Alpine.store('isAvailable').kodi = false;
         },
 
         init() {
