@@ -147,7 +147,7 @@ window.kodi = () => {
                             reason: event.reason || 'No reason provided',
                             wasClean: event.wasClean,
                             type: event.type
-                        }));
+                        }, null, 4));
                         Alpine.store('isAvailable').kodi = false;
 
                         this._handleDisconnectCleanup({useTimeout: false});
