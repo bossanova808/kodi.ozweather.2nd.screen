@@ -201,15 +201,16 @@ window.kodi = () => {
 
                         let json_result = data;
                         console.log('Websocket [message]:');
-                        console.log(json_result);
+                        // This logs the whole json response from Kodi nicely and means we don't need to log this individually below
+                        console.log(JSON.stringify(json_result, null, 4));
 
                         //////////////////////////////////////////////////////
                         // RESULTS PROCESSING!
 
                         if (json_result.id === "Player.GetItem") {
-                            let results = json_result.result;
                             console.log("Processing result for: Player.GetItem");
-                            console.log(results);
+
+                            let results = json_result.result;
                             this.title = results.item.title || '';
                             this.season = (results.item.season ?? '');
                             this.episode = (results.item.episode ?? '');
@@ -297,8 +298,9 @@ window.kodi = () => {
 
                         // Get Time Remaining and Finish time - varies for PVR vs. other types of playback...
                         if (json_result.id === "XBMC.GetInfoLabels") {
-                            let results = json_result.result;
                             console.log("Processing result for: XBMC.GetInfoLabels");
+
+                            let results = json_result.result;
                             // Remaining time
                             const remainingTime = results["PVR.EpgEventRemainingTime"] || results["VideoPlayer.TimeRemaining"] || '';
                             const temp = typeof remainingTime === 'string' ? remainingTime.replace(/^0(?:0:0?)?/, '') : '';
@@ -322,7 +324,7 @@ window.kodi = () => {
                             // Responding to request to Kodi Player.GetActivePlayers
                             if (json_result.id === "Player.GetActivePlayers") {
                                 console.log("Processing result for: Player.GetActivePlayers")
-                                //console.log(json_result);
+
                                 if (json_result.result.length === 0) {
                                     console.log("Kodi is not playing.");
                                     return;
@@ -344,8 +346,8 @@ window.kodi = () => {
                             }
 
                             if (playerId === -1) {
-                                playerId = 1;
                                 console.log("Player ID was -1 (stream?) - let's assume video...");
+                                playerId = 1;
                             }
                             // Playing pictures?  Just stay on the weather display
                             if (playerId === 2) {
