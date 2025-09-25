@@ -129,18 +129,7 @@ window.kodi = () => {
 
                     rws.addEventListener('error', (event) => {
                         if (options.debug) console.log('WebSocket [error]:', event);
-                        setTimeout(() => {
-                            this._clearProperties();
-                        }, 2000);
-                        Alpine.store('isAvailable').kodi = false;
-                        if (this._updateTimeRemainingInterval) {
-                            clearInterval(this._updateTimeRemainingInterval);
-                            this._updateTimeRemainingInterval = null;
-                        }
-                        if (pingInterval) {
-                            clearInterval(pingInterval);
-                            pingInterval = null;
-                        }
+                        this._handleDisconnectCleanup();
                     });
 
                     // Register offline handler once
@@ -148,29 +137,24 @@ window.kodi = () => {
                         this._offlineHandlerRegistered = true;
                         window.addEventListener('offline', () => {
                             if (options.debug) console.log('Network offline');
-                            setTimeout(() => {
-                                this._clearProperties();
-                            }, 2000);
-                            Alpine.store('isAvailable').kodi = false;
-                            if (this._updateTimeRemainingInterval) {
-                                clearInterval(this._updateTimeRemainingInterval);
-                                this._updateTimeRemainingInterval = null;
-                            }
-                            if (pingInterval) {
-                                clearInterval(pingInterval);
-                                pingInterval = null;
-                            }
+                            this._handleDisconnectCleanup();
                         });
                     }
 
                     rws.addEventListener('close', (event) => {
-                        console.log(`Kodi WebSocket Disconnected: ${event.code} - ${event.reason}`);
+                        console.log(`Kodi WebSocket Disconnected:`, {
+                            code: event.code,
+                            reason: event.reason || 'No reason provided',
+                            wasClean: event.wasClean,
+                            type: event.type
+                        });
                         Alpine.store('isAvailable').kodi = false;
 
-                        if (pingInterval) {
-                            clearInterval(pingInterval);
-                            pingInterval = null;
-                        }
+                        this._handleDisconnectCleanup({
+                            useTimeout: false,
+                            clearUpdateInterval: false
+                        });
+
                         this._updateTimeRemainingInterval = setInterval(function () {
                             let labels;
                             // For PVR we get this info from the EPG...
@@ -307,6 +291,7 @@ window.kodi = () => {
                             this.timeRemainingAsTime = temp !== '' ? '-' + temp : '';
                             // Finish time
                             const finishTime = results["PVR.EpgEventFinishTime"] || results["Player.FinishTime"] || '';
+                            console.log("Time Remaining is " + this.timeRemainingAsTime);
                             console.log("Kodi finish time is " + finishTime);
                             this.finishTime = typeof finishTime === 'string'
                                 ? finishTime.replace(' PM','pm').replace(' AM','am')
@@ -373,9 +358,8 @@ window.kodi = () => {
 
                         if (json_result.method === "Player.OnStop") {
                             console.log("Kodi: Player.OnStop");
-                            clearInterval(this._updateTimeRemainingInterval);
-                            this._updateTimeRemainingInterval = null;
                             this._clearProperties();
+                            this._handleDisconnectCleanup({ useTimeout: false });
                             Alpine.store('isAvailable').kodi = false;
                         }
 
@@ -396,6 +380,34 @@ window.kodi = () => {
             this.episode = '';
             this.finishTime = '';
             this.timeRemainingAsTime = '';
+        },
+
+        _handleDisconnectCleanup(options = {}) {
+            const {
+                useTimeout = true,
+                clearUpdateInterval = true,
+                clearPingInterval = true
+            } = options;
+
+            if (useTimeout) {
+                setTimeout(() => {
+                    this._clearProperties();
+                }, 2000);
+            } else {
+                this._clearProperties();
+            }
+
+            Alpine.store('isAvailable').kodi = false;
+
+            if (clearUpdateInterval && this._updateTimeRemainingInterval) {
+                clearInterval(this._updateTimeRemainingInterval);
+                this._updateTimeRemainingInterval = null;
+            }
+
+            if (clearPingInterval && pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
         },
 
         // Add cleanup method for the workarounds
