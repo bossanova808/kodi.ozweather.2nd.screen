@@ -148,9 +148,8 @@ window.kodi = () => {
                             wasClean: event.wasClean,
                             type: event.type
                         }, null, 4));
-                        Alpine.store('isAvailable').kodi = false;
 
-                        this._handleDisconnectCleanup({useTimeout: false});
+                        this._handleDisconnectCleanup({ useTimeout: false });
 
                         this._updateTimeRemainingInterval = setInterval(function () {
                             let labels;
@@ -355,9 +354,7 @@ window.kodi = () => {
 
                         if (json_result.method === "Player.OnStop") {
                             console.log("Kodi: Player.OnStop");
-                            this._clearProperties();
                             this._handleDisconnectCleanup({ useTimeout: false });
-                            Alpine.store('isAvailable').kodi = false;
                         }
 
                     });
@@ -370,7 +367,7 @@ window.kodi = () => {
         },
 
         _clearProperties() {
-            console.log("Clearing Kodi Properties");
+            // console.log("Clearing Kodi properties");
             this.artwork = null;
             this.title = '';
             this.season = '';
@@ -405,43 +402,6 @@ window.kodi = () => {
                 clearInterval(pingInterval);
                 pingInterval = null;
             }
-        },
-
-        // Add cleanup method for the workarounds
-        cleanup() {
-            if (this._initDelay) {
-                clearTimeout(this._initDelay);
-                this._initDelay = null;
-            }
-            if (this._connectTimeout) {
-                clearTimeout(this._connectTimeout);
-                this._connectTimeout = null;
-            }
-
-            if (pingInterval) {
-                clearInterval(pingInterval);
-                pingInterval = null;
-            }
-
-            if (this._updateTimeRemainingInterval) {
-                clearInterval(this._updateTimeRemainingInterval);
-                this._updateTimeRemainingInterval = null;
-            }
-
-            if (rws) {
-                try {
-                    // CONNECTING(0) or OPEN(1)
-                    if (rws.readyState < 2) rws.close(1000, 'Component cleanup');
-                } catch (e) {
-                    console.log('WebSocket cleanup close failed:', e);
-                }
-                rws = null;
-            }
-
-
-            this._clearProperties();
-            this._monitoringKodiPlayback = false;
-            Alpine.store('isAvailable').kodi = false;
         },
 
         init() {
