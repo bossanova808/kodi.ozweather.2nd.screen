@@ -88,10 +88,10 @@ window.kodi = () => {
             const kodiWebsocketUrl = `${protocols.ws}${Alpine.store('config').kodiJsonUrl}/jsonrpc`;
 
             const options = {
-                connectionTimeout: 1000,
-                minReconnectionDelay: 500,
-                maxReconnectionDelay: 5000,
-                reconnectionDelayGrowFactor: 1.3,
+                connectionTimeout: 2000,        // Increased slightly for network stability
+                minReconnectionDelay: 3000,     // Start with 3 seconds instead of 500ms
+                maxReconnectionDelay: 30000,    // 30 seconds to handle reboots gracefully
+                reconnectionDelayGrowFactor: 1.5, // Slightly more aggressive backoff
                 maxEnqueuedMessages: 0,
                 debug: false,
             };
@@ -142,18 +142,15 @@ window.kodi = () => {
                     }
 
                     rws.addEventListener('close', (event) => {
-                        console.log(`Kodi WebSocket Disconnected:`, {
+                        console.log(`Kodi WebSocket Disconnected:`, JSON.stringify({
                             code: event.code,
                             reason: event.reason || 'No reason provided',
                             wasClean: event.wasClean,
                             type: event.type
-                        });
+                        }));
                         Alpine.store('isAvailable').kodi = false;
 
-                        this._handleDisconnectCleanup({
-                            useTimeout: false,
-                            clearUpdateInterval: false
-                        });
+                        this._handleDisconnectCleanup({useTimeout: false});
 
                         this._updateTimeRemainingInterval = setInterval(function () {
                             let labels;
