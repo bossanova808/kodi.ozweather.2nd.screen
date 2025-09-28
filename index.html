@@ -36,7 +36,7 @@
 
 <!-- Weather is available, but Kodi is not actively playing -->
 
-            <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false" x-transition.duration.500ms>
+            <div x-show="$store.isAvailable.weather === true && $store.weather && store.weather.currentTemperature && $store.isAvailable.kodi === false " x-transition.duration.500ms>
 
                 <!-- Forthcoming High / Low -->
                 <div class="absolute top-0 left-0 mt-3 ml-4" >
@@ -87,7 +87,7 @@
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
                     <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
-                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
+                    <div x-show="$store.config.size!=='small' && $store.weather && $store.weather.currentFeelsLike" :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
                     <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
                 </div>
 
