@@ -438,6 +438,13 @@ window.weather = () => {
         async updateCurrentUV() {
             const stationRaw = Alpine.store('config').uvStation;
             const station = (stationRaw ?? "").toLowerCase();
+            if (!station.length) {
+                console.log("No UV station configured — skipping UV fetch");
+                this.uvNow = "";
+                this.uvIcon = "";
+                return;
+            }
+            
             const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
             console.log(`Getting current UV from: ${uvURL}`);
 
