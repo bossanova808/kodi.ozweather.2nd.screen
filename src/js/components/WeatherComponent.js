@@ -174,6 +174,8 @@ window.weather = () => {
             // set by updateObservations()
             this.currentTemperature = "";
             this.currentFeelsLike = "";
+            this.sunrise = "";
+            this.sunset = "";
             // set by updateForecast()
             this.icon = "";
             this.iconAlt = "";
@@ -188,7 +190,7 @@ window.weather = () => {
             this.rainChance = "";
             this.rainAmount = "";
             this.rainSince9am = "";
-            // set by updateUV() - but note this is not finished/disabled
+            // set by updateUV()
             this.uvNow = "";
             this.uvIcon = "";
         },
@@ -434,7 +436,8 @@ window.weather = () => {
         // Runs every weather update to get the current UV data
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
         async updateCurrentUV() {
-            const station = Alpine.store('config').uvStation;
+            const stationRaw = Alpine.store('config').uvStation;
+            const station = (stationRaw ?? "").toLowerCase();
             const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
             console.log(`Getting current UV from: ${uvURL}`);
 
