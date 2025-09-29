@@ -142,7 +142,6 @@ window.weather = () => {
         // set by updateForecast()
         icon: "",
         iconAlt: "",
-        rainIcon: Alpine.store('config').svgAnimatedPath + 'raindrop.svg',
         outlook: "",
         forecastHigh: "",
         forecastHighText: "",
@@ -178,7 +177,6 @@ window.weather = () => {
             // set by updateForecast()
             this.icon = "";
             this.iconAlt = "";
-            this.rainIcon = Alpine.store('config').svgAnimatedPath +'/raindrop.svg';
             this.outlook = "";
             this.forecastHigh = "";
             this.forecastHighText = "";
@@ -191,7 +189,6 @@ window.weather = () => {
             this.rainAmount = "";
             this.rainSince9am = "";
             // set by updateUV() - but note this is not finished/disabled
-            this.uv = ""
             this.uvNow = "";
             this.uvIcon = "";
         },
@@ -213,12 +210,7 @@ window.weather = () => {
             let result = null;
             // Get the initial location & weather data
             result = this.updateWeather(true)
-            // Give the above time to arrive before we actually show the weather...
-            // Only reveal once basic data is present
-            const revealWhenReady = () => {
-                if (this.currentTemperature) Alpine.store('isAvailable').weather = true;
-            };
-            setTimeout(revealWhenReady, 2000);
+
             // Then, update every 5 minutes (5 * 60 * 1000)
             setInterval(() => {
                 result = this.updateWeather(false)
@@ -385,7 +377,12 @@ window.weather = () => {
                     // Save the icon - we convert the short text and use that to get the icon, if we can
                     // as sometimes the BOM will return an outlook of 'Sunny' but an icon of 'shower' if there is even
                     // a small percentage of 0mm of rain or whatever.
-                    let iconFromShortText = this.outlook.toLowerCase().replace(" ","_").replace(".","").trim() + dayOrNight;
+                    const slug = this.outlook
+                      .toLowerCase()
+                      .replace(/\s+/g, "_")
+                      .replace(/[^\w-]/g, "")
+                      .trim();
+                    let iconFromShortText = slug + dayOrNight;
                     console.log(`iconFromShortText is ${iconFromShortText}`);
                     if (mapBOMConditionToWeatherIcon[iconFromShortText] !== undefined){
                         this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[iconFromShortText];
@@ -455,7 +452,6 @@ window.weather = () => {
                         console.log('Currently nighttime - not bothering with UV data');
                         this.uvNow = "";
                         this.uvIcon = "";
-                        this.uv = "";
                         return;
                     }
 
@@ -485,7 +481,6 @@ window.weather = () => {
 
                     if (uvValue !== null) {
                         // Store the raw UV data
-                        this.uv = { uv: uvValue };
                         this.uvNow = Math.round(uvValue);
                         let iconCode = (uvValue < 11) ? this.uvNow : 11;
                         this.uvIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${iconCode}.svg`;
@@ -502,14 +497,12 @@ window.weather = () => {
                     console.warn(`Could not find valid UV data for station: ${station}`);
                     this.uvNow = "";
                     this.uvIcon = "";
-                    this.uv = "";
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching UV data:', error);
                     this.uvNow = "";
                     this.uvIcon = "";
-                    this.uv = "";
                 });
         }
     }
