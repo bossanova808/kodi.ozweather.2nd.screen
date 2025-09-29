@@ -260,6 +260,7 @@ window.weather = () => {
                 catch (e) {
                     console.log("Error fetching weather location on startup - big problem!")
                     console.log(e);
+                    this._clearProperties();
                     Alpine.store('isAvailable').weather = false;
                     return;
                 }
@@ -270,6 +271,7 @@ window.weather = () => {
             catch (e) {
                 console.log("Error fetching observations.")
                 console.log(e);
+                this._clearProperties();
                 Alpine.store('isAvailable').weather = false;
                 return;
             }
@@ -279,6 +281,7 @@ window.weather = () => {
             catch (e) {
                 console.log("Error fetching forecast.")
                 console.log(e);
+                this._clearProperties();
                 Alpine.store('isAvailable').weather = false;
                 return;
             }
@@ -291,6 +294,9 @@ window.weather = () => {
                 // return;
             }
             // If we get here, at least some basic weather is available, so if we're not showing it, show it!
+            // If we have just current temperature, the showing that and the clock is better than just the clock
+            // Missing things will simply not display
+            // @coderabbitai no further gating necessary!!
             if (this.currentTemperature) {
                 Alpine.store('isAvailable').weather = true;
             }
@@ -379,12 +385,12 @@ window.weather = () => {
                     // Save the icon - we convert the short text and use that to get the icon, if we can
                     // as sometimes the BOM will return an outlook of 'Sunny' but an icon of 'shower' if there is even
                     // a small percentage of 0mm of rain or whatever.
-                    const slug = this.outlook
+                    const slugify = s => (s ?? "")
                       .toLowerCase()
                       .replace(/\s+/g, "_")
                       .replace(/[^\w-]/g, "")
                       .trim();
-                    let iconFromShortText = slug + dayOrNight;
+                    let iconFromShortText = slugify(this.outlook) + dayOrNight;
                     console.log(`iconFromShortText is ${iconFromShortText}`);
                     if (mapBOMConditionToWeatherIcon[iconFromShortText] !== undefined){
                         this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[iconFromShortText];
@@ -411,11 +417,12 @@ window.weather = () => {
                         this.rainAmount = 'no rain';
                         this.rainChance = 100 - this.rainChance;
                     }
-                    // UV Max
                     this.forecastUVMax = todayForecast.uv.max_index;
-                    this.forecastUVMaxText = mapUVValueToText[this.forecastUVMax];
-                    this.forecastUVMaxIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${this.forecastUVMax}.svg`;
-                    console.log(`Mapped max UV ${this.forecastUVMax} to icon ${this.forecastUVMaxIcon}`);
+                    // UV Max - if forecast over 11, clamp to 11 for description and icon purposes
+                    // Values over 11 are possible from the API, but descriptions and icons top out at Extreme/11
+                    const uvClampedMax = Math.min(Math.round(todayForecast.uv.max_index ?? 0), 11);
+                    this.forecastUVMaxText = mapUVValueToText[uvClampedMax];
+                    this.forecastUVMaxIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${uvClampedMax}.svg`;
                     // Max and Min
                     this.forecastLow = todayForecast.now.temp_later;
                     this.forecastLowText = todayForecast.now.later_label;
@@ -436,6 +443,8 @@ window.weather = () => {
         // Runs every weather update to get the current UV data
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
         async updateCurrentUV() {
+            const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
+
             const stationRaw = Alpine.store('config').uvStation;
             const station = (stationRaw ?? "").toLowerCase();
             if (!station.length) {
@@ -444,8 +453,7 @@ window.weather = () => {
                 this.uvIcon = "";
                 return;
             }
-            
-            const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
+
             console.log(`Getting current UV from: ${uvURL}`);
 
             return await fetch(uvURL, {
@@ -496,13 +504,14 @@ window.weather = () => {
                         this.uvIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${iconCode}.svg`;
 
                         // Add this debugging
-                        console.log(`UV SET: uvNow=${this.uvNow}, uvIcon=${this.uvIcon}, forecastUVMax=${this.forecastUVMax}`);
+                        console.log(`UV data: uvNow=${this.uvNow}, uvIcon=${this.uvIcon}, forecastUVMax=${this.forecastUVMax}`);
 
                         // Force Alpine to re-evaluate by using $nextTick
-                        this.$nextTick(() => {
-                            console.log('NextTick: UV data should be reactive now');
-                            console.log('Values:', this.uvNow, this.uvIcon, this.forecastUVMax);
-                        });
+                        // noinspection JSUnresolvedReference
+                        // this.$nextTick(() => {
+                        //     console.log('NextTick: UV data should be reactive now');
+                        //     console.log('Values:', this.uvNow, this.uvIcon, this.forecastUVMax);
+                        // });
                     } else {
                     console.warn(`Could not find valid UV data for station: ${station}`);
                     this.uvNow = "";
