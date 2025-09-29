@@ -446,14 +446,14 @@ window.weather = () => {
                     console.log(data);
 
                     // If it's nighttime, don't set UV data
-                    // const now = new Date();
-                    // if (this.sunrise && this.sunset && (now < this.sunrise || now > this.sunset)) {
-                    //     console.log('Currently nighttime - not bothering with UV data');
-                    //     this.uvNow = "";
-                    //     this.uvIcon = "";
-                    //     this.uv = "";
-                    //     return;
-                    // }
+                    const now = new Date();
+                    if (this.sunrise && this.sunset && (now < this.sunrise || now > this.sunset)) {
+                        console.log('Currently nighttime - not bothering with UV data');
+                        this.uvNow = "";
+                        this.uvIcon = "";
+                        this.uv = "";
+                        return;
+                    }
 
                     // Find the location element that matches our target station
                     const locations = data.querySelectorAll('location');
