@@ -10,6 +10,7 @@
     <title>Kodi Dash v1.0.0</title>
     <!-- Imports Tailwind & let Vite know about it -->
     <link rel="stylesheet" href="src/css/style.css">
+    <script src="https://kit.fontawesome.com/edc04f1dad.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -36,36 +37,37 @@
 
 <!-- Weather is available, but Kodi is not actively playing -->
 
-            <div x-show="$store.isAvailable.weather === true && $store.weather && store.weather.currentTemperature && $store.isAvailable.kodi === false " x-transition.duration.500ms>
+            <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false " x-transition.duration.500ms>
 
                 <!-- Forthcoming High / Low -->
                 <div class="absolute top-0 left-0 mt-3 ml-4" >
-                    <div :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap" x-text="`↑${forecastHigh}`"></div>
-                    <div :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`↓${forecastLow}`"></div>
+                    <div x-show="forecastHigh" :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-arrow-up align-middle text-[0.5em] pb-2 pr-2'></i>${forecastHigh}`"></div>
+                    <div x-show="forecastLow" :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-arrow-down align-middle text-[0.5em] pb-2 pr-2'></i>${forecastLow}`"></div>
                 </div>
 
                 <!-- Rain forecast & info -->
                 <div x-show="$store.config.size!=='small'" class="absolute top-0 right-0 mt-5 mr-5 max-w-3xl">
                     <div class="grid grid-cols-1 text-right">
-                        <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`🌧   ${rainChance}% chance of ${rainAmount}`"></div>
-                        <div x-show="showRainSince9am" :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`(${rainSince9am}mm since 9am)`"></div>
+                        <div x-show="rainChance && rainAmount" :class="$store.config.textSmall" class="font-semibold text-blue-200 whitespace-nowrap" x-html="`<i class='fa-solid fa-cloud-rain align-middle text-[0.65em] pb-2 pr-4'></i>${rainChance}% chance of ${rainAmount}`"></div>
+                        <div x-show="showRainSince9am" :class="$store.config.textSmall" class="font-semibold text-blue-200 whitespace-nowrap" x-text="`(${rainSince9am}mm since 9am)`"></div>
                     </div>
                 </div>
 
                 <!-- Outlook inc. icon -->
                 <div x-show="$store.config.size!=='small'" class="absolute bottom-0 left-0 mb-2">
                     <div class="grid grid-cols-1 justify-items-center">
-                        <img class="mb-14 pb-4 ml-6" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
-                        <div :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -75px;" x-text="outlook"></div>
+                        <img x-show="icon" class="mb-14 pb-2 ml-6" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
+                        <div x-show="outlook" :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -75px;" x-text="outlook"></div>
                     </div>
                 </div>
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
-                <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="`${currentTemperature}`"></div>
-                    <div :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
-                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
-                </div>
+                <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-center">
+                    <div x-show="forecastUVMax" :class="$store.config.textSmall" class="pb-1 font-bold italic text-amber-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-sun align-middle text-[0.5em] pb-2 mr-2'></i>${uvNow}<i class='fa-solid fa-arrow-up align-middle text-[0.5em] ml-2 pb-2'></i>${forecastUVMax}`"></div>
+                    <div x-show="currentTemperature" :class="$store.config.textMedium" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
+                    <div x-show="currentFeelsLike" :class="$store.config.textSmaller" class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(feels ${currentFeelsLike})`"></div>
+                    <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                 </div>
 
             </div>
 
@@ -74,22 +76,23 @@
             <div x-show="$store.isAvailable.kodi === true" x-transition.duration.500ms>
 
                 <!-- Artwork -->
-                <div :class="$store.config.kodiArtworkScale" class="absolute top-0 left align-middle">
+                <div x-show="artwork" :class="$store.config.kodiArtworkScale" class="absolute top-0 left align-middle">
                     <img class="object-contain h-screen"  :src="artwork" />
                 </div>
 
                 <!-- Time Remaining -->
                 <div class="z-50 absolute top-0 right-0 mt-5 mr-5 text-right" >
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></div>
-                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 pr-4 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`⬩${finishTime}`"></div>
+                    <div x-show="timeRemainingAsTime" :class="$store.config.textLarge" class="pb-2 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></div>
+                    <div x-show="finishTime && $store.config.size!=='small'" :class="$store.config.textSmaller" class="pb-10 pr-4 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-html="`<i class='fa-regular fa-circle-stop align-middle text-[0.5em] pb-1 pr-2'></i>${finishTime}`"></div>
                 </div>
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
-                    <div x-show="$store.config.size!=='small' && $store.weather && $store.weather.currentFeelsLike" :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
-                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
-                </div>
+                    <div x-show="forecastUVMax" :class="$store.config.textSmall" class="pb-1 font-bold italic text-amber-400 font-mono whitespace-nowrap" style="margin-right: 20px;" x-html="`<i class='fa-solid fa-sun align-middle text-[0.5em] pb-2 mr-2'></i>${uvNow}<i class='fa-solid fa-arrow-up align-middle text-[0.5em] ml-2 pb-2'></i>${forecastUVMax}`"></div>
+                    <div x-show="currentTemperature" :class="$store.config.textLarge" class="pb-3 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
+                    <div x-show="currentFeelsLike" :class="$store.config.textSmaller" class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(feels ${currentFeelsLike})`"></div>
+                    <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                 </div>
 
             </div>
 

@@ -48,6 +48,7 @@ Alpine.store('config', {
             this.textLarge = 'text-8xl';
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
+            this.textSmaller = 'text-5xl';
             this.weatherIconSize = 375;
             this.kodiArtworkScale = "max-w-sm"
         }
@@ -58,6 +59,7 @@ Alpine.store('config', {
             this.textLarge = 'text-7xl';
             this.textMedium = 'text-6xl';
             this.textSmall = 'text-5xl';
+            this.textSmaller = 'text-4xl';
             this.weatherIconSize = 375;
             this.kodiArtworkScale = "max-w-md"
         }
@@ -68,6 +70,7 @@ Alpine.store('config', {
             this.textLarge = 'text-8xl';
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
+            this.textSmaller = 'text-5xl';
             this.weatherIconSize = 375;
             this.kodiArtworkScale = "max-w-lg"
         }
@@ -84,7 +87,9 @@ Alpine.store('config', {
     textSoloClock: null,
     textSoloClockSeconds: null,
     textLarge: null,
+    textMedium: null,
     textSmall: null,
+    testSmaller: null,
     weatherIconSize: null,
     kodiArtworkScale: null,
     iconMarginCorrection: null,

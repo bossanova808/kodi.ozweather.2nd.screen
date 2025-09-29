@@ -1,3 +1,71 @@
+/**
+ * Location API Response Type
+ * @typedef {{
+ *   name: string,
+ *   data: {
+ *     latitude: number,
+ *     longitude: number
+ *   }
+ * }} LocationResponse
+ */
+
+/**
+ * Observations API Response Type
+ * @typedef {{
+ *   metadata: {
+ *     response_timestamp: string
+ *   },
+ *   data: {
+ *     temp: number,
+ *     temp_feels_like: number|null,
+ *     rain_since_9am: number
+ *   }
+ * }} ObservationsResponse
+ */
+
+/**
+ * Forecast Day Data Type
+ * @typedef {{
+ *   astronomical: {
+ *     sunrise_time: string,
+ *     sunset_time: string
+ *   },
+ *   short_text: string,
+ *   icon_descriptor: string,
+ *   rain: {
+ *     chance: number,
+ *     amount: {
+ *       min: number,
+ *       max: number|null
+ *     }
+ *   },
+ *   uv: {
+ *     max_index: number
+ *   },
+ *   now: {
+ *     temp_now: number,
+ *     temp_later: number,
+ *     now_label: string,
+ *     later_label: string
+ *   }
+ * }} ForecastDayData
+ */
+
+/**
+ * Forecast API Response Type
+ * @typedef {{
+ *   data: {
+ *     '0': ForecastDayData,
+ *     '1': ForecastDayData,
+ *     '2': ForecastDayData,
+ *     '3': ForecastDayData,
+ *     '4': ForecastDayData,
+ *     '5': ForecastDayData,
+ *     '6': ForecastDayData
+ *   }
+ * }} ForecastResponse
+ */
+
 
 const mapUVValueToText = {
     1: 'Very Low',
@@ -86,7 +154,8 @@ window.weather = () => {
         rainAmount: "",
         rainSince9am: "",
         showRainSince9am: true,
-        // set by updateUV() - but note this is not finished/disabled
+        sunrise: "",
+        sunset: "",
         uvNow: "",
         uvIcon: "",
 
@@ -98,7 +167,6 @@ window.weather = () => {
             this.forecast = "";
             this.observations = "";
             this.observationsFetchedAt = "";
-            this.uv = "";
             // set by updateLocation()
             this.locationName = "";
             this.locationLatitude = "";
@@ -117,10 +185,12 @@ window.weather = () => {
             this.forecastLowText = "";
             this.forecastUVMax = "";
             this.forecastUVMaxText = "";
+            this.forecastMaxIcon = "";
             this.rainChance = "";
             this.rainAmount = "";
             this.rainSince9am = "";
             // set by updateUV() - but note this is not finished/disabled
+            this.uv = ""
             this.uvNow = "";
             this.uvIcon = "";
         },
@@ -130,8 +200,13 @@ window.weather = () => {
             console.log("WeatherComponent init");
 
             console.log("Pre-caching weather icons")
-            for (const [key, value] of Object.entries(mapBOMConditionToWeatherIcon)) {
+            for (const [_key, value] of Object.entries(mapBOMConditionToWeatherIcon)) {
                 this.preload_image(value).then();
+            }
+            // Add UV icon pre-caching
+            console.log("Pre-caching UV icons")
+            for (let i = 0; i <= 11; i++) {
+                this.preload_image(`uv-index-${i}.svg`).then();
             }
 
             let result = null;
@@ -209,8 +284,18 @@ window.weather = () => {
                 Alpine.store('isAvailable').weather = false;
                 return;
             }
-            // If we get here, weather is available, so if we're not showing it, show it!
-            Alpine.store('isAvailable').weather = true;
+            try{
+                result = await this.updateCurrentUV();
+            }
+            catch (e) {
+                console.log("Error fetching UV.")
+                console.log(e);
+                // return;
+            }
+            // If we get here, at least some basic weather is available, so if we're not showing it, show it!
+            if (this.currentTemperature) {
+                Alpine.store('isAvailable').weather = true;
+            }
         },
 
         // Run only once at init, to get the location name, and latitude and longitude
@@ -225,6 +310,7 @@ window.weather = () => {
                 .then(response => response.json())
                 .then(json => {
                     console.log(JSON.stringify(json));
+                    /** @type {LocationResponse} */
                     this.location = json;
                     this.locationLatitude = this.location.data.latitude.toFixed(2);
                     this.locationLongitude = this.location.data.longitude.toFixed(2);
@@ -244,6 +330,7 @@ window.weather = () => {
                 .then(response => response.json())
                 .then(json => {
                     console.log(JSON.stringify(json));
+                    /** @type {ObservationsResponse} */
                     this.observations = json;
                     // Use this to keep track of when we last got observations, in case of network drop etc.
                     this.observationsFetchedAt =  new Date(this.observations.metadata.response_timestamp);
@@ -270,21 +357,24 @@ window.weather = () => {
                 .then(response => response.json())
                 .then(json => {
                     console.log(JSON.stringify(json));
+                    /** @type {ForecastResponse} */
                     this.forecast = json;
+                    /** @type {ForecastDayData} */
+                    const todayForecast = this.forecast.data['0'];
                     // Is it currently day or night?
                     // All UTC/ISO - e.g. 2023-02-03T19:38:01Z
                     let now = new Date();
-                    let sunrise = new Date(this.forecast.data['0'].astronomical.sunrise_time);
-                    let sunset = new Date(this.forecast.data['0'].astronomical.sunset_time);
+                    this.sunrise = new Date(todayForecast.astronomical.sunrise_time);
+                    this.sunset = new Date(todayForecast.astronomical.sunset_time);
                     let dayOrNight = '-night';
                     // console.log("Now", now);
                     // console.log("Sunrise", sunrise);
                     // console.log("Sunset", sunset);
-                    if ( now > sunrise && now < sunset ) {
+                    if ( now > this.sunrise && now < this.sunset ) {
                         dayOrNight = '-day';
                     }
                     // What is the general outlook?
-                    this.outlook = this.forecast.data['0'].short_text;
+                    this.outlook = todayForecast.short_text;
                     // Remove full stop on end
                     this.outlook = this.outlook.replace(/\.$/, '')
 
@@ -299,19 +389,19 @@ window.weather = () => {
                         console.log(`Mapped BOM Short Text [${this.outlook}] -> [${iconFromShortText}] -> to actual icon ${this.icon}`)
                     }
                     else {
-                        let bomIconDescriptor = this.forecast.data['0'].icon_descriptor + dayOrNight;
+                        let bomIconDescriptor = todayForecast.icon_descriptor + dayOrNight;
                         this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[bomIconDescriptor];
-                        this.iconAlt = this.forecast.data['0'].icon_descriptor;
+                        this.iconAlt = todayForecast.icon_descriptor;
                         console.log(`Mapped BOM Icon Descriptor [${this.iconAlt}] -> [${bomIconDescriptor}] -> to actual icon ${this.icon}`)
                     }
                     // Clean up the outlook text
 
 
                     // Rain
-                    this.rainChance = this.forecast.data['0'].rain.chance;
-                    if (this.forecast.data['0'].rain.amount.max != null)
+                    this.rainChance = todayForecast.rain.chance;
+                    if (todayForecast.rain.amount.max != null)
                     {
-                        this.rainAmount = this.forecast.data['0'].rain.amount.min + "-" + this.forecast.data['0'].rain.amount.max + "mm";
+                        this.rainAmount = todayForecast.rain.amount.min + "-" + todayForecast.rain.amount.max + "mm";
                     }
                     else {
                         // Instead of 5% of none, present it as 95% chance of no rain
@@ -319,15 +409,17 @@ window.weather = () => {
                         this.rainChance = 100 - this.rainChance;
                     }
                     // UV Max
-                    this.forecastUVMax = this.forecast.data['0'].uv.max_index;
+                    this.forecastUVMax = todayForecast.uv.max_index;
                     this.forecastUVMaxText = mapUVValueToText[this.forecastUVMax];
+                    this.forecastMaxIcon = `/${Alpine.store('config').svgAnimatedPath}uv-index-${this.forecastUVMax}.svg`;
+                    console.log(`Mapped max UV ${this.forecastUVMax} to icon ${this.forecastMaxIcon}`);
                     // Max and Min
-                    this.forecastLow = this.forecast.data['0'].now.temp_later;
-                    this.forecastLowText = this.forecast.data['0'].now.later_label;
-                    this.forecastHigh = this.forecast.data['0'].now.temp_now;
-                    this.forecastHighText = this.forecast.data['0'].now.now_label;
+                    this.forecastLow = todayForecast.now.temp_later;
+                    this.forecastLowText = todayForecast.now.later_label;
+                    this.forecastHigh = todayForecast.now.temp_now;
+                    this.forecastHighText = todayForecast.now.now_label;
 
-                    // Hack to deal with the bizarro BOM API 'Now' issue...
+                    // Hack to deal with the bizarre BOM API 'Now' behaviour...API design fail...
                     if (this.forecastLow > this.forecastHigh){
                         let temp = this.forecastLow;
                         this.forecastLow = this.forecastHigh;
@@ -338,29 +430,83 @@ window.weather = () => {
                 })
         },
 
-        // Runs every update to get the current UV data
-        // @TODO At the moment gets only 'Raw' UVI - need elevation and cloud cover to get scaled UVI
-        // async updateUV() {
-        //
-        //     // Uses my Cloudflare worker to bypass CORS restrictions
-        //     // https://github.com/Zibri/cloudflare-cors-anywhere
-        //     let uvURL = `https://cors.bossanova808.workers.dev/?https://www.uvindex.app/api/getUvCurrent?lat=${this.locationLatitude}&lng=${this.locationLongitude}`;
-        //     console.log(`Getting current UV from: ${uvURL}`);
-        //     return await fetch(uvURL, {
-        //         method: 'GET',
-        //         headers: {
-        //             'Accept': 'application/json',
-        //         },
-        //     })
-        //         .then(response => response.json())
-        //         .then(json => {
-        //             console.log(JSON.stringify(json));
-        //             this.uv = json;
-        //             this.uvNow = this.uv.uv.toFixed(0);
-        //             let iconCode = (this.uv < 11) ? this.uvNow  : 11;
-        //             this.uvIcon = `${svgAnimatedPath}uv-index-${iconCode}.svg`
-        //             console.log(`Mapped current UV ${this.uv.uv} to rounded ${this.uvNow} and icon ${this.uvIcon}`);
-        //         })
-        // },
+        // Runs every weather update to get the current UV data
+        // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
+        async updateCurrentUV() {
+            const station = "Melbourne";
+            const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
+            console.log(`Getting current UV from: ${uvURL}`);
+
+            return await fetch(uvURL, {
+                method: 'GET',
+            })
+                .then(response => response.text())
+                .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
+                .then(data => {
+                    console.log(data);
+
+                    // If it's nighttime, don't set UV data
+                    // const now = new Date();
+                    // if (this.sunrise && this.sunset && (now < this.sunrise || now > this.sunset)) {
+                    //     console.log('Currently nighttime - not bothering with UV data');
+                    //     this.uvNow = "";
+                    //     this.uvIcon = "";
+                    //     this.uv = "";
+                    //     return;
+                    // }
+
+                    // Find the location element that matches our target station
+                    const locations = data.querySelectorAll('location');
+                    let uvValue = null;
+
+                    for (let locationElement of locations) {
+                        // The location name is in the 'id' attribute
+                        const locationId = locationElement.getAttribute('id');
+                        console.log(`Checking station: ${locationId}`);
+
+                        if (locationId && locationId.toLowerCase().includes(station.toLowerCase())) {
+                            // Found our station, get the UV index
+                            const uvIndex = locationElement.querySelector('index')?.textContent?.trim();
+                            const status = locationElement.querySelector('status')?.textContent?.trim();
+
+                            console.log(`Station: ${locationId}, UV Index: ${uvIndex}, Status: ${status}`);
+
+                            if (uvIndex && uvIndex !== '' && !isNaN(parseFloat(uvIndex)) && status === 'ok') {
+                                uvValue = parseFloat(uvIndex);
+                                console.log(`Found valid UV value for ${locationId}: ${uvValue}`);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (uvValue !== null) {
+                        // Store the raw UV data
+                        this.uv = { uv: uvValue };
+                        this.uvNow = Math.round(uvValue);
+                        let iconCode = (uvValue < 11) ? this.uvNow : 11;
+                        this.uvIcon = `/${Alpine.store('config').svgAnimatedPath}uv-index-${iconCode}.svg`;
+
+                        // Add this debugging
+                        console.log(`UV SET: uvNow=${this.uvNow}, uvIcon=${this.uvIcon}, forecastUVMax=${this.forecastUVMax}`);
+
+                        // Force Alpine to re-evaluate by using $nextTick
+                        this.$nextTick(() => {
+                            console.log('NextTick: UV data should be reactive now');
+                            console.log('Values:', this.uvNow, this.uvIcon, this.forecastUVMax);
+                        });
+                    } else {
+                    console.warn(`Could not find valid UV data for station: ${station}`);
+                    this.uvNow = "";
+                    this.uvIcon = "";
+                    this.uv = "";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching UV data:', error);
+                    this.uvNow = "";
+                    this.uvIcon = "";
+                    this.uv = "";
+                });
+        }
     }
 };
