@@ -16,6 +16,7 @@ Alpine.store('config', {
 
         this.kodi = urlParams.get('kodi') || '127.0.0.1';
         this.bom = urlParams.get('bom') || false;
+        this.uvStation = urlParams.get('uv') || 'Melbourne';
         this.latitude = urlParams.get('latitude') || false;
         this.longitude = urlParams.get('longitude') || false;
         this.timezone = urlParams.get('timezone') || false;
@@ -39,6 +40,9 @@ Alpine.store('config', {
         }
         else {
             console.log("OpenMeteo Weather Location Latitude: ", this.latitude, " Longitude: ", this.longitude);
+        }
+        if (this.uvStation) {
+            console.log("UV station: ", this.uvStation);
         }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4
@@ -80,6 +84,7 @@ Alpine.store('config', {
     kodiWebUrl: false,
     kodiSSL: false,
     bom: false,
+    uvStation: false,
     latitude: false,
     longitude: false,
     timezone: false,
@@ -89,7 +94,7 @@ Alpine.store('config', {
     textLarge: null,
     textMedium: null,
     textSmall: null,
-    testSmaller: null,
+    textSmaller: null,
     weatherIconSize: null,
     kodiArtworkScale: null,
     iconMarginCorrection: null,

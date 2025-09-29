@@ -142,7 +142,7 @@ window.weather = () => {
         // set by updateForecast()
         icon: "",
         iconAlt: "",
-        rainIcon: Alpine.store('config').svgAnimatedPath +'/raindrop.svg',
+        rainIcon: Alpine.store('config').svgAnimatedPath + 'raindrop.svg',
         outlook: "",
         forecastHigh: "",
         forecastHighText: "",
@@ -150,6 +150,7 @@ window.weather = () => {
         forecastLowText: "",
         forecastUVMax: "",
         forecastUVMaxText: "",
+        forecastUVMaxIcon: "",
         rainChance: "",
         rainAmount: "",
         rainSince9am: "",
@@ -185,7 +186,7 @@ window.weather = () => {
             this.forecastLowText = "";
             this.forecastUVMax = "";
             this.forecastUVMaxText = "";
-            this.forecastMaxIcon = "";
+            this.forecastUVMaxIcon = "";
             this.rainChance = "";
             this.rainAmount = "";
             this.rainSince9am = "";
@@ -213,9 +214,11 @@ window.weather = () => {
             // Get the initial location & weather data
             result = this.updateWeather(true)
             // Give the above time to arrive before we actually show the weather...
-            setTimeout( () => {
-                Alpine.store('isAvailable').weather = true;
-            }, 2000);
+            // Only reveal once basic data is present
+            const revealWhenReady = () => {
+                if (this.currentTemperature) Alpine.store('isAvailable').weather = true;
+            };
+            setTimeout(revealWhenReady, 2000);
             // Then, update every 5 minutes (5 * 60 * 1000)
             setInterval(() => {
                 result = this.updateWeather(false)
@@ -232,9 +235,10 @@ window.weather = () => {
         // If more than 60 minutes old, there's a problem.
         checkWeatherRecentlyUpdated(){
             let now = new Date();
-            let weatherAge = Math.round(((now - this.observationsFetchedAt) / 1000) / 60) ;
+            if (!this.observationsFetchedAt) return;
+            let weatherAge = Math.round((now - this.observationsFetchedAt) / 60000);
             console.log(`Current weather data was fetched ${weatherAge} minutes ago`);
-            if (weatherAge > this.weatherConsideredStaleAtMinutes){
+            if (weatherAge > this.weatherConsideredStaleAtMinutes) {
                 console.log("Weather is stale.");
                 this._clearProperties();
                 Alpine.store('isAvailable').weather = false;
@@ -244,7 +248,7 @@ window.weather = () => {
         // Utility function to pre-cache all the weather icons after initial load
         async preload_image(img_svg) {
             let img = new Image();
-            img.src = `${Alpine.store('config').svgAnimatedPath}${img_svg}`;
+            img.src = Alpine.store('config').svgAnimatedPath + img_svg;
             console.log(`Pre-cached ${img.src}`);
         },
 
@@ -411,8 +415,8 @@ window.weather = () => {
                     // UV Max
                     this.forecastUVMax = todayForecast.uv.max_index;
                     this.forecastUVMaxText = mapUVValueToText[this.forecastUVMax];
-                    this.forecastMaxIcon = `/${Alpine.store('config').svgAnimatedPath}uv-index-${this.forecastUVMax}.svg`;
-                    console.log(`Mapped max UV ${this.forecastUVMax} to icon ${this.forecastMaxIcon}`);
+                    this.forecastUVMaxIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${this.forecastUVMax}.svg`;
+                    console.log(`Mapped max UV ${this.forecastUVMax} to icon ${this.forecastUVMaxIcon}`);
                     // Max and Min
                     this.forecastLow = todayForecast.now.temp_later;
                     this.forecastLowText = todayForecast.now.later_label;
@@ -433,7 +437,7 @@ window.weather = () => {
         // Runs every weather update to get the current UV data
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
         async updateCurrentUV() {
-            const station = "Melbourne";
+            const station = Alpine.store('config').uvStation;
             const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
             console.log(`Getting current UV from: ${uvURL}`);
 
@@ -484,7 +488,7 @@ window.weather = () => {
                         this.uv = { uv: uvValue };
                         this.uvNow = Math.round(uvValue);
                         let iconCode = (uvValue < 11) ? this.uvNow : 11;
-                        this.uvIcon = `/${Alpine.store('config').svgAnimatedPath}uv-index-${iconCode}.svg`;
+                        this.uvIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${iconCode}.svg`;
 
                         // Add this debugging
                         console.log(`UV SET: uvNow=${this.uvNow}, uvIcon=${this.uvIcon}, forecastUVMax=${this.forecastUVMax}`);

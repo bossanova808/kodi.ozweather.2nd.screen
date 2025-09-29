@@ -37,7 +37,7 @@
 
 <!-- Weather is available, but Kodi is not actively playing -->
 
-            <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false " x-transition.duration.500ms>
+            <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false" x-transition.duration.500ms>
 
                 <!-- Forthcoming High / Low -->
                 <div class="absolute top-0 left-0 mt-3 ml-4" >
@@ -76,7 +76,7 @@
             <div x-show="$store.isAvailable.kodi === true" x-transition.duration.500ms>
 
                 <!-- Artwork -->
-                <div x-show="artwork" :class="$store.config.kodiArtworkScale" class="absolute top-0 left align-middle">
+                <div x-show="artwork" :class="$store.config.kodiArtworkScale" class="absolute top-0 left-0 align-middle">
                     <img class="object-contain h-screen"  :src="artwork" />
                 </div>
 
@@ -86,7 +86,7 @@
                     <div x-show="finishTime && $store.config.size!=='small'" :class="$store.config.textSmaller" class="pb-10 pr-4 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-html="`<i class='fa-regular fa-circle-stop align-middle text-[0.5em] pb-1 pr-2'></i>${finishTime}`"></div>
                 </div>
 
-                <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
+                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
                     <div x-show="uvNow && forecastUVMax" :class="$store.config.textSmall" class="pb-1 mr-2 font-bold italic text-amber-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-sun align-middle text-[0.5em] pb-2 mr-2'></i>${uvNow}<i class='fa-solid fa-arrow-up align-middle text-[0.5em] ml-2 pb-2'></i>${forecastUVMax}`"></div>
                     <div x-show="currentTemperature" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
