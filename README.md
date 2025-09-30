@@ -30,12 +30,16 @@ _(And, remember, you're normally viewing this from 3 to 5 metres away, displayed
 
 Above, displaying the weather information:
 
+_(n.b. this shows an Australian BOM example, OpenMeteo display is simpler)_
+
 * Today's forecast High/Low - if before 6pm...
-* ...otherwise, the forecast Overnight Low/Tomorrow High
-* Rain Chance/Amount
-* Actual rain recorded since 9am
+* ...otherwise, the forecast Overnight Low/Tomorrow High  (i.e. Next High & Next Low)
+* (If between sunrise and sunset, and UV is available for your location) - current UV
+* (If between sunrise and sunset, and UV is available for your location) - predicted max. UV
+* Rain Chance/Amount Predicted
+* Actual rain since 9am
 * Current Temperature
-* (Current 'Feels Like' Temperature)
+* Current 'Feels Like' Temperature
 * Current Time
 * Weather Outlook Icon (animated weather icon)
 * Weather Outlook Text
@@ -46,16 +50,22 @@ Above, displaying Kodi 'Now Playing' information:
 
 * Kodi Artwork - e.g. poster / thumbnail / channel logo / album cover etc
 * Time Remaining
-* (not shown, added later) Programme End Time
+* Programme End Time
 * Current Temperature
-* (Current 'Feels Like' Temperature)
+* Current 'Feels Like' Temperature
 * Current Time
 
-For my own lounge-room, I am using a Samsung A7 Lite (about AU$185 from OfficeWorks IIRC) - which is simple but high quality 8-inch tablet, and runs for weeks/months at a time, with complete stability.  
+## Hardware
+
+For my own lounge-room, I am using a Samsung A7 Lite (about AU$185 from OfficeWorks, IIRC) - which is simple but relatively high quality 8-inch tablet, and runs for weeks/months at a time, with complete stability.  I have also used a MiPad 4, which can often be found secondhand.
 
 (With my mobile [Kodi-a-go-go travelling setup](https://github.com/bossanova808/MediaCopier), I use a much older Samsung A6 7-inch tablet, and that also works very well, although it's wireless has always been a bit flakey...). 
 
-In practise, I use a Google Play store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the 2nd Screen app URL - but really any tablet and basic browser should work (including iOS devices).  
+I and friends/family have also used a variety of phones.  Really anything that runs a browser will get you going, it's a great way to re-purpose some old hardware you have lying around in a drawer somewhere...
+
+## Software
+
+In practise, I use a Google Play Store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the 2nd Screen app URL - but really any tablet and basic somewhat modern browser should work (including iOS devices of course).  
 
 _(Fully Kiosk is just a very handy app helps with things like keeping the screen always on, and automatically re-starting the app should there be a network connection issue, and so on.  I bought a license for it (AU $15) because I am using it extensively, but the free version is all you actually need to get going with this.  If you want more advanced features like on/off schedules for the tablet, you do need the paid version.)_
 
@@ -68,8 +78,9 @@ This project uses, and sends thanks to, these particular giants:
 * [Vite](https://vitejs.dev/) for dev/building/packaging
 * [Alpine.js](https://alpinejs.dev/) for reactivity
 * [Tailwind CSS](https://tailwindcss.com/) for CSS
-* (Either) [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
-* (Or) [OpenMeteo](https://open-meteo.com/) for weather data
+* (Either) [OpenMeteo](https://open-meteo.com/) for weather data
+* (Or) [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
+* [ARPANSA](https://www.arpansa.gov.au/)) for live UV data
 * [Meteocons](https://bas.dev/work/meteocons) for the weather icons
 * [Kodi](https://kodi.tv/) - my media player of choice (since 2008!)
 
