@@ -161,7 +161,7 @@ E.g. `bom=r1r11df`
 
 (UV observations courtesy of [ARPANSA](https://www.arpansa.gov.au/))
 
-If your location has live UV (ultraviolet) data available from the list here: [ARPANSA](https://uvdata.arpansa.gov.au/xml/uvvalues.xml), you can add a parameter for live UV data.
+If your location has live UV (ultraviolet) data available from the list here: [ARPANSA](https://uvdata.arpansa.gov.au/xml/uvvalues.xml), you can add a parameter for live UV data (n.b. this data only displays between sunrise and sunset!).
 
 `uv=` (default is no value)
 
