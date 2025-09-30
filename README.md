@@ -167,7 +167,7 @@ If your location has live UV (ultraviolet) data available from the list here: [A
 
 E.g.
 
-`uv=Melbbourne`
+`uv=Melbourne`
 
 #### UI Size
 
