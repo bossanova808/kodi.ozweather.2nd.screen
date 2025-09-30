@@ -9,6 +9,11 @@ export default {
         manifest: true,
         minify: 'terser', // Slower, but trying for older iOS support - https://github.com/vitejs/vite/issues/6506
     },
+    server: {
+        watch: {
+            usePolling: true
+        }
+    },
     plugins: [
         tailwindcss(),
         legacy({

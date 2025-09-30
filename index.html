@@ -10,7 +10,14 @@
     <title>Kodi Dash v1.0.0</title>
     <!-- Imports Tailwind & let Vite know about it -->
     <link rel="stylesheet" href="src/css/style.css">
+
+    <!-- Font Awesome icons -->
     <script src="https://kit.fontawesome.com/edc04f1dad.js" crossorigin="anonymous"></script>
+
+    <!-- Google Icons     -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=vertical_align_top" />
+
+
 </head>
 <body>
 
@@ -39,11 +46,25 @@
 
             <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false" x-transition.duration.500ms>
 
-                <!-- Forthcoming High / Low -->
-                <div class="absolute top-0 left-0 mt-3 ml-4" >
-                    <div x-show="forecastHigh" :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-arrow-up align-middle text-[0.5em] pb-2 pr-2'></i>${forecastHigh}`"></div>
-                    <div x-show="forecastLow" :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-arrow-down align-middle text-[0.5em] pb-2 pr-2'></i>${forecastLow}`"></div>
-                </div>
+            <!-- Forthcoming High / Low with UV -->
+<div class="absolute top-0 left-0 mt-3 ml-4 flex gap-6" >
+    <div>
+        <div x-show="forecastHigh" :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-arrow-up align-middle text-[0.5em] pb-2 pr-2'></i>${forecastHigh}`"></div>
+        <div x-show="forecastLow" :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-arrow-down align-middle text-[0.5em] pb-2 pr-2'></i>${forecastLow}`"></div>
+    </div>
+
+    <div>
+        <!-- Current UV -->
+        <div x-show="uvNow" :class="$store.config.textMedium" class="font-bold text-amber-400 font-mono whitespace-nowrap">
+            <svg class='inline-block align-middle h-[0.85em] w-[0.85em] pb-2 pr-1 fill-current' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'><path d='M210.2 53.9C217.6 50.8 226 51.7 232.7 56.1L320.5 114.3L408.3 56.1C415 51.7 423.4 50.9 430.8 53.9C438.2 56.9 443.4 63.5 445 71.3L465.9 174.5L569.1 195.4C576.9 197 583.5 202.4 586.5 209.7C589.5 217 588.7 225.5 584.3 232.2L526.1 320L584.3 407.8C588.7 414.5 589.5 422.9 586.5 430.3C583.5 437.7 576.9 443.1 569.1 444.6L465.8 465.4L445 568.7C443.4 576.5 438 583.1 430.7 586.1C423.4 589.1 414.9 588.3 408.2 583.9L320.4 525.7L232.6 583.9C225.9 588.3 217.5 589.1 210.1 586.1C202.7 583.1 197.3 576.5 195.8 568.7L175 465.4L71.7 444.5C63.9 442.9 57.3 437.5 54.3 430.2C51.3 422.9 52.1 414.4 56.5 407.7L114.7 320L56.5 232.2C52.1 225.5 51.3 217.1 54.3 209.7C57.3 202.3 63.9 196.9 71.7 195.4L175 174.6L195.9 71.3C197.5 63.5 202.9 56.9 210.2 53.9zM239.6 320C239.6 275.6 275.6 239.6 320 239.6C364.4 239.6 400.4 275.6 400.4 320C400.4 364.4 364.4 400.4 320 400.4C275.6 400.4 239.6 364.4 239.6 320zM448.4 320C448.4 249.1 390.9 191.6 320 191.6C249.1 191.6 191.6 249.1 191.6 320C191.6 390.9 249.1 448.4 320 448.4C390.9 448.4 448.4 390.9 448.4 320z'/></svg><span class='inline-block text-right' :class="String(uvNow).length >= 2 || String(forecastUVMax).length >= 2 ? 'min-w-[2ch]' : ''" x-text="uvNow"></span>
+        </div>
+
+        <!-- Maximum UV -->
+        <div x-show="forecastUVMax" :class="$store.config.textMedium" class="font-bold text-amber-400 font-mono whitespace-nowrap">
+            <svg class='inline-block align-middle h-[0.85em] w-[0.85em] pb-2 pr-1 fill-current' xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'><path d='M160-760v-80h640v80H160Zm280 640v-408L336-424l-56-56 200-200 200 200-56 56-104-104v408h-80Z'/></svg><span class='inline-block text-right' :class="String(uvNow).length >= 2 || String(forecastUVMax).length >= 2 ? 'min-w-[2ch]' : ''" x-text="forecastUVMax"></span>
+        </div>
+    </div>
+</div>
 
                 <!-- Rain forecast & info -->
                 <div x-show="$store.config.size!=='small'" class="absolute top-0 right-0 mt-5 mr-5 max-w-3xl">
@@ -63,7 +84,6 @@
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
-                    <div x-show="uvNow && forecastUVMax" :class="$store.config.textSmall" class="pb-1 mr-2 font-bold italic text-amber-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-sun align-middle text-[0.5em] pb-2 mr-2'></i>${uvNow}<i class='fa-solid fa-arrow-up align-middle text-[0.5em] ml-2 pb-2'></i>${forecastUVMax}`"></div>
                     <div x-show="currentTemperature" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
                     <div x-show="$store.config.size!=='small' && currentFeelsLike" :class="$store.config.textSmaller" class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(feels ${currentFeelsLike})`"></div>
                     <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
@@ -88,7 +108,6 @@
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
                 <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
-                    <div x-show="uvNow && forecastUVMax" :class="$store.config.textSmall" class="pb-1 mr-2 font-bold italic text-amber-400 font-mono whitespace-nowrap" x-html="`<i class='fa-solid fa-sun align-middle text-[0.5em] pb-2 mr-2'></i>${uvNow}<i class='fa-solid fa-arrow-up align-middle text-[0.5em] ml-2 pb-2'></i>${forecastUVMax}`"></div>
                     <div x-show="currentTemperature" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
                     <div x-show="$store.config.size!=='small' && currentFeelsLike" :class="$store.config.textSmaller" class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(feels ${currentFeelsLike})`"></div>
                     <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
