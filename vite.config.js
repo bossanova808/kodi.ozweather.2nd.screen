@@ -17,7 +17,7 @@ export default {
         VitePWA({
             registerType: 'autoUpdate',
             devOptions: {
-                enabled: false   // Disable PWA in dev - break HMR, requiring shift-reload to see new code changes...
+                enabled: false   // Disable PWA in dev - breaks HMR, requiring shift-reload to see new code changes...
             },
             manifest: {
                 // caches the assets/icons mentioned (assets/* includes all the assets present in your src/ directory)
