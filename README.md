@@ -157,6 +157,18 @@ You'll get back some JSON, e.g.
 
 E.g. `bom=r1r11df`
 
+#### Ultraviolet Data for Australian Cities
+
+(UV observations courtesy of [ARPANSA](https://www.arpansa.gov.au/))
+
+If your location has live UV (ultraviolet) data available from the list here: [ARPANSA](https://uvdata.arpansa.gov.au/xml/uvvalues.xml), you can add a parameter for live UV data.
+
+`uv=` (default is no value)
+
+E.g.
+
+`uv=Melbourne`
+
 #### UI Size
 
 `size=` UI size.  One of `small` `medium` or `large`.  Default is `large`. 

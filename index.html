@@ -6,8 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-<!--     <link rel="icon" href="/images/kodi.svg"> -->
-    <title>Kodi Dash v1.0.0</title>
+    <title>Kodi Dash v2.0.0</title>
     <!-- Imports Tailwind & let Vite know about it -->
     <link rel="stylesheet" href="src/css/style.css">
 </head>
@@ -38,33 +37,62 @@
 
             <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false" x-transition.duration.500ms>
 
-                <!-- Forthcoming High / Low -->
-                <div class="absolute top-0 left-0 mt-3 ml-4" >
-                    <div :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap" x-text="`↑${forecastHigh}`"></div>
-                    <div :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap" x-text="`↓${forecastLow}`"></div>
+                <!-- Forthcoming High / Low with UV -->
+                <div class="absolute top-0 left-0 mt-3 ml-4 flex gap-6" >
+                    <div>
+                        <div x-show="forecastHigh !== '' && forecastHigh !== null && forecastHigh !== undefined" :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap">
+                            <svg class="inline-block align-middle h-[0.85em] w-[0.85em] pb-2 mr-[0.1em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M342.6 81.4C330.1 68.9 309.8 68.9 297.3 81.4L137.3 241.4C124.8 253.9 124.8 274.2 137.3 286.7C149.8 299.2 170.1 299.2 182.6 286.7L288 181.3L288 552C288 569.7 302.3 584 320 584C337.7 584 352 569.7 352 552L352 181.3L457.4 286.7C469.9 299.2 490.2 299.2 502.7 286.7C515.2 274.2 515.2 253.9 502.7 241.4L342.7 81.4z"/></svg><span class="inline-block min-w-[2ch] text-right" x-text="forecastHigh"></span>
+                        </div>
+                        <div x-show="forecastLow !== '' && forecastLow !== null && forecastLow !== undefined" :class="$store.config.textMedium" class="font-bold text-blue-200 font-mono whitespace-nowrap">
+                            <svg class="inline-block align-middle h-[0.85em] w-[0.85em] pb-2 mr-[0.1em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M297.4 566.6C309.9 579.1 330.2 579.1 342.7 566.6L502.7 406.6C515.2 394.1 515.2 373.8 502.7 361.3C490.2 348.8 469.9 348.8 457.4 361.3L352 466.7L352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 466.7L182.6 361.3C170.1 348.8 149.8 348.8 137.3 361.3C124.8 373.8 124.8 394.1 137.3 406.6L297.3 566.6z"/></svg><span class="inline-block min-w-[2ch] text-right" x-text="forecastLow"></span>
+                        </div>
+                    </div>
+
+                    <div x-show="uvNow !== '' && uvNow !== null && uvNow !== undefined && forecastUVMax !== null && forecastUVMax !== undefined">
+                        <!-- Current UV -->
+                        <div x-show="uvNow !== '' && uvNow !== null && uvNow !== undefined" :class="$store.config.textMedium" class="font-bold text-amber-400 font-mono whitespace-nowrap">
+                            <svg class='inline-block align-middle h-[0.85em] w-[0.85em] pb-2 pr-1 fill-current' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'><path d='M210.2 53.9C217.6 50.8 226 51.7 232.7 56.1L320.5 114.3L408.3 56.1C415 51.7 423.4 50.9 430.8 53.9C438.2 56.9 443.4 63.5 445 71.3L465.9 174.5L569.1 195.4C576.9 197 583.5 202.4 586.5 209.7C589.5 217 588.7 225.5 584.3 232.2L526.1 320L584.3 407.8C588.7 414.5 589.5 422.9 586.5 430.3C583.5 437.7 576.9 443.1 569.1 444.6L465.8 465.4L445 568.7C443.4 576.5 438 583.1 430.7 586.1C423.4 589.1 414.9 588.3 408.2 583.9L320.4 525.7L232.6 583.9C225.9 588.3 217.5 589.1 210.1 586.1C202.7 583.1 197.3 576.5 195.8 568.7L175 465.4L71.7 444.5C63.9 442.9 57.3 437.5 54.3 430.2C51.3 422.9 52.1 414.4 56.5 407.7L114.7 320L56.5 232.2C52.1 225.5 51.3 217.1 54.3 209.7C57.3 202.3 63.9 196.9 71.7 195.4L175 174.6L195.9 71.3C197.5 63.5 202.9 56.9 210.2 53.9zM239.6 320C239.6 275.6 275.6 239.6 320 239.6C364.4 239.6 400.4 275.6 400.4 320C400.4 364.4 364.4 400.4 320 400.4C275.6 400.4 239.6 364.4 239.6 320zM448.4 320C448.4 249.1 390.9 191.6 320 191.6C249.1 191.6 191.6 249.1 191.6 320C191.6 390.9 249.1 448.4 320 448.4C390.9 448.4 448.4 390.9 448.4 320z'/></svg><span class='inline-block text-right' :class="String(uvNow).length >= 2 || String(forecastUVMax).length >= 2 ? 'min-w-[2ch]' : ''" x-text="uvNow"></span>
+                        </div>
+
+                        <!-- Maximum UV -->
+                        <div x-show="forecastUVMax !== '' && forecastUVMax !== null && forecastUVMax !== undefined" :class="$store.config.textMedium" class="font-bold text-amber-400 font-mono whitespace-nowrap">
+                            <svg class='inline-block align-middle h-[0.85em] w-[0.85em] pb-2 pr-1 fill-current' xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'><path d='M160-760v-80h640v80H160Zm280 640v-408L336-424l-56-56 200-200 200 200-56 56-104-104v408h-80Z'/></svg><span class='inline-block text-right' :class="String(uvNow).length >= 2 || String(forecastUVMax).length >= 2 ? 'min-w-[2ch]' : ''" x-text="forecastUVMax"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Rain forecast & info -->
-                <div x-show="$store.config.size!=='small'" class="absolute top-0 right-0 mt-5 mr-5 max-w-3xl">
+                <div class="absolute top-0 right-0 mt-5 mr-5 max-w-3xl">
                     <div class="grid grid-cols-1 text-right">
-                        <div :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`🌧   ${rainChance}% chance of ${rainAmount}`"></div>
-                        <div x-show="showRainSince9am" :class="$store.config.textSmall" class="font-semibold text-amber-200 whitespace-nowrap" x-text="`(${rainSince9am}mm since 9am)`"></div>
+                        <!-- Rain chance & amount -->
+                        <div x-show="rainChance !== null && rainChance !== undefined && rainAmount !== '' && rainAmount !== null && rainAmount !== undefined" :class="$store.config.textSmall" class="font-semibold text-blue-200 whitespace-nowrap">
+                            <span x-text="`${rainChance}% of ${rainAmount}`"></span><svg class='inline-block align-middle h-[1.2em] w-[1.2em] pb-2 pl-4 fill-current' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'><path d='M160 384C107 384 64 341 64 288C64 245.5 91.6 209.4 129.9 196.8C128.6 190.1 128 183.1 128 176C128 114.1 178.1 64 240 64C283.1 64 320.5 88.3 339.2 124C353.9 106.9 375.7 96 400 96C444.2 96 480 131.8 480 176C480 181.5 479.4 186.8 478.4 192C478.9 192 479.5 192 480 192C533 192 576 235 576 288C576 341 533 384 480 384L160 384zM161.6 452.2C162.7 449.7 165.2 448 168 448C170.8 448 173.3 449.6 174.4 452.2L204.6 520.4C206.8 525.5 208 530.9 208 536.4C208 558.3 189.9 576 168 576C146.1 576 128 558.3 128 536.4C128 530.9 129.2 525.4 131.4 520.4L161.6 452.2zM313.6 452.2C314.7 449.7 317.2 448 320 448C322.8 448 325.3 449.6 326.4 452.2L356.6 520.4C358.8 525.5 360 530.9 360 536.4C360 558.3 341.9 576 320 576C298.1 576 280 558.3 280 536.4C280 530.9 281.2 525.4 283.4 520.4L313.6 452.2zM435.4 520.4L465.6 452.2C466.7 449.7 469.2 448 472 448C474.8 448 477.3 449.6 478.4 452.2L508.6 520.4C510.8 525.5 512 530.9 512 536.4C512 558.3 493.9 576 472 576C450.1 576 432 558.3 432 536.4C432 530.9 433.2 525.4 435.4 520.4z'/></svg>
+                        </div>
+
+                        <!-- Rain since 9am -->
+                        <div x-show="showRainSince9am" :class="$store.config.textSmall" class="font-semibold text-blue-200 whitespace-nowrap">
+                            <span x-text="`${rainSince9am}mm`"></span><svg class='inline-block align-middle h-[1.2em] w-[1.2em] pb-2 pl-4 fill-current' style='stroke: currentColor; stroke-width: 0.5;' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M28,4a2.0023,2.0023,0,0,0-2,2V8H24a3.4376,3.4376,0,0,1-3.0513-2.3164A1.007,1.007,0,0,0,20,5a.9894.9894,0,0,0-.9468.6787A3.44,3.44,0,0,1,16,8a3.4376,3.4376,0,0,1-3.0513-2.3164A1.007,1.007,0,0,0,12,5a.971.971,0,0,0-.9468.6787A3.44,3.44,0,0,1,8,8H6V6A2.0023,2.0023,0,0,0,4,4H2V6H4V26a2.0023,2.0023,0,0,0,2,2H26a2.0023,2.0023,0,0,0,2-2V6h2V4ZM6,26V22h4V20H6V16h4V14H6V10H8a4.9316,4.9316,0,0,0,4-1.9873,5.0192,5.0192,0,0,0,8,0A4.9316,4.9316,0,0,0,24,10h2V26Z'/></svg>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Outlook inc. icon -->
                 <div x-show="$store.config.size!=='small'" class="absolute bottom-0 left-0 mb-2">
                     <div class="grid grid-cols-1 justify-items-center">
-                        <img class="mb-14 pb-4 ml-6" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
-                        <div :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -75px;" x-text="outlook"></div>
+                        <img x-show="icon" class="mb-14 pb-2 ml-6" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
+                        <div x-show="outlook" :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -75px;" x-text="outlook"></div>
                     </div>
                 </div>
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
-                <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="`${currentTemperature}`"></div>
-                    <div :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
-                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
+                    <div x-show="currentTemperature !== '' && currentTemperature !== null && currentTemperature !== undefined" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
+                    <div x-show="$store.config.size!=='small' && currentFeelsLike !== '' && currentFeelsLike !== null && currentFeelsLike !== undefined"
+                          :class="$store.config.textSmall"
+                          class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap">
+                        <svg class="inline-block align-middle h-[0.85em] w-[0.85em] pb-1 mr-[0.2em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M750-614q-27 27-62 41t-70 14q-35 0-69-13.5T488-614l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-689l-75 75-57-57 75-75q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-746l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-671l75-75 57 57-75 75Zm0 200q-27 27-61.5 40.5T619-360q-35 0-69.5-13.5T488-414l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-489l-75 75-57-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-546l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-471l75-75 57 57-75 75Zm-1 200q-27 27-61 40.5T619-160q-35 0-69.5-13.5T488-214l-76-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T266-289l-75 75-56-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-346l75 75q16 16 35.5 23.5T619-240q20 0 39-7.5t35-23.5l75-75 56 57-75 75Z"/></svg><span x-text="currentFeelsLike" class="inline-block align-middle"></span>
+                    </div>
+                    <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
                 </div>
 
             </div>
@@ -74,21 +102,29 @@
             <div x-show="$store.isAvailable.kodi === true" x-transition.duration.500ms>
 
                 <!-- Artwork -->
-                <div :class="$store.config.kodiArtworkScale" class="absolute top-0 left align-middle">
+                <div x-show="artwork" :class="$store.config.kodiArtworkScale" class="absolute top-0 left-0 align-middle">
                     <img class="object-contain h-screen"  :src="artwork" />
                 </div>
 
                 <!-- Time Remaining -->
                 <div class="z-50 absolute top-0 right-0 mt-5 mr-5 text-right" >
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></div>
-                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 pr-4 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`⬩${finishTime}`"></div>
+                    <div x-show="timeRemainingAsTime" :class="$store.config.textLarge" class="pb-2 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="timeRemainingAsTime"></div>
+                    <div x-show="finishTime && $store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 pr-4 font-bold italic text-blue-200 font-mono whitespace-nowrap">
+                      <svg class="inline-block top-0.5 h-[0.75em] w-[0.75em] mr-[0.2em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                        <path d="M320-320h320v-320H320v320ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                      </svg><span x-text="finishTime" class="align-middle"></span>
+                    </div>
                 </div>
 
                 <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Kodi component ! -->
-                <div class="z-50 absolute bottom-0 right-0 mb-4 pr-5 text-right">
-                    <div :class="$store.config.textLarge" class="pb-4 font-bold text-amber-200 font-mono whitespace-nowrap" x-text="currentTemperature"></div>
-                    <div x-show="$store.config.size!=='small'" :class="$store.config.textSmall" class="pb-10 font-bold italic text-blue-200 font-mono whitespace-nowrap" x-text="`(${currentFeelsLike})`"></div>
-                    <div :class="$store.config.textLarge" class="font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
+                    <div x-show="currentTemperature !== '' && currentTemperature !== null && currentTemperature !== undefined" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
+                    <div x-show="$store.config.size!=='small' && currentFeelsLike !== '' && currentFeelsLike !== null && currentFeelsLike !== undefined"
+                          :class="$store.config.textSmall"
+                          class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap">
+                        <svg class="inline-block align-middle h-[0.85em] w-[0.85em] pb-1 mr-[0.2em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M750-614q-27 27-62 41t-70 14q-35 0-69-13.5T488-614l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-689l-75 75-57-57 75-75q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-746l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-671l75-75 57 57-75 75Zm0 200q-27 27-61.5 40.5T619-360q-35 0-69.5-13.5T488-414l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-489l-75 75-57-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-546l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-471l75-75 57 57-75 75Zm-1 200q-27 27-61 40.5T619-160q-35 0-69.5-13.5T488-214l-76-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T266-289l-75 75-56-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-346l75 75q16 16 35.5 23.5T619-240q20 0 39-7.5t35-23.5l75-75 56 57-75 75Z"/></svg><span x-text="currentFeelsLike" class="inline-block align-middle"></span>
+                    </div>
+                    <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
                 </div>
 
             </div>

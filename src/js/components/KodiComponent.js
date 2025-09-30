@@ -26,14 +26,6 @@ function sendKodiMessageOverWebSocket(rws, method, params) {
     rws.send(JSON.stringify(msg));
 }
 
-function calculateTotalSeconds(kodiTimeObject){
-    return kodiTimeObject.hours * 60 * 60 + kodiTimeObject.minutes * 60 + kodiTimeObject.seconds;
-}
-
-function secondsToTimeFormat(seconds){
-    return new Date(seconds * 1000).toISOString().substring(11, 19);
-}
-
 window.kodi = () => {
 
     // globals to store our Kodi websocket

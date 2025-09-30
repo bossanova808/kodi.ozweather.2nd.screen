@@ -16,6 +16,7 @@ Alpine.store('config', {
 
         this.kodi = urlParams.get('kodi') || '127.0.0.1';
         this.bom = urlParams.get('bom') || false;
+        this.uvStation = urlParams.get('uv') || '';
         this.latitude = urlParams.get('latitude') || false;
         this.longitude = urlParams.get('longitude') || false;
         this.timezone = urlParams.get('timezone') || false;
@@ -40,6 +41,9 @@ Alpine.store('config', {
         else {
             console.log("OpenMeteo Weather Location Latitude: ", this.latitude, " Longitude: ", this.longitude);
         }
+        if (this.uvStation) {
+            console.log("UV station: ", this.uvStation);
+        }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4
         if (this.size === "small") {
@@ -48,6 +52,7 @@ Alpine.store('config', {
             this.textLarge = 'text-8xl';
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
+            this.textSmaller = 'text-5xl';
             this.weatherIconSize = 375;
             this.kodiArtworkScale = "max-w-sm"
         }
@@ -58,6 +63,7 @@ Alpine.store('config', {
             this.textLarge = 'text-7xl';
             this.textMedium = 'text-6xl';
             this.textSmall = 'text-5xl';
+            this.textSmaller = 'text-4xl';
             this.weatherIconSize = 375;
             this.kodiArtworkScale = "max-w-md"
         }
@@ -68,6 +74,7 @@ Alpine.store('config', {
             this.textLarge = 'text-8xl';
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
+            this.textSmaller = 'text-5xl';
             this.weatherIconSize = 375;
             this.kodiArtworkScale = "max-w-lg"
         }
@@ -77,6 +84,7 @@ Alpine.store('config', {
     kodiWebUrl: false,
     kodiSSL: false,
     bom: false,
+    uvStation: false,
     latitude: false,
     longitude: false,
     timezone: false,
@@ -84,7 +92,9 @@ Alpine.store('config', {
     textSoloClock: null,
     textSoloClockSeconds: null,
     textLarge: null,
+    textMedium: null,
     textSmall: null,
+    textSmaller: null,
     weatherIconSize: null,
     kodiArtworkScale: null,
     iconMarginCorrection: null,
