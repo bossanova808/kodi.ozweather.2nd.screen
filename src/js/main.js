@@ -16,7 +16,7 @@ Alpine.store('config', {
 
         this.kodi = urlParams.get('kodi') || '127.0.0.1';
         this.bom = urlParams.get('bom') || false;
-        this.uvStation = urlParams.get('uv') || 'Melbourne';
+        this.uvStation = urlParams.get('uv') || '';
         this.latitude = urlParams.get('latitude') || false;
         this.longitude = urlParams.get('longitude') || false;
         this.timezone = urlParams.get('timezone') || false;

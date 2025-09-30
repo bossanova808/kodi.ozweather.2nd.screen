@@ -186,7 +186,7 @@ window.weatherOpenMeteo = () => {
             console.table(weatherData);
 
             this.rainChance = weatherData.daily.precipitationProbabilityMean[0].toFixed(0);
-            this.rainAmount = weatherData.daily.precipitationSum[0] + 'mm';
+            this.rainAmount = weatherData.daily.precipitationSum[0].toFixed(0) + 'mm';
             this.forecastHigh = weatherData.daily.temperature2mMax[0].toFixed(0) + "°";
             this.forecastLow = weatherData.daily.temperature2mMin[0].toFixed(0) + "°";
             this.currentTemperature = weatherData.current.temperature2m.toFixed(1) + "°";
