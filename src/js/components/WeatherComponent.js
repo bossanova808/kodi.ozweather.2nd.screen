@@ -1,3 +1,5 @@
+import { Moon, Hemisphere } from "lunarphase-js";
+
 /**
  * Location API Response Type
  * @typedef {{
@@ -120,6 +122,16 @@ const mapBOMConditionToWeatherIcon = {
     "windy-night": "windsock.svg",
 }
 
+const mapMoonPhaseToWeatherIcon = {
+    "New": "moon-new.svg",
+    "Waxing Crescent":  "moon-waxing-crescent.svg",
+    "First Quarter": "moon-first-quarter.svg",
+    "Waxing Gibbous": "moon-waxing-gibbous.svg",
+    "Full": "moon-full.svg",
+    "Waning Gibbous": "moon-waning-gibbous.svg",
+    "Last Quarter": "moon-last-quarter.svg",
+    "Waning Crescent": "moon-waning-crescent.svg",
+}
 
 window.weather = () => {
     return {
@@ -158,6 +170,11 @@ window.weather = () => {
         sunset: "",
         uvNow: "",
         uvIcon: "",
+        showUV: false,
+        moonPhase: "",
+        moonPhaseEmoji: "",
+        moonPhaseIcon: "",
+        showMoon: false,
 
         // 'Private' methods
         _clearProperties() {
@@ -193,6 +210,12 @@ window.weather = () => {
             // set by updateUV()
             this.uvNow = "";
             this.uvIcon = "";
+            this.showUV = false;
+            // set by updateMoon()
+            this.moonPhase = "";
+            this.moonPhaseEmoji = "";
+            this.moonPhaseIcon = "";
+            this.showMoon = false;
         },
 
 
@@ -252,7 +275,8 @@ window.weather = () => {
         // https://stackoverflow.com/questions/41775517/waiting-for-the-fetch-to-complete-and-then-execute-the-next-instruction/51992739#51992739
         async updateWeather (init = false) {
             let result = null;
-            // On initialisation, we must have the location data before we can
+
+            // On initialisation, we must have the location data
             if (init) {
                 try {
                     result = await this.updateLocation();
@@ -265,6 +289,7 @@ window.weather = () => {
                     return;
                 }
             }
+
             try {
                 result = await this.updateObservations();
             }
@@ -275,6 +300,7 @@ window.weather = () => {
                 Alpine.store('isAvailable').weather = false;
                 return;
             }
+
             try {
                 result = await this.updateForecast();
             }
@@ -285,14 +311,29 @@ window.weather = () => {
                 Alpine.store('isAvailable').weather = false;
                 return;
             }
+
+            // ***
+            // Data below here is less essential so don't block availability
+            // ***
+
             try{
-                result = await this.updateCurrentUV();
+                result = await this.updateUV();
             }
             catch (e) {
                 console.log("Error fetching UV.")
                 console.log(e);
                 // return;
             }
+
+            try{
+                result = await this.updateMoon();
+            }
+            catch (e) {
+                console.log("Error calculating moon phase.")
+                console.log(e);
+                // return;
+            }
+
             // If we get here, at least some basic weather is available, so if we're not showing it, show it!
             // If we have just current temperature, the showing that and the clock is better than just the clock
             // Missing things will simply not display
@@ -442,15 +483,18 @@ window.weather = () => {
 
         // Runs every weather update to get the current UV data
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
-        async updateCurrentUV() {
-            const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
+        async updateUV() {
 
+            const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
             const stationRaw = Alpine.store('config').uvStation;
             const station = (stationRaw ?? "").toLowerCase();
+
+            // Short circuit if not configured
             if (!station.length) {
                 console.log("No UV station configured — skipping UV fetch");
                 this.uvNow = "";
                 this.uvIcon = "";
+                this.showUV = false;
                 return;
             }
 
@@ -470,6 +514,8 @@ window.weather = () => {
                         console.log('Currently nighttime - not bothering with UV data');
                         this.uvNow = "";
                         this.uvIcon = "";
+                        this.forecastUVMax = "";
+                        this.showUV = false;
                         return;
                     }
 
@@ -498,31 +544,45 @@ window.weather = () => {
                     }
 
                     if (uvValue !== null) {
-                        // Store the raw UV data
                         this.uvNow = Math.round(uvValue);
                         let iconCode = (uvValue < 11) ? this.uvNow : 11;
                         this.uvIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${iconCode}.svg`;
-
-                        // Add this debugging
-                        console.log(`UV data: uvNow=${this.uvNow}, uvIcon=${this.uvIcon}, forecastUVMax=${this.forecastUVMax}`);
-
-                        // Force Alpine to re-evaluate by using $nextTick
-                        // noinspection JSUnresolvedReference
-                        // this.$nextTick(() => {
-                        //     console.log('NextTick: UV data should be reactive now');
-                        //     console.log('Values:', this.uvNow, this.uvIcon, this.forecastUVMax);
-                        // });
-                    } else {
-                    console.warn(`Could not find valid UV data for station: ${station}`);
-                    this.uvNow = "";
-                    this.uvIcon = "";
+                        console.log(`UV now: ${this.uvNow}, forecast max: ${this.forecastUVMax}, icon: ${this.uvIcon}`);
+                        this.showUV = true;
+                    }
+                    else {
+                        console.warn(`Could not find valid UV data for station: ${station}`);
+                        this.uvNow = "";
+                        this.forecastUVMax = "";
+                        this.uvIcon = "";
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching UV data:', error);
                     this.uvNow = "";
+                    this.forecastUVMax = "";
                     this.uvIcon = "";
                 });
+        },
+
+        async updateMoon() {
+            const now = new Date();
+
+            // If it's daytime, short circuit - don't set Moon data
+            if (this.sunrise && this.sunset && (this.sunset < now < this.sunrise)) {
+                console.log('Currently daytime - not showing moon data');
+                this.moonPhase = "";
+                this.moonPhaseEmoji = "";
+                this.moonPhaseIcon = "";
+                this.showMoon = false;
+                return;
+            }
+            // These default to using now...
+            this.moonPhase = Moon.lunarPhase(now, {hemisphere: Hemisphere.SOUTHERN});
+            this.moonPhaseEmoji = Moon.lunarPhaseEmoji(now, {hemisphere: Hemisphere.SOUTHERN});
+            this.moonPhaseIcon = Alpine.store('config').svgAnimatedPath  + mapMoonPhaseToWeatherIcon[this.moonPhase];
+            console.log(`Current moon is ${this.moonPhase} ${this.moonPhaseEmoji}, icon: ${this.moonPhaseIcon}`);
+            this.showMoon = true;
         }
     }
 };
