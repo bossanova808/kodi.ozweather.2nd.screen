@@ -9,11 +9,6 @@ export default {
         manifest: true,
         minify: 'terser', // Slower, but trying for older iOS support - https://github.com/vitejs/vite/issues/6506
     },
-    server: {
-        watch: {
-            usePolling: true
-        }
-    },
     plugins: [
         tailwindcss(),
         legacy({
@@ -22,7 +17,7 @@ export default {
         VitePWA({
             registerType: 'autoUpdate',
             devOptions: {
-                enabled: true
+                enabled: false   // Disable PWA in dev - break HMR, requiring shift-reload to see new code changes...
             },
             manifest: {
                 // caches the assets/icons mentioned (assets/* includes all the assets present in your src/ directory)
