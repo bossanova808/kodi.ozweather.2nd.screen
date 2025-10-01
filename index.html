@@ -37,8 +37,10 @@
 
             <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false" x-transition.duration.500ms>
 
-                <!-- Forthcoming High / Low with UV -->
+                <!-- Key Weather Information -->
                 <div class="absolute top-0 left-0 mt-3 ml-4 flex gap-6" >
+
+                    <!-- Forthcoming High / Low  -->
                     <div>
                         <div x-show="forecastHigh !== '' && forecastHigh !== null && forecastHigh !== undefined" :class="$store.config.textMedium" class="font-bold text-red-400 font-mono whitespace-nowrap">
                             <svg class="inline-block align-middle h-[0.85em] w-[0.85em] pb-2 mr-[0.1em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M342.6 81.4C330.1 68.9 309.8 68.9 297.3 81.4L137.3 241.4C124.8 253.9 124.8 274.2 137.3 286.7C149.8 299.2 170.1 299.2 182.6 286.7L288 181.3L288 552C288 569.7 302.3 584 320 584C337.7 584 352 569.7 352 552L352 181.3L457.4 286.7C469.9 299.2 490.2 299.2 502.7 286.7C515.2 274.2 515.2 253.9 502.7 241.4L342.7 81.4z"/></svg><span class="inline-block min-w-[2ch] text-right" x-text="forecastHigh"></span>
@@ -48,6 +50,7 @@
                         </div>
                     </div>
 
+                    <!-- UV (BOM & daytime) -->
                     <div x-show="$store.config.size!=='small' && showUV">
                         <!-- Current UV -->
                         <div :class="$store.config.textMedium" class="font-bold text-amber-400 font-mono whitespace-nowrap">
@@ -60,9 +63,14 @@
                         </div>
                     </div>
 
+                    <!-- Moon Phase - Open Meteo or BOM & nighttime -->
                     <div x-show="$store.config.size!=='small' && showMoon">
                         <img class="mb-2 pb-2" :src="moonPhaseIcon" :alt="moonPhase" :height="$store.config.moonIconSize" :width="$store.config.moonIconSize"/>
+
+                        <!-- WAXING or WANING STATUS HERE -->
+                        
                     </div>
+
 
                 </div>
 

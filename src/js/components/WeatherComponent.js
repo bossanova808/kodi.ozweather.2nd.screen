@@ -299,6 +299,8 @@ window.weather = () => {
         moonPhase: "",
         moonPhaseEmoji: "",
         moonPhaseIcon: "",
+        isWaxing: false,
+        isWaning: false,
         showMoon: false,
 
         // 'Private' methods
@@ -340,6 +342,8 @@ window.weather = () => {
             this.moonPhase = "";
             this.moonPhaseEmoji = "";
             this.moonPhaseIcon = "";
+            this.isWaxing = false;
+            this.isWaning = false;
             this.showMoon = false;
         },
 
@@ -624,6 +628,97 @@ window.weather = () => {
                 })
         },
 
+        async updateForecastAndObservationsUsingOpenMeteo () {
+
+            console.log("updateWeatherOpenMeteo");
+
+            // OpenMeteo doesn't really have an easy to get equivalent for these...
+            this.showRainSince9am = false;
+            this.showUV = false
+
+            const params = {
+                "latitude": Alpine.store('config').latitude,
+                "longitude": Alpine.store('config').longitude,
+                "current": ["temperature_2m", "apparent_temperature", "precipitation", "weather_code"],
+                "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "precipitation_probability_mean"],
+                "timezone": Alpine.store('config').timezone,
+                "forecast_days": 1
+            };
+            const url = "https://api.open-meteo.com/v1/forecast";
+            console.log(`Calling ${url} with params:`)
+            console.table(params);
+            const responses = await fetchWeatherApi(url, params);
+
+            // Helper function to form time ranges
+            const range = (start, stop, step) =>
+                Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+
+            // Process first location. Add a for-loop for multiple locations or weather models
+            const response = /** @type {OpenMeteoResponse} */ (responses[0]);
+
+            // Attributes for timezone and location
+            const utcOffsetSeconds = response.utcOffsetSeconds();
+            // const timezone = response.timezone();
+            // const timezoneAbbreviation = response.timezoneAbbreviation();
+            // const latitude = response.latitude();
+            // const longitude = response.longitude();
+
+            /** @type {CurrentWeather} */
+            const current = response.current();
+            /** @type {DailyWeather} */
+            const daily = response.daily();
+
+            // Note: The order of weather variables in the URL query and the indices below need to match!
+            const weatherData = {
+                current: {
+                    time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
+                    temperature2m: current.variables(0).value(),
+                    apparentTemperature: current.variables(1).value(),
+                    precipitation: current.variables(2).value(),
+                    weatherCode: current.variables(3).value(),
+                },
+                daily: {
+                    time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
+                        (t) => new Date((t + utcOffsetSeconds) * 1000)
+                    ),
+                    temperature2mMax: daily.variables(0).valuesArray(),
+                    temperature2mMin: daily.variables(1).valuesArray(),
+                    precipitationSum: daily.variables(2).valuesArray(),
+                    precipitationProbabilityMean: daily.variables(3).valuesArray(),
+                },
+
+            };
+
+            // `weatherData` now contains a simple structure with arrays for datetime and weather data
+            // for (let i = 0; i < weatherData.daily.time.length; i++) {
+            //     console.log(
+            //         weatherData.daily.time[i].toISOString(),
+            //         weatherData.daily.precipitationSum[i],
+            //         weatherData.daily.precipitationProbabilityMean[i]
+            //     );
+            // }
+
+            console.log("OpenMeteo API returned:")
+            console.table(weatherData);
+
+
+
+            this.rainChance = weatherData.daily.precipitationProbabilityMean[0].toFixed(0);
+            this.rainAmount = weatherData.daily.precipitationSum[0].toFixed(0) + 'mm';
+            this.forecastHigh = weatherData.daily.temperature2mMax[0].toFixed(0) + "°";
+            this.forecastLow = weatherData.daily.temperature2mMin[0].toFixed(0) + "°";
+            this.currentTemperature = weatherData.current.temperature2m.toFixed(1) + "°";
+            this.currentFeelsLike = weatherData.current.apparentTemperature.toFixed(1) + "°";
+
+                if (mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode] !== undefined){
+                    this.icon = Alpine.store('config').svgAnimatedPath + mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
+                    this.iconAlt = mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
+                    this.outlook = mapOpenMeteoWeatherCodeToOutlook[weatherData.current.weatherCode];
+                    console.log(`Mapped OpenMeteo WeatherCode [${weatherData.current.weatherCode}]-> to icon ${this.icon} and outlook ${this.outlook}`)
+                }
+
+        },
+
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
         async updateUV() {
 
@@ -733,101 +828,12 @@ window.weather = () => {
             // Phases are listed here: https://www.npmjs.com/package/lunarphase-js#usage
             this.moonPhase = Moon.lunarPhase(now, {hemisphere: Hemisphere.SOUTHERN});
             this.moonPhaseEmoji = Moon.lunarPhaseEmoji(now, {hemisphere: Hemisphere.SOUTHERN});
+            this.isWaxing = Moon.isWaxing(now);
+            this.isWaning = Moon.isWaning(now);
             this.moonPhaseIcon = Alpine.store('config').svgAnimatedPath  + mapMoonPhaseToWeatherIcon[this.moonPhase];
             console.log(`Current moon is ${this.moonPhase} ${this.moonPhaseEmoji}, icon: ${this.moonPhaseIcon}`);
             this.showMoon = true;
         },
-
-        async updateForecastAndObservationsUsingOpenMeteo () {
-
-            console.log("updateWeatherOpenMeteo");
-
-            // OpenMeteo doesn't really have an easy to get equivalent for these...
-            this.showRainSince9am = false;
-            this.showUV = false
-
-            const params = {
-                "latitude": Alpine.store('config').latitude,
-                "longitude": Alpine.store('config').longitude,
-                "current": ["temperature_2m", "apparent_temperature", "precipitation", "weather_code"],
-                "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "precipitation_probability_mean"],
-                "timezone": Alpine.store('config').timezone,
-                "forecast_days": 1
-            };
-            const url = "https://api.open-meteo.com/v1/forecast";
-            console.log(`Calling ${url} with params:`)
-            console.table(params);
-            const responses = await fetchWeatherApi(url, params);
-
-            // Helper function to form time ranges
-            const range = (start, stop, step) =>
-                Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
-
-            // Process first location. Add a for-loop for multiple locations or weather models
-            const response = /** @type {OpenMeteoResponse} */ (responses[0]);
-
-            // Attributes for timezone and location
-            const utcOffsetSeconds = response.utcOffsetSeconds();
-            // const timezone = response.timezone();
-            // const timezoneAbbreviation = response.timezoneAbbreviation();
-            // const latitude = response.latitude();
-            // const longitude = response.longitude();
-
-            /** @type {CurrentWeather} */
-            const current = response.current();
-            /** @type {DailyWeather} */
-            const daily = response.daily();
-
-            // Note: The order of weather variables in the URL query and the indices below need to match!
-            const weatherData = {
-                current: {
-                    time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
-                    temperature2m: current.variables(0).value(),
-                    apparentTemperature: current.variables(1).value(),
-                    precipitation: current.variables(2).value(),
-                    weatherCode: current.variables(3).value(),
-                },
-                daily: {
-                    time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
-                        (t) => new Date((t + utcOffsetSeconds) * 1000)
-                    ),
-                    temperature2mMax: daily.variables(0).valuesArray(),
-                    temperature2mMin: daily.variables(1).valuesArray(),
-                    precipitationSum: daily.variables(2).valuesArray(),
-                    precipitationProbabilityMean: daily.variables(3).valuesArray(),
-                },
-
-            };
-
-            // `weatherData` now contains a simple structure with arrays for datetime and weather data
-            // for (let i = 0; i < weatherData.daily.time.length; i++) {
-            //     console.log(
-            //         weatherData.daily.time[i].toISOString(),
-            //         weatherData.daily.precipitationSum[i],
-            //         weatherData.daily.precipitationProbabilityMean[i]
-            //     );
-            // }
-
-            console.log("OpenMeteo API returned:")
-            console.table(weatherData);
-
-
-
-            this.rainChance = weatherData.daily.precipitationProbabilityMean[0].toFixed(0);
-            this.rainAmount = weatherData.daily.precipitationSum[0].toFixed(0) + 'mm';
-            this.forecastHigh = weatherData.daily.temperature2mMax[0].toFixed(0) + "°";
-            this.forecastLow = weatherData.daily.temperature2mMin[0].toFixed(0) + "°";
-            this.currentTemperature = weatherData.current.temperature2m.toFixed(1) + "°";
-            this.currentFeelsLike = weatherData.current.apparentTemperature.toFixed(1) + "°";
-
-                if (mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode] !== undefined){
-                    this.icon = Alpine.store('config').svgAnimatedPath + mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
-                    this.iconAlt = mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
-                    this.outlook = mapOpenMeteoWeatherCodeToOutlook[weatherData.current.weatherCode];
-                    console.log(`Mapped OpenMeteo WeatherCode [${weatherData.current.weatherCode}]-> to icon ${this.icon} and outlook ${this.outlook}`)
-                }
-
-        }
 
     }
 };
