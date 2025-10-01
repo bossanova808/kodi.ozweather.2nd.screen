@@ -3,13 +3,9 @@ window.Alpine = Alpine;
 
 import "./components/ClockComponent";
 import "./components/WeatherComponent";
-import "./components/WeatherComponentOpenMeteo";
 import "./components/KodiComponent";
 
-
-// Utility function to pre-cache all the weather icons after initial load
-
-// Config from URL parameters
+// Config comes from URL parameters
 Alpine.store('config', {
     init() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -49,10 +45,10 @@ Alpine.store('config', {
         if (this.size === "small") {
             this.textSoloClock = 'text-[11rem]';
             this.textSoloClockSeconds = 'text-9xl';
-            this.textLarge = 'text-8xl';
-            this.textMedium = 'text-7xl';
-            this.textSmall = 'text-6xl';
-            this.textSmaller = 'text-5xl';
+            this.textLarge = 'text-7xl';
+            this.textMedium = 'text-6xl';
+            this.textSmall = 'text-5xl';
+            this.textSmaller = 'text-4xl';
             this.weatherIconSize = 200;
             this.moonIconSize = 50;
             this.kodiArtworkScale = "max-w-sm"
@@ -99,6 +95,7 @@ Alpine.store('config', {
     textSmall: null,
     textSmaller: null,
     weatherIconSize: null,
+    moonIconSize: null,
     kodiArtworkScale: null,
     iconMarginCorrection: null,
     svgAnimatedPath: "images/weather-icons/svg/",
@@ -116,13 +113,7 @@ Alpine.store('isAvailable', {
 
 // Create the components - each are scoped to the window which is where Alpine expects to find them
 Alpine.data('clock', window.clock);
-// Weather - use either BOM weather or OpenMeteo components
-if (Alpine.store('config').bom) {
-    Alpine.data('weather', window.weather);
-}
-else {
-    Alpine.data('weather', window.weatherOpenMeteo);
-}
+Alpine.data('weather', window.weather);
 Alpine.data('kodi', window.kodi);
 
 // Actually start Alpine

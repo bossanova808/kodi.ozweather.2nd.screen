@@ -1,3 +1,4 @@
+import { fetchWeatherApi } from 'openmeteo';
 import { Moon, Hemisphere } from "lunarphase-js";
 
 /**
@@ -133,6 +134,130 @@ const mapMoonPhaseToWeatherIcon = {
     "Waning Crescent": "moon-waning-crescent.svg",
 }
 
+
+// ********* OPEN METEO
+
+/**
+ * OpenMeteo API Response Types
+ * @typedef {{
+ *   time: () => bigint,
+ *   value: () => number,
+ *   valuesArray: () => Float32Array
+ * }} WeatherVariable
+ */
+
+/**
+ * @typedef {{
+ *   time: () => bigint,
+ *   variables: (index: number) => WeatherVariable
+ * }} CurrentWeather
+ */
+
+/**
+ * @typedef {{
+ *   time: () => bigint,
+ *   timeEnd: () => bigint,
+ *   interval: () => number,
+ *   variables: (index: number) => WeatherVariable
+ * }} DailyWeather
+ */
+
+/**
+ * @typedef {{
+ *   utcOffsetSeconds: () => number,
+ *   timezone: () => string,
+ *   timezoneAbbreviation: () => string,
+ *   latitude: () => number,
+ *   longitude: () => number,
+ *   current: () => CurrentWeather,
+ *   daily: () => DailyWeather
+ * }} OpenMeteoResponse
+ */
+
+// See bottom of https://open-meteo.com/en/docs
+// WMO Weather interpretation codes (WW)
+// Code 	Description
+// 0 	Clear sky
+// 1, 2, 3 	Mainly clear, partly cloudy, and overcast
+// 45, 48 	Fog and depositing rime fog
+// 51, 53, 55 	Drizzle: Light, moderate, and dense intensity
+// 56, 57 	Freezing Drizzle: Light and dense intensity
+// 61, 63, 65 	Rain: Slight, moderate and heavy intensity
+// 66, 67 	Freezing Rain: Light and heavy intensity
+// 71, 73, 75 	Snow fall: Slight, moderate, and heavy intensity
+// 77 	Snow grains
+// 80, 81, 82 	Rain showers: Slight, moderate, and violent
+// 85, 86 	Snow showers slight and heavy
+// 95 * 	Thunderstorm: Slight or moderate
+// 96, 99 * 	Thunderstorm with slight and heavy hail
+//
+// (*) Thunderstorm forecast with hail is only available in Central Europe
+
+const mapOpenMeteoWeatherCodeToOutlook = {
+    0: "Sunny",
+    1: "Mostly Sunny",
+    2: "Partly Cloudy",
+    3: "Cloudy",
+    45: "Fog",
+    48: "Fog",
+    51: "Light Drizzle",
+    53: "Drizzle",
+    55: "Heavy Drizzle",
+    56: "Light Sleet",
+    57: "Sleet",
+    61: "Light Rain",
+    63: "Rain",
+    65: "Heavy Rain",
+    66: "Freezing Rain",
+    67: "Heavy Freezing Rain",
+    71: "Light Snow",
+    73: "Snow",
+    75: "Heavy Snow",
+    77: "Snow",
+    80: "Light Showers",
+    81: "Showers",
+    82: "Heavy Showers",
+    85: "Snow Showers",
+    86: "Heavy Snow Showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm with Hail",
+    99: "Thunderstorm with Heavy Hail",
+}
+
+const mapOpenMeteoWeatherCodeToWeatherIcon = {
+    0: "clear-day.svg",
+    1: "clear-day.svg",
+    2: "partly-cloudy-day.svg",
+    3: "cloudy.svg",
+    45: "fog.svg",
+    48: "fog.svg",
+    51: "drizzle.svg",
+    53: "drizzle.svg",
+    55: "rain.svg",
+    56: "sleet.svg",
+    57: "extreme-sleet.svg",
+    61: "drizzle.svg",
+    63: "rain.svg",
+    65: "extreme-rain.svg",
+    66: "sleet.svg",
+    67: "extreme-rain.svg",
+    71: "snow.svg",
+    73: "snow.svg",
+    75: "extreme-snow.svg",
+    77: "snow.svg",
+    80: "drizzle.svg",
+    81: "rain.svg",
+    82: "extreme-rain.svg",
+    85: "snow.svg",
+    86: "extreme-snow.svg",
+    95: "thunderstorms-rain.svg",
+    96: "thunderstorms-rain.svg",
+    99: "hail.svg",
+}
+
+// ********* END OPEN METEO
+
+
 window.weather = () => {
     return {
         // These hold the full JSON returned
@@ -232,13 +357,15 @@ window.weather = () => {
                 this.preload_image(`uv-index-${i}.svg`).then();
             }
 
+            // this stops IDE errors with awaits,
             let result = null;
+            const weatherService = Alpine.store('config').bom ? "bom" : "open_meteo";
             // Get the initial location & weather data
-            result = this.updateWeather(true)
+            result = this.updateWeather(true, weatherService)
 
             // Then, update every 5 minutes (5 * 60 * 1000)
             setInterval(() => {
-                result = this.updateWeather(false)
+                result = this.updateWeather(false, weatherService)
             }, this.updateWeatherEveryMinutes * 60 * 1000);
             // & check that it remains fresh (e.g. network dropout or whatever).
             // Check for every third weather update
@@ -273,16 +400,54 @@ window.weather = () => {
         // (call with init = true to kick off)
         // Awaiting of fetch data method from:
         // https://stackoverflow.com/questions/41775517/waiting-for-the-fetch-to-complete-and-then-execute-the-next-instruction/51992739#51992739
-        async updateWeather (init = false) {
-            let result = null;
+        async updateWeather (init = false, weatherService) {
 
-            // On initialisation, we must have the location data
-            if (init) {
+            // Are we using Australian BOM data?
+            if (weatherService==="bom") {
+                console.log("Using Australian BOM for weather data.")
+
+                // On initialisation, we must have the location data
+                if (init) {
+                    try {
+                        await this.updateLocation();
+                    }
+                    catch (e) {
+                        console.log("Error fetching weather location on startup - big problem!")
+                        console.log(e);
+                        this._clearProperties();
+                        Alpine.store('isAvailable').weather = false;
+                        return;
+                    }
+                }
+
                 try {
-                    result = await this.updateLocation();
+                    await this.updateObservations();
+                } catch (e) {
+                    console.log("Error fetching observations.")
+                    console.log(e);
+                    this._clearProperties();
+                    Alpine.store('isAvailable').weather = false;
+                    return;
+                }
+
+                try {
+                    await this.updateForecast();
+                } catch (e) {
+                    console.log("Error fetching forecast.")
+                    console.log(e);
+                    this._clearProperties();
+                    Alpine.store('isAvailable').weather = false;
+                    return;
+                }
+            }
+            // Not using Australian BOM data? Use OpenMeteo for weather data instead
+            else {
+                console.log("Using Open Meteo for weather data.")
+                try {
+                    await this.updateForecastAndObservationsUsingOpenMeteo()
                 }
                 catch (e) {
-                    console.log("Error fetching weather location on startup - big problem!")
+                    console.log("Error fetching weather from OpenMeteo.")
                     console.log(e);
                     this._clearProperties();
                     Alpine.store('isAvailable').weather = false;
@@ -290,34 +455,12 @@ window.weather = () => {
                 }
             }
 
-            try {
-                result = await this.updateObservations();
-            }
-            catch (e) {
-                console.log("Error fetching observations.")
-                console.log(e);
-                this._clearProperties();
-                Alpine.store('isAvailable').weather = false;
-                return;
-            }
-
-            try {
-                result = await this.updateForecast();
-            }
-            catch (e) {
-                console.log("Error fetching forecast.")
-                console.log(e);
-                this._clearProperties();
-                Alpine.store('isAvailable').weather = false;
-                return;
-            }
-
             // ***
             // Data below here is less essential so don't block availability
             // ***
 
             try{
-                result = await this.updateUV();
+                await this.updateUV();
             }
             catch (e) {
                 console.log("Error fetching UV.")
@@ -326,7 +469,7 @@ window.weather = () => {
             }
 
             try{
-                result = await this.updateMoon();
+                await this.updateMoon(weatherService);
             }
             catch (e) {
                 console.log("Error calculating moon phase.")
@@ -573,11 +716,12 @@ window.weather = () => {
         },
 
         // See: https://www.npmjs.com/package/lunarphase-js
-        async updateMoon() {
+        async updateMoon(weatherService) {
             const now = new Date();
 
-            // If it's daytime, short circuit - don't set Moon data
-            if (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset) {
+            // If we're using the BOM, and it's daytime, short circuit - don't set Moon data as UV is displayed instead
+            // However if we're using Open Meteo for weather data, carry on, as there's no UV to show so might as well always show the moon
+            if (weatherService === "bom" && (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset)) {
                 console.log('Currently daytime - not showing moon data');
                 this.moonPhase = "";
                 this.moonPhaseEmoji = "";
@@ -592,6 +736,98 @@ window.weather = () => {
             this.moonPhaseIcon = Alpine.store('config').svgAnimatedPath  + mapMoonPhaseToWeatherIcon[this.moonPhase];
             console.log(`Current moon is ${this.moonPhase} ${this.moonPhaseEmoji}, icon: ${this.moonPhaseIcon}`);
             this.showMoon = true;
+        },
+
+        async updateForecastAndObservationsUsingOpenMeteo () {
+
+            console.log("updateWeatherOpenMeteo");
+
+            // OpenMeteo doesn't really have an easy to get equivalent for these...
+            this.showRainSince9am = false;
+            this.showUV = false
+
+            const params = {
+                "latitude": Alpine.store('config').latitude,
+                "longitude": Alpine.store('config').longitude,
+                "current": ["temperature_2m", "apparent_temperature", "precipitation", "weather_code"],
+                "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "precipitation_probability_mean"],
+                "timezone": Alpine.store('config').timezone,
+                "forecast_days": 1
+            };
+            const url = "https://api.open-meteo.com/v1/forecast";
+            console.log(`Calling ${url} with params:`)
+            console.table(params);
+            const responses = await fetchWeatherApi(url, params);
+
+            // Helper function to form time ranges
+            const range = (start, stop, step) =>
+                Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+
+            // Process first location. Add a for-loop for multiple locations or weather models
+            const response = /** @type {OpenMeteoResponse} */ (responses[0]);
+
+            // Attributes for timezone and location
+            const utcOffsetSeconds = response.utcOffsetSeconds();
+            // const timezone = response.timezone();
+            // const timezoneAbbreviation = response.timezoneAbbreviation();
+            // const latitude = response.latitude();
+            // const longitude = response.longitude();
+
+            /** @type {CurrentWeather} */
+            const current = response.current();
+            /** @type {DailyWeather} */
+            const daily = response.daily();
+
+            // Note: The order of weather variables in the URL query and the indices below need to match!
+            const weatherData = {
+                current: {
+                    time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
+                    temperature2m: current.variables(0).value(),
+                    apparentTemperature: current.variables(1).value(),
+                    precipitation: current.variables(2).value(),
+                    weatherCode: current.variables(3).value(),
+                },
+                daily: {
+                    time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
+                        (t) => new Date((t + utcOffsetSeconds) * 1000)
+                    ),
+                    temperature2mMax: daily.variables(0).valuesArray(),
+                    temperature2mMin: daily.variables(1).valuesArray(),
+                    precipitationSum: daily.variables(2).valuesArray(),
+                    precipitationProbabilityMean: daily.variables(3).valuesArray(),
+                },
+
+            };
+
+            // `weatherData` now contains a simple structure with arrays for datetime and weather data
+            // for (let i = 0; i < weatherData.daily.time.length; i++) {
+            //     console.log(
+            //         weatherData.daily.time[i].toISOString(),
+            //         weatherData.daily.precipitationSum[i],
+            //         weatherData.daily.precipitationProbabilityMean[i]
+            //     );
+            // }
+
+            console.log("OpenMeteo API returned:")
+            console.table(weatherData);
+
+
+
+            this.rainChance = weatherData.daily.precipitationProbabilityMean[0].toFixed(0);
+            this.rainAmount = weatherData.daily.precipitationSum[0].toFixed(0) + 'mm';
+            this.forecastHigh = weatherData.daily.temperature2mMax[0].toFixed(0) + "°";
+            this.forecastLow = weatherData.daily.temperature2mMin[0].toFixed(0) + "°";
+            this.currentTemperature = weatherData.current.temperature2m.toFixed(1) + "°";
+            this.currentFeelsLike = weatherData.current.apparentTemperature.toFixed(1) + "°";
+
+                if (mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode] !== undefined){
+                    this.icon = Alpine.store('config').svgAnimatedPath + mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
+                    this.iconAlt = mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
+                    this.outlook = mapOpenMeteoWeatherCodeToOutlook[weatherData.current.weatherCode];
+                    console.log(`Mapped OpenMeteo WeatherCode [${weatherData.current.weatherCode}]-> to icon ${this.icon} and outlook ${this.outlook}`)
+                }
+
         }
+
     }
 };
