@@ -17,6 +17,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "alpinejs": "^3.11.1",
+    "lunarphase-js": "^2.0.3",
     "openmeteo": "^1.1.4",
     "partysocket": "^1.0.1"
   }

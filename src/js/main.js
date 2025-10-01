@@ -53,7 +53,8 @@ Alpine.store('config', {
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
             this.textSmaller = 'text-5xl';
-            this.weatherIconSize = 375;
+            this.weatherIconSize = 200;
+            this.moonIconSize = 50;
             this.kodiArtworkScale = "max-w-sm"
         }
         // 'medium' = Smaller tablets, ~7" screens - FF: Responsive, 920x570, DPR 2, Zoom to 67%
@@ -64,7 +65,8 @@ Alpine.store('config', {
             this.textMedium = 'text-6xl';
             this.textSmall = 'text-5xl';
             this.textSmaller = 'text-4xl';
-            this.weatherIconSize = 375;
+            this.weatherIconSize = 275;
+            this.moonIconSize = 75;
             this.kodiArtworkScale = "max-w-md"
         }
         // 'large' = Default, 8 inch or bigger tablets - FF: Responsive, 960x580, DPR 1, Zoom to 80%
@@ -75,7 +77,8 @@ Alpine.store('config', {
             this.textMedium = 'text-7xl';
             this.textSmall = 'text-6xl';
             this.textSmaller = 'text-5xl';
-            this.weatherIconSize = 375;
+            this.weatherIconSize = 325;
+            this.moonIconSize = 150;
             this.kodiArtworkScale = "max-w-lg"
         }
     },
