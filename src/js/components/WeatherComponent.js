@@ -481,7 +481,6 @@ window.weather = () => {
                 })
         },
 
-        // Runs every weather update to get the current UV data
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
         async updateUV() {
 
@@ -565,6 +564,7 @@ window.weather = () => {
                 });
         },
 
+        // See: https://www.npmjs.com/package/lunarphase-js
         async updateMoon() {
             const now = new Date();
 
