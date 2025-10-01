@@ -569,7 +569,7 @@ window.weather = () => {
             const now = new Date();
 
             // If it's daytime, short circuit - don't set Moon data
-            if (this.sunrise && this.sunset && (this.sunset < now < this.sunrise)) {
+            if (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset) {
                 console.log('Currently daytime - not showing moon data');
                 this.moonPhase = "";
                 this.moonPhaseEmoji = "";
