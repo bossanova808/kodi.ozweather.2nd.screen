@@ -486,7 +486,12 @@ window.weather = () => {
 
             const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
             const stationRaw = Alpine.store('config').uvStation;
-            const station = (stationRaw ?? "").toLowerCase();
+            let station = (stationRaw ?? "").toLowerCase();
+
+            // If the BOM is set to Ascot Vale, auto-set UV too, significantly aids testing!
+            if (!station.length && Alpine.store('config').bom === 'r1r11df'){
+                station = "Melbourne"
+            }
 
             // Short circuit if not configured
             if (!station.length) {
@@ -554,6 +559,7 @@ window.weather = () => {
                         this.uvNow = "";
                         this.forecastUVMax = "";
                         this.uvIcon = "";
+                        this.showUV = false;
                     }
                 })
                 .catch(error => {
@@ -561,6 +567,7 @@ window.weather = () => {
                     this.uvNow = "";
                     this.forecastUVMax = "";
                     this.uvIcon = "";
+                    this.showUV = false;
                 });
         },
 
@@ -577,7 +584,8 @@ window.weather = () => {
                 this.showMoon = false;
                 return;
             }
-            // These default to using now...
+            // The Moon Phases are well known and a fixed set, so no fallback required
+            // Phases are listed here: https://www.npmjs.com/package/lunarphase-js#usage
             this.moonPhase = Moon.lunarPhase(now, {hemisphere: Hemisphere.SOUTHERN});
             this.moonPhaseEmoji = Moon.lunarPhaseEmoji(now, {hemisphere: Hemisphere.SOUTHERN});
             this.moonPhaseIcon = Alpine.store('config').svgAnimatedPath  + mapMoonPhaseToWeatherIcon[this.moonPhase];
