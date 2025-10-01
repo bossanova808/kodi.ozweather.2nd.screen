@@ -82,10 +82,10 @@
                 </div>
 
                 <!-- Outlook inc. icon -->
-                <div x-show="$store.config.size!=='small'" class="absolute bottom-0 left-0 mb-2">
+                <div class="absolute bottom-0 left-0 mb-2">
                     <div class="grid grid-cols-1 justify-items-center">
-                        <img x-show="icon" class="mb-14 pb-2" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
-                        <div x-show="outlook" :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -75px;" x-text="outlook"></div>
+                        <img x-show="icon" class="mb-14 ml-6 pb-2" :src="icon" :alt="iconAlt" :height="$store.config.weatherIconSize" :width="$store.config.weatherIconSize"/>
+                        <div x-show="outlook" :class="$store.config.textSmall" class="max-w-lg font-semibold text-amber-200 m-0 ml-8 pb-3" style="margin-top: -65px;" x-text="outlook"></div>
                     </div>
                 </div>
 
