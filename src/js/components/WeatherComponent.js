@@ -484,6 +484,7 @@ window.weather = () => {
         // See https://www.arpansa.gov.au/our-services/monitoring/ultraviolet-radiation-monitoring/ultraviolet-radation-data-information
         async updateUV() {
 
+            const now = new Date();
             const uvURL = `https://uvdata.arpansa.gov.au/xml/uvvalues.xml`;
             const stationRaw = Alpine.store('config').uvStation;
             let station = (stationRaw ?? "").toLowerCase();
@@ -493,7 +494,7 @@ window.weather = () => {
                 station = "Melbourne"
             }
 
-            // Short circuit if not configured
+            // Short circuit if no station configured
             if (!station.length) {
                 console.log("No UV station configured — skipping UV fetch");
                 this.uvNow = "";
@@ -502,6 +503,17 @@ window.weather = () => {
                 return;
             }
 
+            // Short circuit if it's nighttime
+            if (this.sunrise && this.sunset && (now < this.sunrise || now > this.sunset)) {
+                console.log('Currently nighttime - not bothering with UV data');
+                this.uvNow = "";
+                this.uvIcon = "";
+                this.forecastUVMax = "";
+                this.showUV = false;
+                return;
+            }
+
+            // Get the UV data
             console.log(`Getting current UV from: ${uvURL}`);
 
             return await fetch(uvURL, {
@@ -511,17 +523,6 @@ window.weather = () => {
                 .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
                 .then(data => {
                     console.log(data);
-
-                    // If it's nighttime, don't set UV data
-                    const now = new Date();
-                    if (this.sunrise && this.sunset && (now < this.sunrise || now > this.sunset)) {
-                        console.log('Currently nighttime - not bothering with UV data');
-                        this.uvNow = "";
-                        this.uvIcon = "";
-                        this.forecastUVMax = "";
-                        this.showUV = false;
-                        return;
-                    }
 
                     // Find the location element that matches our target station
                     const locations = data.querySelectorAll('location');
