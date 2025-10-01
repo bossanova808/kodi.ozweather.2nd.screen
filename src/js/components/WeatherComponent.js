@@ -719,9 +719,9 @@ window.weather = () => {
         async updateMoon(weatherService) {
             const now = new Date();
 
-            // If it's daytime, short circuit - don't set Moon data
+            // If we're using the BOM, and it's daytime, short circuit - don't set Moon data as UV is displayed instead
             // However if we're using Open Meteo for weather data, carry on, as there's no UV to show so might as well always show the moon
-            if (weatherService !== "open_meteo" || (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset)) {
+            if (weatherService === "bom" && (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset)) {
                 console.log('Currently daytime - not showing moon data');
                 this.moonPhase = "";
                 this.moonPhaseEmoji = "";
