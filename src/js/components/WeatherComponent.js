@@ -137,6 +137,43 @@ const mapMoonPhaseToWeatherIcon = {
 
 // ********* OPEN METEO
 
+/**
+ * OpenMeteo API Response Types
+ * @typedef {{
+ *   time: () => bigint,
+ *   value: () => number,
+ *   valuesArray: () => Float32Array
+ * }} WeatherVariable
+ */
+
+/**
+ * @typedef {{
+ *   time: () => bigint,
+ *   variables: (index: number) => WeatherVariable
+ * }} CurrentWeather
+ */
+
+/**
+ * @typedef {{
+ *   time: () => bigint,
+ *   timeEnd: () => bigint,
+ *   interval: () => number,
+ *   variables: (index: number) => WeatherVariable
+ * }} DailyWeather
+ */
+
+/**
+ * @typedef {{
+ *   utcOffsetSeconds: () => number,
+ *   timezone: () => string,
+ *   timezoneAbbreviation: () => string,
+ *   latitude: () => number,
+ *   longitude: () => number,
+ *   current: () => CurrentWeather,
+ *   daily: () => DailyWeather
+ * }} OpenMeteoResponse
+ */
+
 // See bottom of https://open-meteo.com/en/docs
 // WMO Weather interpretation codes (WW)
 // Code 	Description
@@ -320,6 +357,7 @@ window.weather = () => {
                 this.preload_image(`uv-index-${i}.svg`).then();
             }
 
+            // this stops IDE errors with awaits,
             let result = null;
             const weatherService = Alpine.store('config').bom ? "bom" : "open_meteo";
             // Get the initial location & weather data
@@ -363,7 +401,6 @@ window.weather = () => {
         // Awaiting of fetch data method from:
         // https://stackoverflow.com/questions/41775517/waiting-for-the-fetch-to-complete-and-then-execute-the-next-instruction/51992739#51992739
         async updateWeather (init = false, weatherService) {
-            let result = null;
 
             // Are we using Australian BOM data?
             if (weatherService==="bom") {
@@ -372,7 +409,7 @@ window.weather = () => {
                 // On initialisation, we must have the location data
                 if (init) {
                     try {
-                        result = await this.updateLocation();
+                        await this.updateLocation();
                     }
                     catch (e) {
                         console.log("Error fetching weather location on startup - big problem!")
@@ -384,7 +421,7 @@ window.weather = () => {
                 }
 
                 try {
-                    result = await this.updateObservations();
+                    await this.updateObservations();
                 } catch (e) {
                     console.log("Error fetching observations.")
                     console.log(e);
@@ -394,7 +431,7 @@ window.weather = () => {
                 }
 
                 try {
-                    result = await this.updateForecast();
+                    await this.updateForecast();
                 } catch (e) {
                     console.log("Error fetching forecast.")
                     console.log(e);
@@ -407,7 +444,7 @@ window.weather = () => {
             else {
                 console.log("Using Open Meteo for weather data.")
                 try {
-                    result = await this.updateForecastAndObservationsUsingOpenMeteo()
+                    await this.updateForecastAndObservationsUsingOpenMeteo()
                 }
                 catch (e) {
                     console.log("Error fetching weather from OpenMeteo.")
@@ -423,7 +460,7 @@ window.weather = () => {
             // ***
 
             try{
-                result = await this.updateUV();
+                await this.updateUV();
             }
             catch (e) {
                 console.log("Error fetching UV.")
@@ -432,7 +469,7 @@ window.weather = () => {
             }
 
             try{
-                result = await this.updateMoon(weatherService);
+                await this.updateMoon(weatherService);
             }
             catch (e) {
                 console.log("Error calculating moon phase.")
@@ -684,7 +721,7 @@ window.weather = () => {
 
             // If it's daytime, short circuit - don't set Moon data
             // However if we're using Open Meteo for weather data, carry on, as there's no UV to show so might as well always show the moon
-            if (!weatherService==="open_meteo" || (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset)) {
+            if (weatherService !== "open_meteo" || (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset)) {
                 console.log('Currently daytime - not showing moon data');
                 this.moonPhase = "";
                 this.moonPhaseEmoji = "";
@@ -727,7 +764,7 @@ window.weather = () => {
                 Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
             // Process first location. Add a for-loop for multiple locations or weather models
-            const response = responses[0];
+            const response = /** @type {OpenMeteoResponse} */ (responses[0]);
 
             // Attributes for timezone and location
             const utcOffsetSeconds = response.utcOffsetSeconds();
@@ -736,7 +773,9 @@ window.weather = () => {
             // const latitude = response.latitude();
             // const longitude = response.longitude();
 
+            /** @type {CurrentWeather} */
             const current = response.current();
+            /** @type {DailyWeather} */
             const daily = response.daily();
 
             // Note: The order of weather variables in the URL query and the indices below need to match!
@@ -745,8 +784,8 @@ window.weather = () => {
                     time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
                     temperature2m: current.variables(0).value(),
                     apparentTemperature: current.variables(1).value(),
-                    precipitation: current.variables(1).value(),
-                    weatherCode: parseInt(current.variables(2).value()),
+                    precipitation: current.variables(2).value(),
+                    weatherCode: current.variables(3).value(),
                 },
                 daily: {
                     time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
