@@ -80,7 +80,7 @@ This project uses, and sends thanks to, these particular giants:
 * [Tailwind CSS](https://tailwindcss.com/) for CSS
 * (Either) [OpenMeteo](https://open-meteo.com/) for weather data
 * (Or) [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
-* [ARPANSA](https://www.arpansa.gov.au/)) for live UV data
+* [ARPANSA](https://www.arpansa.gov.au/) for live UV data (some Australian locations)
 * [Meteocons](https://bas.dev/work/meteocons) for the weather icons
 * [Kodi](https://kodi.tv/) - my media player of choice (since 2008!)
 
