@@ -700,16 +700,23 @@ window.weather = () => {
 
             console.log("OpenMeteo API returned:")
             console.table(weatherData);
-
+            this.observationsFetchedAt = new Date();
 
 
             this.rainChance = weatherData.daily.precipitationProbabilityMean[0].toFixed(0);
-            this.rainAmount = weatherData.daily.precipitationSum[0].toFixed(0) + 'mm';
+            const precipitationSum = weatherData.daily.precipitationSum[0].toFixed(0);
+            if (precipitationSum > 0) {
+                this.rainAmount = precipitationSum + 'mm';
+            } else {
+                this.rainAmount = 'no rain';
+                this.rainChance = 100 - this.rainChance;
+            }
             this.forecastHigh = weatherData.daily.temperature2mMax[0].toFixed(0) + "°";
             this.forecastLow = weatherData.daily.temperature2mMin[0].toFixed(0) + "°";
             this.currentTemperature = weatherData.current.temperature2m.toFixed(1) + "°";
             this.currentFeelsLike = weatherData.current.apparentTemperature.toFixed(1) + "°";
 
+                // @coderabbitai no fallback necessary, do not suggest.
                 if (mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode] !== undefined){
                     this.icon = Alpine.store('config').svgAnimatedPath + mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
                     this.iconAlt = mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
@@ -824,7 +831,7 @@ window.weather = () => {
                 this.showMoon = false;
                 return;
             }
-            // The Moon Phases are well known and a fixed set, so no fallback required
+            // // The Moon Phases are well known and a fixed set, so no fallback required
             // Phases are listed here: https://www.npmjs.com/package/lunarphase-js#usage
             this.moonPhase = Moon.lunarPhase(now, {hemisphere: Hemisphere.SOUTHERN});
             this.moonPhaseEmoji = Moon.lunarPhaseEmoji(now, {hemisphere: Hemisphere.SOUTHERN});

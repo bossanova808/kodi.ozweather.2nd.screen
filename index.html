@@ -64,13 +64,19 @@
                     </div>
 
                     <!-- Moon Phase - Open Meteo or BOM & nighttime -->
-                    <div x-show="$store.config.size!=='small' && showMoon">
+                    <div x-show="$store.config.size!=='small' && showMoon" class="relative">
                         <img class="mb-2 pb-2" :src="moonPhaseIcon" :alt="moonPhase" :height="$store.config.moonIconSize" :width="$store.config.moonIconSize"/>
 
-                        <!-- WAXING or WANING STATUS HERE -->
-                        
-                    </div>
+                        <!-- Waxing indicator -->
+                        <div x-show="isWaxing" class="absolute bottom-9 left-[70%]" :style="`width: ${$store.config.moonIconSize / 4}px; height: ${$store.config.moonIconSize / 4}px;`">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full fill-blue-200"><path d="M7 14l5-5 5 5z"/></svg>
+                        </div>
 
+                        <!-- Waning indicator -->
+                        <div x-show="isWaning" class="absolute bottom-10 left-[70%]"  :style="`width: ${$store.config.moonIconSize / 4}px; height: ${$store.config.moonIconSize / 4}px;`">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full fill-blue-200"><path d="M7 10l5 5 5-5z"/></svg>
+                        </div>
+                    </div>
 
                 </div>
 
