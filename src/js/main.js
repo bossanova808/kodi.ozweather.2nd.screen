@@ -74,7 +74,7 @@ Alpine.store('config', {
             this.textSmall = 'text-6xl';
             this.textSmaller = 'text-5xl';
             this.weatherIconSize = 325;
-            this.moonIconSize = 150;
+            this.moonIconSize = 200;
             this.kodiArtworkScale = "max-w-lg"
         }
     },
