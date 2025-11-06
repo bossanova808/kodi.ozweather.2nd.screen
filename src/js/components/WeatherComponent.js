@@ -1,5 +1,8 @@
 import { fetchWeatherApi } from 'openmeteo';
 import { Moon, Hemisphere } from "lunarphase-js";
+import "../utils/logger.js"
+
+const log = logger('WeatherComponent.js');
 
 /**
  * Location API Response Type
@@ -305,7 +308,7 @@ window.weather = () => {
 
         // 'Private' methods
         _clearProperties() {
-            console.log("Clearing Weather Properties.");
+            log.info("Clearing Weather Properties.");
             // These hold the full JSON returned
             this.location = "";
             this.forecast = "";
@@ -349,14 +352,14 @@ window.weather = () => {
 
 
         init() {
-            console.log("WeatherComponent init");
+            log.info("WeatherComponent init");
 
-            console.log("Pre-caching weather icons")
+            log.info("Pre-caching weather icons")
             for (const [_key, value] of Object.entries(mapBOMConditionToWeatherIcon)) {
                 this.preload_image(value).then();
             }
             // Add UV icon pre-caching
-            console.log("Pre-caching UV icons")
+            log.info("Pre-caching UV icons")
             for (let i = 0; i <= 11; i++) {
                 this.preload_image(`uv-index-${i}.svg`).then();
             }
@@ -385,9 +388,9 @@ window.weather = () => {
             let now = new Date();
             if (!this.observationsFetchedAt) return;
             let weatherAge = Math.round((now - this.observationsFetchedAt) / 60000);
-            console.log(`Current weather data was fetched ${weatherAge} minutes ago`);
+            log.info(`Current weather data was fetched ${weatherAge} minutes ago`);
             if (weatherAge > this.weatherConsideredStaleAtMinutes) {
-                console.log("Weather is stale.");
+                log.info("Weather is stale.");
                 this._clearProperties();
                 Alpine.store('isAvailable').weather = false;
             }
@@ -397,7 +400,7 @@ window.weather = () => {
         async preload_image(img_svg) {
             let img = new Image();
             img.src = Alpine.store('config').svgAnimatedPath + img_svg;
-            console.log(`Pre-cached ${img.src}`);
+            log.info(`Pre-cached ${img.src}`);
         },
 
         // 'Parent' function to trigger the various stages of updating the weather data.
@@ -408,7 +411,7 @@ window.weather = () => {
 
             // Are we using Australian BOM data?
             if (weatherService==="bom") {
-                console.log("Using Australian BOM for weather data.")
+                log.info("Using Australian BOM for weather data.")
 
                 // On initialisation, we must have the location data
                 if (init) {
@@ -416,8 +419,8 @@ window.weather = () => {
                         await this.updateLocation();
                     }
                     catch (e) {
-                        console.log("Error fetching weather location on startup - big problem!")
-                        console.log(e);
+                        log.error("Error fetching weather location on startup - big problem!")
+                        log.error(e);
                         this._clearProperties();
                         Alpine.store('isAvailable').weather = false;
                         return;
@@ -427,8 +430,8 @@ window.weather = () => {
                 try {
                     await this.updateObservations();
                 } catch (e) {
-                    console.log("Error fetching observations.")
-                    console.log(e);
+                    log.error("Error fetching observations.")
+                    log.error(e);
                     this._clearProperties();
                     Alpine.store('isAvailable').weather = false;
                     return;
@@ -437,8 +440,8 @@ window.weather = () => {
                 try {
                     await this.updateForecast();
                 } catch (e) {
-                    console.log("Error fetching forecast.")
-                    console.log(e);
+                    log.error("Error fetching forecast.")
+                    log.error(e);
                     this._clearProperties();
                     Alpine.store('isAvailable').weather = false;
                     return;
@@ -446,13 +449,13 @@ window.weather = () => {
             }
             // Not using Australian BOM data? Use OpenMeteo for weather data instead
             else {
-                console.log("Using Open Meteo for weather data.")
+                log.info("Using Open Meteo for weather data.")
                 try {
                     await this.updateForecastAndObservationsUsingOpenMeteo()
                 }
                 catch (e) {
-                    console.log("Error fetching weather from OpenMeteo.")
-                    console.log(e);
+                    log.error("Error fetching weather from OpenMeteo.")
+                    log.error(e);
                     this._clearProperties();
                     Alpine.store('isAvailable').weather = false;
                     return;
@@ -467,8 +470,8 @@ window.weather = () => {
                 await this.updateUV();
             }
             catch (e) {
-                console.log("Error fetching UV.")
-                console.log(e);
+                log.error("Error fetching UV.")
+                log.error(e);
                 // return;
             }
 
@@ -476,8 +479,8 @@ window.weather = () => {
                 await this.updateMoon(weatherService);
             }
             catch (e) {
-                console.log("Error calculating moon phase.")
-                console.log(e);
+                log.error("Error calculating moon phase.")
+                log.error(e);
                 // return;
             }
 
@@ -501,7 +504,7 @@ window.weather = () => {
             })
                 .then(response => response.json())
                 .then(json => {
-                    console.log(JSON.stringify(json));
+                    log.info(JSON.stringify(json));
                     /** @type {LocationResponse} */
                     this.location = json;
                     this.locationLatitude = this.location.data.latitude.toFixed(2);
@@ -521,7 +524,7 @@ window.weather = () => {
             })
                 .then(response => response.json())
                 .then(json => {
-                    console.log(JSON.stringify(json));
+                    log.info(JSON.stringify(json));
                     /** @type {ObservationsResponse} */
                     this.observations = json;
                     // Use this to keep track of when we last got observations, in case of network drop etc.
@@ -548,7 +551,7 @@ window.weather = () => {
             })
                 .then(response => response.json())
                 .then(json => {
-                    console.log(JSON.stringify(json));
+                    log.info(JSON.stringify(json));
                     /** @type {ForecastResponse} */
                     this.forecast = json;
                     /** @type {ForecastDayData} */
@@ -559,9 +562,9 @@ window.weather = () => {
                     this.sunrise = new Date(todayForecast.astronomical.sunrise_time);
                     this.sunset = new Date(todayForecast.astronomical.sunset_time);
                     let dayOrNight = '-night';
-                    // console.log("Now", now);
-                    // console.log("Sunrise", sunrise);
-                    // console.log("Sunset", sunset);
+                    // log.info("Now", now);
+                    // log.info("Sunrise", sunrise);
+                    // log.info("Sunset", sunset);
                     if ( now > this.sunrise && now < this.sunset ) {
                         dayOrNight = '-day';
                     }
@@ -579,17 +582,17 @@ window.weather = () => {
                       .replace(/[^\w-]/g, "")
                       .trim();
                     let iconFromShortText = slugify(this.outlook) + dayOrNight;
-                    console.log(`iconFromShortText is ${iconFromShortText}`);
+                    log.info(`iconFromShortText is ${iconFromShortText}`);
                     if (mapBOMConditionToWeatherIcon[iconFromShortText] !== undefined){
                         this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[iconFromShortText];
                         this.iconAlt = iconFromShortText;
-                        console.log(`Mapped BOM Short Text [${this.outlook}] -> [${iconFromShortText}] -> to actual icon ${this.icon}`)
+                        log.info(`Mapped BOM Short Text [${this.outlook}] -> [${iconFromShortText}] -> to actual icon ${this.icon}`)
                     }
                     else {
                         let bomIconDescriptor = todayForecast.icon_descriptor + dayOrNight;
                         this.icon = Alpine.store('config').svgAnimatedPath + mapBOMConditionToWeatherIcon[bomIconDescriptor];
                         this.iconAlt = todayForecast.icon_descriptor;
-                        console.log(`Mapped BOM Icon Descriptor [${this.iconAlt}] -> [${bomIconDescriptor}] -> to actual icon ${this.icon}`)
+                        log.info(`Mapped BOM Icon Descriptor [${this.iconAlt}] -> [${bomIconDescriptor}] -> to actual icon ${this.icon}`)
                     }
                     // Clean up the outlook text
 
@@ -630,7 +633,7 @@ window.weather = () => {
 
         async updateForecastAndObservationsUsingOpenMeteo () {
 
-            console.log("updateWeatherOpenMeteo");
+            log.info("updateWeatherOpenMeteo");
 
             // OpenMeteo doesn't really have an easy to get equivalent for these...
             this.showRainSince9am = false;
@@ -645,7 +648,7 @@ window.weather = () => {
                 "forecast_days": 1
             };
             const url = "https://api.open-meteo.com/v1/forecast";
-            console.log(`Calling ${url} with params:`)
+            log.info(`Calling ${url} with params:`)
             console.table(params);
             const responses = await fetchWeatherApi(url, params);
 
@@ -691,14 +694,14 @@ window.weather = () => {
 
             // `weatherData` now contains a simple structure with arrays for datetime and weather data
             // for (let i = 0; i < weatherData.daily.time.length; i++) {
-            //     console.log(
+            //     log.info(
             //         weatherData.daily.time[i].toISOString(),
             //         weatherData.daily.precipitationSum[i],
             //         weatherData.daily.precipitationProbabilityMean[i]
             //     );
             // }
 
-            console.log("OpenMeteo API returned:")
+            log.info("OpenMeteo API returned:")
             console.table(weatherData);
             this.observationsFetchedAt = new Date();
 
@@ -721,7 +724,7 @@ window.weather = () => {
                     this.icon = Alpine.store('config').svgAnimatedPath + mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
                     this.iconAlt = mapOpenMeteoWeatherCodeToWeatherIcon[weatherData.current.weatherCode];
                     this.outlook = mapOpenMeteoWeatherCodeToOutlook[weatherData.current.weatherCode];
-                    console.log(`Mapped OpenMeteo WeatherCode [${weatherData.current.weatherCode}]-> to icon ${this.icon} and outlook ${this.outlook}`)
+                    log.info(`Mapped OpenMeteo WeatherCode [${weatherData.current.weatherCode}]-> to icon ${this.icon} and outlook ${this.outlook}`)
                 }
 
         },
@@ -741,7 +744,7 @@ window.weather = () => {
 
             // Short circuit if no station configured
             if (!station.length) {
-                console.log("No UV station configured — skipping UV fetch");
+                log.info("No UV station configured — skipping UV fetch");
                 this.uvNow = "";
                 this.uvIcon = "";
                 this.showUV = false;
@@ -750,7 +753,7 @@ window.weather = () => {
 
             // Short circuit if it's nighttime
             if (this.sunrise && this.sunset && (now < this.sunrise || now > this.sunset)) {
-                console.log('Currently nighttime - not bothering with UV data');
+                log.info('Currently nighttime - not bothering with UV data');
                 this.uvNow = "";
                 this.uvIcon = "";
                 this.forecastUVMax = "";
@@ -759,7 +762,7 @@ window.weather = () => {
             }
 
             // Get the UV data
-            console.log(`Getting current UV from: ${uvURL}`);
+            log.info(`Getting current UV from: ${uvURL}`);
 
             return await fetch(uvURL, {
                 method: 'GET',
@@ -767,7 +770,7 @@ window.weather = () => {
                 .then(response => response.text())
                 .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
                 .then(data => {
-                    console.log(data);
+                    log.info(data);
 
                     // Find the location element that matches our target station
                     const locations = data.querySelectorAll('location');
@@ -776,18 +779,18 @@ window.weather = () => {
                     for (let locationElement of locations) {
                         // The location name is in the 'id' attribute
                         const locationId = locationElement.getAttribute('id');
-                        console.log(`Checking station: ${locationId}`);
+                        log.info(`Checking station: ${locationId}`);
 
                         if (locationId && locationId.toLowerCase().includes(station.toLowerCase())) {
                             // Found our station, get the UV index
                             const uvIndex = locationElement.querySelector('index')?.textContent?.trim();
                             const status = locationElement.querySelector('status')?.textContent?.trim();
 
-                            console.log(`Station: ${locationId}, UV Index: ${uvIndex}, Status: ${status}`);
+                            log.info(`Station: ${locationId}, UV Index: ${uvIndex}, Status: ${status}`);
 
                             if (uvIndex && uvIndex !== '' && !isNaN(parseFloat(uvIndex)) && status === 'ok') {
                                 uvValue = parseFloat(uvIndex);
-                                console.log(`Found valid UV value for ${locationId}: ${uvValue}`);
+                                log.info(`Found valid UV value for ${locationId}: ${uvValue}`);
                                 break;
                             }
                         }
@@ -797,7 +800,7 @@ window.weather = () => {
                         this.uvNow = Math.round(uvValue);
                         let iconCode = (uvValue < 11) ? this.uvNow : 11;
                         this.uvIcon = Alpine.store('config').svgAnimatedPath + `uv-index-${iconCode}.svg`;
-                        console.log(`UV now: ${this.uvNow}, forecast max: ${this.forecastUVMax}, icon: ${this.uvIcon}`);
+                        log.info(`UV now: ${this.uvNow}, forecast max: ${this.forecastUVMax}, icon: ${this.uvIcon}`);
                         this.showUV = true;
                     }
                     else {
@@ -824,7 +827,7 @@ window.weather = () => {
             // If we're using the BOM, and it's daytime, short circuit - don't set Moon data as UV is displayed instead
             // However if we're using Open Meteo for weather data, carry on, as there's no UV to show so might as well always show the moon
             if (weatherService === "bom" && (this.sunrise && this.sunset && now >= this.sunrise && now <= this.sunset)) {
-                console.log('Currently daytime - not showing moon data');
+                log.info('Currently daytime - not showing moon data');
                 this.moonPhase = "";
                 this.moonPhaseEmoji = "";
                 this.moonPhaseIcon = "";
@@ -838,7 +841,7 @@ window.weather = () => {
             this.isWaxing = Moon.isWaxing(now);
             this.isWaning = Moon.isWaning(now);
             this.moonPhaseIcon = Alpine.store('config').svgAnimatedPath  + mapMoonPhaseToWeatherIcon[this.moonPhase];
-            console.log(`Current moon is ${this.moonPhase} ${this.moonPhaseEmoji}, icon: ${this.moonPhaseIcon}`);
+            log.info(`Current moon is ${this.moonPhase} ${this.moonPhaseEmoji}, icon: ${this.moonPhaseIcon}`);
             this.showMoon = true;
         },
 
