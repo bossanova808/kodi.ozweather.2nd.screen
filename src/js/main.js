@@ -5,7 +5,7 @@ import "./utils/logger.js"
 import "./components/ClockComponent";
 import "./components/WeatherComponent";
 import "./components/KodiComponent";
-// import './components/JellyfinComponent';
+import './components/JellyfinComponent';
 
 
 const log = logger('main.js');
@@ -15,6 +15,9 @@ Alpine.store('config', {
     init() {
         const urlParams = new URLSearchParams(window.location.search);
 
+        this.jellyfinUrl = urlParams.get('jelly') || 'jellyfin:8096';
+        this.jellyfinApiKey = urlParams.get('jelly-api') || '85c87c5bf4d44eb5ae0d8d1062d77ab4';
+        this.jellyfinSSL = false;
         this.kodi = urlParams.get('kodi') || '127.0.0.1';
         this.bom = urlParams.get('bom') || false;
         this.uvStation = urlParams.get('uv') || '';
@@ -83,6 +86,9 @@ Alpine.store('config', {
             this.kodiArtworkScale = "max-w-lg"
         }
     },
+    jellyfinUrl: false,
+    jellyfinApiKey: false,
+    jellyfinSSL: false,
     kodi: false,
     kodiJsonUrl: false,
     kodiWebUrl: false,
@@ -111,15 +117,18 @@ Alpine.store('isAvailable', {
     init() {
         this.weather = false;
         this.kodi = false;
+        this.jellyfin = false;
     },
     weather: false,
     kodi: false,
+    jellyfin: false,
 });
 
 // Create the components - each are scoped to the window which is where Alpine expects to find them
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
-Alpine.data('kodi', window.kodi);
+//Alpine.data('kodi', window.kodi);
+Alpine.data('jelly', window.jelly);
 
 // Actually start Alpine
 Alpine.start();
