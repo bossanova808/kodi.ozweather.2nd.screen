@@ -1,6 +1,9 @@
 // noinspection JSUnresolvedReference
 
 import { WebSocket } from "partysocket";
+import "../utils/logger.js"
+
+const log = logger('KodiComponent.js');
 
 function getKodiProtocols() {
     // Read SSL setting from centralized config
@@ -22,7 +25,7 @@ function sendKodiMessageOverWebSocket(rws, method, params) {
     if (params) {
         msg.params = params;
     }
-    //console.log("About to send message:", msg)
+    //log.info("About to send message:", msg)
     rws.send(JSON.stringify(msg));
 }
 
@@ -50,7 +53,7 @@ window.kodi = () => {
                     };
                     rws.send(JSON.stringify(pingMessage));
                 } catch (error) {
-                    console.log('Health check ping failed:', error);
+                    log.warning('Health check ping failed:', error);
                     if (rws) {
                         rws.close(1011, 'Closing WebSocket to Kodi as health check failed');
                     }
@@ -88,11 +91,11 @@ window.kodi = () => {
                 debug: false,
             };
 
-            console.log(`*** Opening new websocket connection to Kodi: ${kodiWebsocketUrl}`);
+            log.info(`*** Opening new websocket connection to Kodi: ${kodiWebsocketUrl}`);
 
             // Workaround 1: Reset existing connection reference
             if (rws) {
-                console.log('Resetting existing WebSocket reference');
+                log.info('Resetting existing WebSocket reference');
                 try {
                     if (rws.readyState < 2) rws.close(1000, 'Re-init'); // normal closure
                 } catch (_) { /* ignore */ }
@@ -112,7 +115,7 @@ window.kodi = () => {
                     rws = new WebSocket(kodiWebsocketUrl, undefined, options);
 
                     rws.addEventListener('open', () => {
-                        console.log("Websocket [open]: Connection opened to Kodi")
+                        log.info("Websocket [open]: Connection opened to Kodi")
                         // (DON'T set Kodi available here - wait for actual playback)
                         startHealthCheck();
                         // Check if Kodi is already playing, as soon as we connect...
@@ -120,7 +123,7 @@ window.kodi = () => {
                     });
 
                     rws.addEventListener('error', (event) => {
-                        if (options.debug) console.log('WebSocket [error]:', event);
+                        if (options.debug) log.info('WebSocket [error]:', event);
                         this._handleDisconnectCleanup();
                     });
 
@@ -128,13 +131,13 @@ window.kodi = () => {
                     if (!this._offlineHandlerRegistered) {
                         this._offlineHandlerRegistered = true;
                         window.addEventListener('offline', () => {
-                            if (options.debug) console.log('Network offline');
+                            if (options.debug) log.info('Network offline');
                             this._handleDisconnectCleanup();
                         });
                     }
 
                     rws.addEventListener('close', (event) => {
-                        console.log(`Kodi WebSocket Disconnected:`, JSON.stringify({
+                        log.info(`Kodi WebSocket Disconnected:`, JSON.stringify({
                             code: event.code,
                             reason: event.reason || 'No reason provided',
                             wasClean: event.wasClean,
@@ -160,7 +163,7 @@ window.kodi = () => {
                         }.bind(this), 1000);
 
                         // Don't add custom reconnection logic here - let PartySocket handle it
-                        console.log('WebSocket closed, PartySocket will handle reconnection automatically');
+                        log.info('WebSocket closed, PartySocket will handle reconnection automatically');
                     });
 
                     rws.addEventListener('message', (event) => {
@@ -172,15 +175,15 @@ window.kodi = () => {
                         }
 
                         let json_result = data;
-                        console.log('Websocket [message]:');
+                        log.info('Websocket [message]:');
                         // This logs the whole json response from Kodi nicely and means we don't need to log this individually below
-                        console.log(JSON.stringify(json_result, null, 4));
+                        log.info(JSON.stringify(json_result, null, 4));
 
                         //////////////////////////////////////////////////////
                         // RESULTS PROCESSING!
 
                         if (json_result.id === "Player.GetItem") {
-                            console.log("Processing result for: Player.GetItem");
+                            log.info("Processing result for: Player.GetItem");
 
                             let results = json_result.result;
                             this.title = results.item.title || '';
@@ -194,49 +197,49 @@ window.kodi = () => {
                                 const art = results.item.art;
 
                                 if (art["album.thumb"]) {
-                                    console.log("Artwork: using [album.thumb]")
+                                    log.info("Artwork: using [album.thumb]")
                                     artworkUrl = art["album.thumb"];
                                 }
                                 else if (art["tvshow.poster"]) {
-                                    console.log("Artwork: using [tvshow.poster]")
+                                    log.info("Artwork: using [tvshow.poster]")
                                     artworkUrl = art["tvshow.poster"];
                                 }
                                 else if (art["movie.poster"]) {
-                                    console.log("Artwork: using [movie.poster]")
+                                    log.info("Artwork: using [movie.poster]")
                                     artworkUrl = art["movie.poster"];
                                 }
                                 else if (art["poster"]) {
-                                    console.log("Artwork: using [poster]")
+                                    log.info("Artwork: using [poster]")
                                     artworkUrl = art["poster"];
                                 }
                                 else if (art["thumb"]) {
-                                    console.log("Artwork: using [thumb]")
+                                    log.info("Artwork: using [thumb]")
                                     artworkUrl = art["thumb"];
                                 }
                                 else if (art["icon"]) {
-                                    console.log("Artwork: using [icon]")
+                                    log.info("Artwork: using [icon]")
                                     artworkUrl = art["icon"];
                                 }
                             }
                             else if (results.item.thumbnail) {
-                                console.log("Artwork: using fallback thumbnail")
+                                log.info("Artwork: using fallback thumbnail")
                                 artworkUrl = results.item.thumbnail;
                             }
 
                             if (artworkUrl) {
                                 let artworkFromKodi = artworkUrl;
-                                console.log("Kodi returned:", artworkFromKodi);
+                                log.info("Kodi returned:", artworkFromKodi);
                                 artworkFromKodi = artworkFromKodi.replace(/\/$/, '');
                                 let kodiArtworkUrl;
 
                                 if (artworkFromKodi.startsWith("http")) {
-                                    console.log("Artwork URL is absolute - using directly");
+                                    log.info("Artwork URL is absolute - using directly");
                                     kodiArtworkUrl = artworkFromKodi;
                                 } else {
                                     const protocols = getKodiProtocols();
                                     kodiArtworkUrl = `${protocols.http}${Alpine.store('config').kodiWebUrl}/image/${encodeURIComponent(artworkFromKodi)}`;
                                 }
-                                console.log("Final artwork URL:", kodiArtworkUrl);
+                                log.info("Final artwork URL:", kodiArtworkUrl);
                                 this.artwork = kodiArtworkUrl;
                             }
 
@@ -270,7 +273,7 @@ window.kodi = () => {
 
                         // Get Time Remaining and Finish time - varies for PVR vs. other types of playback...
                         if (json_result.id === "XBMC.GetInfoLabels") {
-                            console.log("Processing result for: XBMC.GetInfoLabels");
+                            log.info("Processing result for: XBMC.GetInfoLabels");
 
                             let results = json_result.result;
                             // Remaining time
@@ -279,8 +282,8 @@ window.kodi = () => {
                             this.timeRemainingAsTime = temp !== '' ? '-' + temp : '';
                             // Finish time
                             const finishTime = results["PVR.EpgEventFinishTime"] || results["Player.FinishTime"] || '';
-                            console.log("Time Remaining is " + this.timeRemainingAsTime);
-                            console.log("Kodi finish time is " + finishTime);
+                            log.info("Time Remaining is " + this.timeRemainingAsTime);
+                            log.info("Kodi finish time is " + finishTime);
                             this.finishTime = typeof finishTime === 'string'
                                 ? finishTime.replace(' PM','pm').replace(' AM','am')
                                 : '';
@@ -296,10 +299,10 @@ window.kodi = () => {
 
                             // Responding to request to Kodi Player.GetActivePlayers
                             if (json_result.id === "Player.GetActivePlayers") {
-                                console.log("Processing result for: Player.GetActivePlayers")
+                                log.info("Processing result for: Player.GetActivePlayers")
 
                                 if (json_result.result.length === 0) {
-                                    console.log("Kodi is not playing.");
+                                    log.info("Kodi is not playing.");
                                     return;
                                 } else {
                                     // Playing music
@@ -314,21 +317,21 @@ window.kodi = () => {
                             }
                             // Responding to Kodi Notification: Player.OnPlay
                             else {
-                                console.log("Kodi Notification: Player.OnPlay");
+                                log.info("Kodi Notification: Player.OnPlay");
                                 playerId = json_result.params.data.player.playerid;
                             }
 
                             if (playerId === -1) {
-                                console.log("Player ID was -1 (stream?) - let's assume video...");
+                                log.info("Player ID was -1 (stream?) - let's assume video...");
                                 playerId = 1;
                             }
                             // Playing pictures?  Just stay on the weather display
                             if (playerId === 2) {
-                                console.log("Player ID is 2, displaying pictures, so do nothing.")
+                                log.info("Player ID is 2, displaying pictures, so do nothing.")
                                 return;
                             }
 
-                            console.log("Playback has started with playerid", playerId);
+                            log.info("Playback has started with playerid", playerId);
 
                             // Kodi playing - so first get static data - what is playing, artwork urls etc.
                             // Once this returns, the handler above will kick off the update of time remaining.
@@ -345,21 +348,21 @@ window.kodi = () => {
                         }
 
                         if (json_result.method === "Player.OnStop") {
-                            console.log("Kodi: Player.OnStop");
+                            log.info("Kodi: Player.OnStop");
                             this._handleDisconnectCleanup({ useTimeout: false });
                         }
 
                     });
 
                 } catch (error) {
-                    console.error('Failed to create WebSocket:', error);
+                    log.error('Failed to create WebSocket:', error);
                     Alpine.store('isAvailable').kodi = false;
                 }
             }, 500);
         },
 
         _clearProperties() {
-            // console.log("Clearing Kodi properties");
+            // log.info("Clearing Kodi properties");
             this.artwork = null;
             this.title = '';
             this.season = '';
@@ -399,7 +402,7 @@ window.kodi = () => {
         init() {
             // Kick this off two seconds after we fire up, just to give time for things to settle a bit...
             this._initDelay = setTimeout(() => {
-                console.log("KodiComponent init");
+                log.info("KodiComponent init");
                 this.createEnhancedKodiWebSocket(); // Use this.createEnhancedKodiWebSocket()
             }, 2000)
         },

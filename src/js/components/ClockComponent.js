@@ -2,7 +2,8 @@ window.clock = () => {
     return {
         time: new Date(),
         init() {
-            console.log("ClockComponent init");
+            const log = logger('ClockComponent.js');
+            log.info("ClockComponent init");
 
             setInterval(() => {
                 this.time = new Date();

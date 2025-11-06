@@ -4,6 +4,9 @@ window.Alpine = Alpine;
 import "./components/ClockComponent";
 import "./components/WeatherComponent";
 import "./components/KodiComponent";
+import "./utils/logger.js"
+
+const log = logger('main.js');
 
 // Config comes from URL parameters
 Alpine.store('config', {
@@ -16,7 +19,7 @@ Alpine.store('config', {
         this.latitude = urlParams.get('latitude') || false;
         this.longitude = urlParams.get('longitude') || false;
         this.timezone = urlParams.get('timezone') || false;
-        // Fall back to BOM weather for Ascot Vale if no weather location info provided
+        // Fall back to BOM weather for Ascot Vale, Victoria, Australia - if no weather location info provided
         if (!this.bom && !this.latitude){
             this.bom = 'r1r11df';
         }
@@ -26,19 +29,19 @@ Alpine.store('config', {
         this.kodiJsonUrl = `${this.kodi}:${kodiJson}`;
         this.kodiWebUrl = `${this.kodi}:${kodiWeb}`;
         this.kodiSSL = urlParams.get('kodi-ssl') === 'true';
-        console.log("Kodi IP (&kodi, default 127.0.0.1) is", this.kodi);
-        console.log("Kodi JSON Port (&kodi-json, default 9090) is", kodiJson);
-        console.log("Kodi Web Port (&kodi-web, default 8080) is", kodiWeb);
-        console.log("Kodi SSL (&kodi-ssl, default false) is", this.kodiSSL);
-        console.log("Display Size (&size=small|medium|large, default large) is", this.size);
+        log.info("Kodi IP (&kodi, default 127.0.0.1) is", this.kodi);
+        log.info("Kodi JSON Port (&kodi-json, default 9090) is", kodiJson);
+        log.info("Kodi Web Port (&kodi-web, default 8080) is", kodiWeb);
+        log.info("Kodi SSL (&kodi-ssl, default false) is", this.kodiSSL);
+        log.info("Display Size (&size=small|medium|large, default large) is", this.size);
         if (this.bom){
-            console.log("BOM Weather Location ID (&bom, default r1r11df - Ascot Vale, Victoria) is", this.bom);
+            log.info("BOM Weather Location ID (&bom, default r1r11df - Ascot Vale, Victoria) is", this.bom);
         }
         else {
-            console.log("OpenMeteo Weather Location Latitude: ", this.latitude, " Longitude: ", this.longitude);
+            log.info("OpenMeteo Weather Location Latitude: ", this.latitude, " Longitude: ", this.longitude);
         }
         if (this.uvStation) {
-            console.log("UV station: ", this.uvStation);
+            log.info("UV station: ", this.uvStation);
         }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4
