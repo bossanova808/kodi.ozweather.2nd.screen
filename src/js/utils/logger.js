@@ -16,7 +16,7 @@ function createLogger(name = null) {
   const tag = name || autoName;
   const color = stringToColor(tag);
 
-  const baseFormat = [
+  const getFormat = () => [
     `%c[${new Date().toLocaleTimeString()}] %c[${tag}]%c`,
     'color: gray;',
     `color: ${color}; font-weight: bold;`,
@@ -24,10 +24,10 @@ function createLogger(name = null) {
   ];
 
   return {
-    log: (...args) => console.log(...baseFormat, ...args),
-    info: (...args) => console.info(...baseFormat, ...args),
-    warn: (...args) => console.warn(...baseFormat, ...args),
-    error: (...args) => console.error(...baseFormat, ...args),
+    log: (...args) => console.log(...getFormat(), ...args),
+    info: (...args) => console.info(...getFormat(), ...args),
+    warn: (...args) => console.warn(...getFormat(), ...args),
+    error: (...args) => console.error(...getFormat(), ...args),
   };
 }
 

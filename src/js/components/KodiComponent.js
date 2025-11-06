@@ -53,7 +53,7 @@ window.kodi = () => {
                     };
                     rws.send(JSON.stringify(pingMessage));
                 } catch (error) {
-                    log.warning('Health check ping failed:', error);
+                    log.warn('Health check ping failed:', error);
                     if (rws) {
                         rws.close(1011, 'Closing WebSocket to Kodi as health check failed');
                     }

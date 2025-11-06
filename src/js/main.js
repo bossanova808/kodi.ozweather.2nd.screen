@@ -1,10 +1,12 @@
 import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 
+import "./utils/logger.js"
 import "./components/ClockComponent";
 import "./components/WeatherComponent";
 import "./components/KodiComponent";
-import "./utils/logger.js"
+// import './components/JellyfinComponent';
+
 
 const log = logger('main.js');
 
