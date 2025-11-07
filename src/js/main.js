@@ -167,9 +167,12 @@ Alpine.store('isAvailable', {
 // Create the components - each are scoped to the window which is where Alpine expects to find them
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
-Alpine.data('kodi', window.kodi);
-Alpine.data('jellyfin', window.jellyfin);
-
+if (Alpine.store('config').mediaSource === "kodi") {
+    Alpine.data('media', window.kodi);
+}
+if (Alpine.store('config').mediaSource === "jellyfin") {
+    Alpine.data('media', window.jellyfin);
+}
 // Actually start Alpine
 Alpine.start();
 

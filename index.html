@@ -17,8 +17,7 @@
 <!-- (...there does not seem to be an easy way to consolidate this to just one div)-->
     <div x-data="clock()" class="bg-black h-screen">
         <div x-data="weather()" class="weather">
-            <div x-data="kodi()" class="kodi">
-                <div x-data="jellyfin()" class="jellyfin">
+            <div x-data="media()" class="kodi">
 
     <!-- This is the fallback if no network / weather / kodi - just show a centralised full-screen clock -->
 
@@ -121,10 +120,6 @@
 
                     <div x-show="$store.isAvailable.kodi === true || $store.isAvailable.jellyfin === true" x-transition.duration.500ms>
 
-                        <div style="position: fixed; top: 50%; left: 50%; color: white; z-index: 9999;">
-                            DEBUG: <span x-text="JSON.stringify({artwork: artwork, time: timeRemainingAsTime, finish: finishTime})"></span>
-                        </div>
-
                        <!--- Artwork -->
                         <div x-show="artwork" :class="$store.config.kodiArtworkScale" class="absolute top-0 left-0 align-middle">
                             <img class="object-contain h-screen"  :src="artwork" />
@@ -155,7 +150,6 @@
 
     <!-- Close off the component containers           -->
 
-                </div>
             </div>
         </div>
     </div>
@@ -166,3 +160,7 @@
 </body>
 </html>
 
+
+<!--                         <div style="position: fixed; top: 50%; left: 50%; color: white; z-index: 9999;"> -->
+<!--                             DEBUG: <span x-text="JSON.stringify({artwork: artwork, time: timeRemainingAsTime, finish: finishTime})"></span> -->
+<!--                         </div> -->
