@@ -38,6 +38,7 @@ Alpine.store('config', {
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') || false;
             this.jellyfinUser = urlParams.get('jellyfin-user') ||  ''
             this.jellyfinPassword = urlParams.get('jellyfin-password') || ''
+            this.jellyfinDevice = urlParams.get('jellyfin-device') || 'dash'
         }
         // Kodi Params
         if (this.mediaSource === 'kodi') {
@@ -127,6 +128,7 @@ Alpine.store('config', {
     jellyfinSSL: false,
     jellyfinUser: false,
     jellyfinPassword: false,
+    jellyfinDevice: false,
     kodi: false,
     kodiJsonPort: false,
     kodiWebPort: false,

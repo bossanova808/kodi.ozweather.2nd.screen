@@ -178,7 +178,7 @@ window.jellyfin = () => {
             }
 
             // Jellyfin WebSocket format: ws://host:port/socket?api_key=KEY&deviceId=DEVICE
-            const jellyfinWebsocketUrl = `${protocols.ws}${Alpine.store('config').jellyfinUrl}/socket?api_key=${this._apiKey}&deviceId=kodidash`;
+            const jellyfinWebsocketUrl = `${protocols.ws}${Alpine.store('config').jellyfinUrl}/socket?api_key=${this._apiKey}&deviceId=${Alpine.store('config').jellyfinDevice}`;
 
             const options = {
                 connectionTimeout: 2000,
@@ -297,8 +297,9 @@ window.jellyfin = () => {
                     const item = activeSession.NowPlayingItem;
                     if (!item) return;
 
-                    // Get artwork with fallback
-                    if (item.Id) {
+                    // Get artwork with fallback - only when item changes
+                    if (item.Id && item.Id !== this._currentItemId) {
+                        log.info(`New item detected (${item.Id}), fetching artwork`);
                         const fallbackUrls = buildArtworkFallbackUrls(
                             item,
                             Alpine.store('config').jellyfinUrl,
