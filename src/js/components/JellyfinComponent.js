@@ -194,7 +194,7 @@ window.jellyfin = () => {
 
                         if (messageType === 'PlaybackStopped') {
                             log.info("Jellyfin: PlaybackStopped");
-                            this._handleDisconnectCleanup({ useTimeout: false });
+                            this._handleDisconnectCleanup({ useTimeout: false, clearPollingInterval: false });
                         }
 
                     });

@@ -32,7 +32,7 @@ Alpine.store('config', {
         // Jellyfin Params
         if (this.mediaSource === 'jellyfin') {
             this.jellyfin = urlParams.get('jellyfin') || 'jellyfin';
-            this.jellyfinPort = urlParams.get('jellyfinPort ') || '8096';
+            this.jellyfinPort = urlParams.get('jellyfinPort') || '8096';
             this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
             this.jellyfinApiKey = urlParams.get('jellyfin-api') || '85c87c5bf4d44eb5ae0d8d1062d77ab4';
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') || false;
