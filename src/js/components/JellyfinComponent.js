@@ -20,7 +20,9 @@ function sendJellyfinMessageOverWebSocket(rws, messageType, data = {}) {
         MessageType: messageType,
         Data: data
     };
-    log.info("Sending Jellyfin message:", msg);
+    if (messageType !== 'KeepAlive') {
+        log.info("Sending Jellyfin message:", msg);
+    }
     rws.send(JSON.stringify(msg));
 }
 
@@ -216,7 +218,19 @@ window.jellyfin = () => {
                 const activeSession = sessions.find(s => s.NowPlayingItem);
 
                 if (activeSession) {
-                    this._handlePlaybackStart(activeSession);
+
+                    const item = activeSession.NowPlayingItem;
+                    if (!item) return;
+
+                    // Get artwork
+                    if (item.Id) {
+                        const protocols = getJellyfinProtocols();
+                        // Use Series poster for episodes, or otherwise primary (poster) for movies
+                        this.artwork = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Items/${item.SeriesId||item.Id}/Images/Primary?api_key=${this._apiKey}`;
+                        log.info(`Artwork URL set to ${this.artwork}`);
+                    }
+
+                    this._handlePlayback(activeSession);
                 } else {
                     // Only clear if we were previously showing jellyfin
                     if (Alpine.store('isAvailable').jellyfin) {
@@ -229,44 +243,36 @@ window.jellyfin = () => {
             }
         },
 
-        _handlePlaybackStart(session) {
-            const item = session.NowPlayingItem;
+        _handlePlayback(session) {
 
+            const item = session.NowPlayingItem;
             if (!item) return;
 
             this._currentItemId = item.Id;
             this._currentSessionId = session.Id;
-            this._currentMediaType = item.Type;
 
-            // Extract info
-            this.title = item.Name || '';
-
-            // For TV episodes
-            if (item.Type === 'Episode') {
-                this.season = item.ParentIndexNumber || '';
-                this.episode = item.IndexNumber || '';
-                this.title = item.SeriesName || this.title;
-            } else {
-                this.season = '';
-                this.episode = '';
-            }
-
-            // Get artwork
-            if (item.Id) {
-                const protocols = getJellyfinProtocols();
-                // Use Series poster for episodes, or otherwise primary (poster) for movies
-                this.artworkUrl = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Items/${item.SeriesId||item.Id}/Images/Primary?api_key=${this._apiKey}`;
-                log.info(`Artwork URL set to ${this.artworkUrl}`);
-            }
+            //this._currentMediaType = item.Type;
+            // // Extract info
+            // this.title = item.Name || '';
+            //
+            // // For TV episodes
+            // if (item.Type === 'Episode') {
+            //     this.season = item.ParentIndexNumber || '';
+            //     this.episode = item.IndexNumber || '';
+            //     this.title = item.SeriesName || this.title;
+            // } else {
+            //     this.season = '';
+            //     this.episode = '';
+            // }
 
             // Calculate time remaining and finish time
             this._updateTimeRemaining(session);
 
             // Remove the old update interval - we're now polling sessions which includes time info
-            if (this._updateTimeRemainingInterval) {
-                clearInterval(this._updateTimeRemainingInterval);
-                this._updateTimeRemainingInterval = null;
-            }
+            // if (this._updateTimeRemainingInterval) {
+            //     clearInterval(this._updateTimeRemainingInterval);
+            //     this._updateTimeRemainingInterval = null;
+            // }
 
             // Show the component
             if (!Alpine.store('isAvailable').jellyfin) {
@@ -333,7 +339,8 @@ window.jellyfin = () => {
             const {
                 useTimeout = true,
                 clearUpdateInterval = true,
-                clearPingInterval = true
+                clearPingInterval = true,
+                clearPollingInterval = true,
             } = options;
 
             if (useTimeout) {
@@ -356,7 +363,7 @@ window.jellyfin = () => {
                 pingInterval = null;
             }
 
-            if (pollInterval) {
+            if (clearPollingInterval && pollInterval) {
                 clearInterval(pollInterval);
                 pollInterval = null;
             }

@@ -400,7 +400,7 @@ window.weather = () => {
         async preload_image(img_svg) {
             let img = new Image();
             img.src = Alpine.store('config').svgAnimatedPath + img_svg;
-            log.info(`Pre-cached ${img.src}`);
+            // log.info(`Pre-cached ${img.src}`);
         },
 
         // 'Parent' function to trigger the various stages of updating the weather data.

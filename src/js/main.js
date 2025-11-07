@@ -15,10 +15,9 @@ Alpine.store('config', {
     init() {
         const urlParams = new URLSearchParams(window.location.search);
 
-        this.jellyfinUrl = urlParams.get('jelly') || 'jellyfin:8096';
-        this.jellyfinApiKey = urlParams.get('jelly-api') || '85c87c5bf4d44eb5ae0d8d1062d77ab4';
-        this.jellyfinSSL = false;
-        this.kodi = urlParams.get('kodi') || '127.0.0.1';
+        // Cosmetic Params
+        this.size = urlParams.get('size') || 'large';
+        // Weather Params
         this.bom = urlParams.get('bom') || false;
         this.uvStation = urlParams.get('uv') || '';
         this.latitude = urlParams.get('latitude') || false;
@@ -28,17 +27,31 @@ Alpine.store('config', {
         if (!this.bom && !this.latitude){
             this.bom = 'r1r11df';
         }
-        this.size = urlParams.get('size') || 'large';
-        const kodiJson = urlParams.get('kodi-json') || '9090';
-        const kodiWeb = urlParams.get('kodi-web') || '8080';
-        this.kodiJsonUrl = `${this.kodi}:${kodiJson}`;
-        this.kodiWebUrl = `${this.kodi}:${kodiWeb}`;
-        this.kodiSSL = urlParams.get('kodi-ssl') === 'true';
-        log.info("Kodi IP (&kodi, default 127.0.0.1) is", this.kodi);
-        log.info("Kodi JSON Port (&kodi-json, default 9090) is", kodiJson);
-        log.info("Kodi Web Port (&kodi-web, default 8080) is", kodiWeb);
-        log.info("Kodi SSL (&kodi-ssl, default false) is", this.kodiSSL);
+        // Media source - currently Jellyfin or Kodi
+        this.mediaSource = urlParams.get('media-source') || 'jellyfin';
+        // Jellyfin Params
+        if (this.mediaSource === 'jellyfin') {
+            this.jellyfin = urlParams.get('jellyfin') || 'jellyfin';
+            this.jellyfinPort = urlParams.get('jellyfinPort ') || '8096';
+            this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
+            this.jellyfinApiKey = urlParams.get('jellyfin-api') || '85c87c5bf4d44eb5ae0d8d1062d77ab4';
+            this.jellyfinSSL = urlParams.get('jellyfin-ssl') || false;
+            this.jellyfinUser = urlParams.get('jellyfin-user') ||  'Adults'
+            this.jellyfinPassword = urlParams.get('jellyfin-password') || 'velouria!!'
+        }
+        // Kodi Params
+        if (this.mediaSource === 'kodi') {
+            this.kodi = urlParams.get('kodi') || '127.0.0.1';
+            this.kodiJsonPort = urlParams.get('kodi-json') || '9090';
+            this.kodiWebPort = urlParams.get('kodi-web') || '8080';
+            this.kodiJsonUrl = `${this.kodi}:${this.kodiJsonPort}`;
+            this.kodiWebUrl = `${this.kodi}:${this.kodiWebPort}`;
+            this.kodiSSL = urlParams.get('kodi-ssl') === 'true';
+        }
+
+        // Explicitly log the config / provide instructions
         log.info("Display Size (&size=small|medium|large, default large) is", this.size);
+
         if (this.bom){
             log.info("BOM Weather Location ID (&bom, default r1r11df - Ascot Vale, Victoria) is", this.bom);
         }
@@ -47,6 +60,26 @@ Alpine.store('config', {
         }
         if (this.uvStation) {
             log.info("UV station: ", this.uvStation);
+        }
+
+        if (this.mediaSource === 'jellyfin') {
+            log.info("Jellyfin Host (&jellyfin, default jellyfin) is", this.jellyfin);
+            log.info("Jellyfin Port (&jellyfin-port, default 8096) is", this.jellyfinPort);
+            log.info("Jellyfin SSL (&jellyfin-ssl, default false) is", this.jellyfinSSL);
+            log.info("Jellyfin user (&jellyfin-user, default user) is", this.jellyfinUser);
+            if (this.jellyfinPassword) {
+                log.info("Jellyfin password (&jellyfin-password, default password) is", this.jellyfinPassword.replace(this.jellyfinPassword, '***'));
+            }
+            if (this.jellyfinApiKey) {
+                log.info("Jellyfin API key (&jellyfin-api-key) is", this.jellyfinApiKey.replace(this.jellyfinApiKey, '***'));
+            }
+        }
+
+        if (this.mediaSource === 'kodi') {
+            log.info("Kodi Host (&kodi, default 127.0.0.1) is", this.kodi);
+            log.info("Kodi JSON Port (&kodi-json, default 9090) is", this.kodiJsonPort);
+            log.info("Kodi Web Port (&kodi-web, default 8080) is", this.kodiWebPort);
+            log.info("Kodi SSL (&kodi-ssl, default false) is", this.kodiSSL);
         }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4
@@ -86,10 +119,17 @@ Alpine.store('config', {
             this.kodiArtworkScale = "max-w-lg"
         }
     },
+    mediaSource: false,
+    jellyfin: false,
+    jellyfinPort: false,
     jellyfinUrl: false,
     jellyfinApiKey: false,
     jellyfinSSL: false,
+    jellyfinUser: false,
+    jellyfinPassword: false,
     kodi: false,
+    kodiJsonPort: false,
+    kodiWebPort: false,
     kodiJsonUrl: false,
     kodiWebUrl: false,
     kodiSSL: false,
@@ -128,7 +168,7 @@ Alpine.store('isAvailable', {
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
 //Alpine.data('kodi', window.kodi);
-Alpine.data('jelly', window.jelly);
+Alpine.data('jelly', window.jellyfin);
 
 // Actually start Alpine
 Alpine.start();
