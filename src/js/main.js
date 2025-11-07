@@ -32,11 +32,11 @@ Alpine.store('config', {
         // Jellyfin Params
         if (this.mediaSource === 'jellyfin') {
             this.jellyfin = urlParams.get('jellyfin') || 'jellyfin';
-            this.jellyfinPort = urlParams.get('jellyfinPort') || '8096';
+            this.jellyfinPort = urlParams.get('jellyfin-port') || '8096';
             this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
             this.jellyfinApiKey = urlParams.get('jellyfin-api') || '';
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') || false;
-            this.jellyfinUser = urlParams.get('jellyfin-user') ||  'Adults'
+            this.jellyfinUser = urlParams.get('jellyfin-user') ||  ''
             this.jellyfinPassword = urlParams.get('jellyfin-password') || ''
         }
         // Kodi Params
@@ -168,7 +168,7 @@ Alpine.store('isAvailable', {
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
 //Alpine.data('kodi', window.kodi);
-Alpine.data('jelly', window.jellyfin);
+Alpine.data('jellyfin', window.jellyfin);
 
 // Actually start Alpine
 Alpine.start();

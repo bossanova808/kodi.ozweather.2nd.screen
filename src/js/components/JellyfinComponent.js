@@ -26,6 +26,86 @@ function sendJellyfinMessageOverWebSocket(rws, messageType, data = {}) {
     rws.send(JSON.stringify(msg));
 }
 
+/**
+ * Builds fallback URLs for artwork based on media type
+ */
+function buildArtworkFallbackUrls(item, baseUrl, apiKey) {
+    const urls = [];
+    const protocols = getJellyfinProtocols();
+    const baseImageUrl = `${protocols.http}${baseUrl}/Items`;
+
+    // Helper to add image URL if ID exists
+    const addImageUrl = (itemId, imageType) => {
+        if (itemId) {
+            urls.push(`${baseImageUrl}/${itemId}/Images/${imageType}?api_key=${apiKey}`);
+        }
+    };
+
+    switch (item.Type) {
+        case 'Episode':
+            // Series Poster -> Series Logo -> Episode Primary -> Episode Thumbnail -> Jellyfin Logo
+            addImageUrl(item.SeriesId, 'Primary');
+            addImageUrl(item.SeriesId, 'Logo');
+            addImageUrl(item.Id, 'Primary');
+            addImageUrl(item.Id, 'Thumb');
+            break;
+
+        case 'Movie':
+            // Movie Poster -> Movie Thumbnail -> Jellyfin Logo
+            addImageUrl(item.Id, 'Primary');
+            addImageUrl(item.Id, 'Thumb');
+            break;
+
+        case 'Audio':
+        case 'MusicAlbum':
+        case 'AudioBook':
+        case 'Book':
+            // Album/Book cover -> Jellyfin logo
+            // Try album first if available, then item itself
+            addImageUrl(item.AlbumId || item.ParentId, 'Primary');
+            addImageUrl(item.Id, 'Primary');
+            break;
+
+        default:
+            // Generic fallback: Primary -> Thumb -> Jellyfin Logo
+            addImageUrl(item.Id, 'Primary');
+            addImageUrl(item.Id, 'Thumb');
+            break;
+    }
+
+    // Always add Jellyfin logo as final fallback
+    urls.push('/images/jellyfin-logo.png');
+
+    return urls;
+}
+
+/**
+ * Tests artwork URLs in order and returns the first valid one
+ */
+async function getValidArtworkUrl(urls) {
+    for (const url of urls) {
+        try {
+            // For local Jellyfin logo, return immediately
+            if (url.startsWith('/images/')) {
+                return url;
+            }
+
+            // Test if the image URL is accessible
+            const response = await fetch(url, { method: 'HEAD' });
+            if (response.ok) {
+                return url;
+            }
+        } catch (error) {
+            // Continue to next URL
+            continue;
+        }
+    }
+
+    // Final fallback (should never reach here since logo is always last)
+    return '/images/jellyfin-logo.png';
+}
+
+
 window.jellyfin = () => {
 
     // globals to store our Jellyfin websocket
@@ -217,12 +297,17 @@ window.jellyfin = () => {
                     const item = activeSession.NowPlayingItem;
                     if (!item) return;
 
-                    // Get artwork
+                    // Get artwork with fallback
                     if (item.Id) {
-                        const protocols = getJellyfinProtocols();
-                        // Use Series poster for episodes, or otherwise primary (poster) for movies
-                        this.artwork = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Items/${item.SeriesId||item.Id}/Images/Primary?api_key=${this._apiKey}`;
-                        log.info(`Artwork URL set to ${this.artwork}`);
+                        const fallbackUrls = buildArtworkFallbackUrls(
+                            item,
+                            Alpine.store('config').jellyfinUrl,
+                            this._apiKey
+                        );
+                        log.info(`Attempting artwork URLs for ${item.Type}:`, fallbackUrls.map(u => u.replace(this._apiKey, '***')));
+
+                        this.artwork = await getValidArtworkUrl(fallbackUrls);
+                        log.info(`Artwork URL set to ${this.artwork.replace(this._apiKey, '***')}`);
                     }
 
                     this._handlePlayback(activeSession);
