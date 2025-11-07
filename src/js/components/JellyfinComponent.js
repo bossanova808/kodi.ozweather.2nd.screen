@@ -20,7 +20,7 @@ function sendJellyfinMessageOverWebSocket(rws, messageType, data = {}) {
         MessageType: messageType,
         Data: data
     };
-    if (messageType !== 'KeepAlive') {
+    if (messageType !== 'ForceKeepAlive') {
         log.info("Sending Jellyfin message:", msg);
     }
     rws.send(JSON.stringify(msg));
@@ -124,7 +124,7 @@ window.jellyfin = () => {
         pingInterval = setInterval(() => {
             if (rws && rws.readyState === 1) { // OPEN
                 try {
-                    sendJellyfinMessageOverWebSocket(rws, 'KeepAlive');
+                    sendJellyfinMessageOverWebSocket(rws, 'ForceKeepAlive');
                 } catch (error) {
                     log.warn('Health check ping failed:', error);
                     if (rws) {
@@ -216,7 +216,7 @@ window.jellyfin = () => {
                         log.info("Websocket [open]: Connection opened to Jellyfin");
                         startHealthCheck();
                         startSessionPolling(this);
-                        // Immediately check for active sessions
+                        // & Immediately check for active sessions
                         this._requestSessionInfo();
                     });
 
@@ -248,30 +248,26 @@ window.jellyfin = () => {
                     });
 
                     rws.addEventListener('message', (event) => {
-                        const data = JSON.parse(event.data);
+                        const message = JSON.parse(event.data);
+                        log.info(`Websocket [message]: Received ${message.MessageType}`, message);
 
-                        // Don't log keep-alive spam
-                        if (data.MessageType !== 'KeepAlive') {
-                            log.info('Websocket [message]:');
-                            log.info(JSON.stringify(data, null, 4));
+                        // Handle different message types from Jellyfin
+                        switch (message.MessageType) {
+                            case 'ForceKeepAlive':
+                                // Server requesting keepalive - already handled by health check
+                                break;
+                            case 'PlaybackStart':
+                            case 'PlaybackStopped':
+                            case 'PlaystateChange':
+                            case 'Sessions':
+                                // Trigger session info update on playback events
+                                log.info(`Playback event detected: ${message.MessageType}`);
+                                this._requestSessionInfo();
+                                break;
+                            default:
+                                // Log other message types for debugging
+                                log.info(`Unhandled message type: ${message.MessageType}`);
                         }
-
-                        const messageType = data.MessageType;
-
-                        //////////////////////////////////////////////////////
-                        // MESSAGE PROCESSING!
-
-                        // Play state notifications (if they arrive)
-                        if (messageType === 'PlaybackStart') {
-                            log.info("Jellyfin: PlaybackStart notification");
-                            this._requestSessionInfo();
-                        }
-
-                        if (messageType === 'PlaybackStopped') {
-                            log.info("Jellyfin: PlaybackStopped");
-                            this._handleDisconnectCleanup({ useTimeout: false, clearPollingInterval: false });
-                        }
-
                     });
 
                 } catch (error) {
