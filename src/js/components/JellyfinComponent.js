@@ -77,7 +77,6 @@ window.jellyfin = () => {
         finishTime: '',
         timeRemainingAsTime: '',
 
-        _updateTimeRemainingInterval: null,
         _monitoringJellyfinPlayback: null,
         _offlineHandlerRegistered: false,
         _initDelay: null,
@@ -126,10 +125,6 @@ window.jellyfin = () => {
                 if (pollInterval) {
                     clearInterval(pollInterval);
                     pollInterval = null;
-                }
-                if (this._updateTimeRemainingInterval) {
-                    clearInterval(this._updateTimeRemainingInterval);
-                    this._updateTimeRemainingInterval = null;
                 }
             }
 
@@ -254,6 +249,7 @@ window.jellyfin = () => {
             // Calculate time remaining and finish time
             this._updateTimeRemaining(session);
 
+            // @coderabbitai ignore this block of commented code
             // The title/season etc info is not used/displayed, currently, but left here for potential later use
             //this._currentMediaType = item.Type;
             // // Extract info
@@ -268,7 +264,7 @@ window.jellyfin = () => {
             //     this.season = '';
             //     this.episode = '';
             // }
-            
+
 
             // Show the component
             if (!Alpine.store('isAvailable').jellyfin) {
@@ -334,7 +330,6 @@ window.jellyfin = () => {
         _handleDisconnectCleanup(options = {}) {
             const {
                 useTimeout = true,
-                clearUpdateInterval = true,
                 clearPingInterval = true,
                 clearPollingInterval = true,
             } = options;
@@ -348,11 +343,6 @@ window.jellyfin = () => {
             }
 
             Alpine.store('isAvailable').jellyfin = false;
-
-            if (clearUpdateInterval && this._updateTimeRemainingInterval) {
-                clearInterval(this._updateTimeRemainingInterval);
-                this._updateTimeRemainingInterval = null;
-            }
 
             if (clearPingInterval && pingInterval) {
                 clearInterval(pingInterval);
