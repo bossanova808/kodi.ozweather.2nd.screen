@@ -235,7 +235,7 @@ window.jellyfin = () => {
                     // Only clear if we were previously showing jellyfin
                     if (Alpine.store('isAvailable').jellyfin) {
                         log.info("No active playback session found - hiding Jellyfin display");
-                        this._handleDisconnectCleanup({ useTimeout: false });
+                        this._handleDisconnectCleanup({ useTimeout: false, clearPollingInterval: false });
                     }
                 }
             } catch (error) {
@@ -251,6 +251,10 @@ window.jellyfin = () => {
             this._currentItemId = item.Id;
             this._currentSessionId = session.Id;
 
+            // Calculate time remaining and finish time
+            this._updateTimeRemaining(session);
+
+            // The title/season etc info is not used/displayed, currently, but left here for potential later use
             //this._currentMediaType = item.Type;
             // // Extract info
             // this.title = item.Name || '';
@@ -264,15 +268,7 @@ window.jellyfin = () => {
             //     this.season = '';
             //     this.episode = '';
             // }
-
-            // Calculate time remaining and finish time
-            this._updateTimeRemaining(session);
-
-            // Remove the old update interval - we're now polling sessions which includes time info
-            // if (this._updateTimeRemainingInterval) {
-            //     clearInterval(this._updateTimeRemainingInterval);
-            //     this._updateTimeRemainingInterval = null;
-            // }
+            
 
             // Show the component
             if (!Alpine.store('isAvailable').jellyfin) {
