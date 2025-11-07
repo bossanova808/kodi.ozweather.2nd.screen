@@ -33,6 +33,21 @@
 
                     </div>
 
+    <!-- Clock & Temperature/Feels Like - displays if weather is available (media playing or not) -->
+
+                    <div x-show="$store.isAvailable.weather === true" x-transition.duration.500ms>
+
+                        <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
+                            <div x-show="currentTemperature !== '' && currentTemperature !== null && currentTemperature !== undefined" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
+                            <div x-show="$store.config.size!=='small' && currentFeelsLike !== '' && currentFeelsLike !== null && currentFeelsLike !== undefined"
+                                  :class="$store.config.textSmall"
+                                  class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap">
+                                <svg class="inline-block align-middle mt-2 h-[0.85em] w-[0.85em] pb-1 mr-[0.2em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M750-614q-27 27-62 41t-70 14q-35 0-69-13.5T488-614l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-689l-75 75-57-57 75-75q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-746l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-671l75-75 57 57-75 75Zm0 200q-27 27-61.5 40.5T619-360q-35 0-69.5-13.5T488-414l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-489l-75 75-57-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-546l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-471l75-75 57 57-75 75Zm-1 200q-27 27-61 40.5T619-160q-35 0-69.5-13.5T488-214l-76-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T266-289l-75 75-56-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-346l75 75q16 16 35.5 23.5T619-240q20 0 39-7.5t35-23.5l75-75 56 57-75 75Z"/></svg><span x-text="currentFeelsLike" class="inline-block align-middle"></span>
+                            </div>
+                            <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
+                        </div>
+                    </div>
+
     <!-- Weather is available, but no media is actively playing -->
 
                     <div x-show="$store.isAvailable.weather === true && $store.isAvailable.kodi === false && $store.isAvailable.jellyfin === false" x-transition.duration.500ms>
@@ -103,20 +118,9 @@
                             </div>
                         </div>
 
-                        <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Media component ! -->
-                        <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
-                            <div x-show="currentTemperature !== '' && currentTemperature !== null && currentTemperature !== undefined" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
-                            <div x-show="$store.config.size!=='small' && currentFeelsLike !== '' && currentFeelsLike !== null && currentFeelsLike !== undefined"
-                                  :class="$store.config.textSmall"
-                                  class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap">
-                                <svg class="inline-block align-middle mt-2 h-[0.85em] w-[0.85em] pb-1 mr-[0.2em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M750-614q-27 27-62 41t-70 14q-35 0-69-13.5T488-614l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-689l-75 75-57-57 75-75q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-746l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-671l75-75 57 57-75 75Zm0 200q-27 27-61.5 40.5T619-360q-35 0-69.5-13.5T488-414l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-489l-75 75-57-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-546l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-471l75-75 57 57-75 75Zm-1 200q-27 27-61 40.5T619-160q-35 0-69.5-13.5T488-214l-76-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T266-289l-75 75-56-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-346l75 75q16 16 35.5 23.5T619-240q20 0 39-7.5t35-23.5l75-75 56 57-75 75Z"/></svg><span x-text="currentFeelsLike" class="inline-block align-middle"></span>
-                            </div>
-                            <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
-                        </div>
-
                     </div>
 
-    <!-- If Kodi/Jellyfin is actively playing something -->
+    <!-- Media is playing -->
 
                     <div x-show="$store.isAvailable.kodi === true || $store.isAvailable.jellyfin === true" x-transition.duration.500ms>
 
@@ -135,17 +139,6 @@
                             </div>
                         </div>
 
-                        <!-- Clock & Temperature/Feels Like - n.b. keep same in Weather & Media component ! -->
-                        <div class="z-50 absolute bottom-0 right-0 mb-4 mr-5 text-right">
-                            <div x-show="currentTemperature !== '' && currentTemperature !== null && currentTemperature !== undefined" :class="$store.config.textLarge" class="pb-3 ml-3 font-bold text-amber-200 font-mono whitespace-nowrap" style="margin-right: -10px;" x-text="currentTemperature"></div>
-                            <div x-show="$store.config.size!=='small' && currentFeelsLike !== '' && currentFeelsLike !== null && currentFeelsLike !== undefined"
-                                  :class="$store.config.textSmall"
-                                  class="pb-3 font-bold italic text-blue-200 font-mono whitespace-nowrap">
-                                <svg class="inline-block align-middle mt-2 h-[0.85em] w-[0.85em] pb-1 mr-[0.2em] fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M750-614q-27 27-62 41t-70 14q-35 0-69-13.5T488-614l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-689l-75 75-57-57 75-75q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-746l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-671l75-75 57 57-75 75Zm0 200q-27 27-61.5 40.5T619-360q-35 0-69.5-13.5T488-414l-75-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T267-489l-75 75-57-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-546l75 75q16 16 35 23.5t39 7.5q20 0 39.5-7.5T693-471l75-75 57 57-75 75Zm-1 200q-27 27-61 40.5T619-160q-35 0-69.5-13.5T488-214l-76-75q-15-15-34-22.5t-39-7.5q-20 0-39 7.5T266-289l-75 75-56-56 75-76q27-27 61-40.5t69-13.5q35 0 68.5 13.5T469-346l75 75q16 16 35.5 23.5T619-240q20 0 39-7.5t35-23.5l75-75 56 57-75 75Z"/></svg><span x-text="currentFeelsLike" class="inline-block align-middle"></span>
-                            </div>
-                            <div :class="$store.config.textLarge" class="mt-3 font-bold bg-clip-text text-transparent bg-linear-to-r from-cyan-300 to-green-300 font-mono whitespace-nowrap" x-text="getTime()"></div>
-                        </div>
-
                     </div>
 
     <!-- Close off the component containers           -->
@@ -159,8 +152,3 @@
 
 </body>
 </html>
-
-
-<!--                         <div style="position: fixed; top: 50%; left: 50%; color: white; z-index: 9999;"> -->
-<!--                             DEBUG: <span x-text="JSON.stringify({artwork: artwork, time: timeRemainingAsTime, finish: finishTime})"></span> -->
-<!--                         </div> -->
