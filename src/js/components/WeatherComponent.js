@@ -779,7 +779,7 @@ window.weather = () => {
                     for (let locationElement of locations) {
                         // The location name is in the 'id' attribute
                         const locationId = locationElement.getAttribute('id');
-                        log.info(`Checking station: ${locationId}`);
+                        //log.info(`Checking station: ${locationId}`);
 
                         if (locationId && locationId.toLowerCase().includes(station.toLowerCase())) {
                             // Found our station, get the UV index

@@ -400,6 +400,11 @@ window.kodi = () => {
         },
 
         init() {
+            // If we're not set up to use Kodi, we're done...
+            if (Alpine.store('config').mediaSource !== 'kodi'){
+                log.info("Media source is not set to kodi, doing nothing.");
+                return;
+            }
             // Kick this off two seconds after we fire up, just to give time for things to settle a bit...
             this._initDelay = setTimeout(() => {
                 log.info("KodiComponent init");

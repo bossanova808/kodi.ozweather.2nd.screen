@@ -27,18 +27,19 @@ Alpine.store('config', {
         if (!this.bom && !this.latitude){
             this.bom = 'r1r11df';
         }
-        // Media source - currently Jellyfin or Kodi
-        this.mediaSource = urlParams.get('media-source') || 'jellyfin';
+        // Media source - currently 'jellyfin' or 'kodi'
+        this.mediaSource = urlParams.get('media-source') || '';
         // Jellyfin Params
         if (this.mediaSource === 'jellyfin') {
             this.jellyfin = urlParams.get('jellyfin') || 'jellyfin';
             this.jellyfinPort = urlParams.get('jellyfin-port') || '8096';
             this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
-            this.jellyfinApiKey = urlParams.get('jellyfin-api') || '';
-            this.jellyfinSSL = urlParams.get('jellyfin-ssl') || false;
+            this.jellyfinApiKey = urlParams.get('jellyfin-api-key') || '';
+            this.jellyfinDevice = urlParams.get('jellyfin-device') || 'dash'
+            // Not currently used, left pending another try at a web sockets approach with JF
+            this.jellyfinSSL = urlParams.get('jellyfin-ssl') === 'true';
             this.jellyfinUser = urlParams.get('jellyfin-user') ||  ''
             this.jellyfinPassword = urlParams.get('jellyfin-password') || ''
-            this.jellyfinDevice = urlParams.get('jellyfin-device') || 'dash'
         }
         // Kodi Params
         if (this.mediaSource === 'kodi') {
@@ -51,36 +52,33 @@ Alpine.store('config', {
         }
 
         // Explicitly log the config / provide instructions
-        log.info("Display Size (&size=small|medium|large, default large) is", this.size);
+        log.info(`Display Size: ${this.size} (&size=small|medium|large, default large)`);
 
         if (this.bom){
-            log.info("BOM Weather Location ID (&bom, default r1r11df - Ascot Vale, Victoria) is", this.bom);
+            log.info(`BOM Weather Location ID: ${this.bom} (&bom, default r1r11df - Ascot Vale, Victoria)`);
         }
         else {
-            log.info("OpenMeteo Weather Location Latitude: ", this.latitude, " Longitude: ", this.longitude);
+            log.info(`OpenMeteo Weather Location Latitude: ${this.latitude}, Longitude: ${this.longitude} (&latitude=,$longitude=)`);
         }
         if (this.uvStation) {
-            log.info("UV station: ", this.uvStation);
+            log.info(`UV station: ${this.uvStation} (&uv)`);
         }
 
         if (this.mediaSource === 'jellyfin') {
-            log.info("Jellyfin Host (&jellyfin, default jellyfin) is", this.jellyfin);
-            log.info("Jellyfin Port (&jellyfin-port, default 8096) is", this.jellyfinPort);
-            log.info("Jellyfin SSL (&jellyfin-ssl, default false) is", this.jellyfinSSL);
-            log.info("Jellyfin user (&jellyfin-user, default user) is", this.jellyfinUser);
-            if (this.jellyfinPassword) {
-                log.info("Jellyfin password (&jellyfin-password, default password) is", this.jellyfinPassword.replace(this.jellyfinPassword, '***'));
-            }
+            log.info(`Media source: ${this.mediaSource} (&media-source)`);
+            log.info(`Jellyfin Host: ${this.jellyfin} (&jellyfin, default jellyfin)`);
+            log.info(`Jellyfin Port: ${this.jellyfinPort} (&jellyfin-port, default 8096)`);
+            log.info(`Jellyfin SSL: ${this.jellyfinSSL} (&jellyfin-ssl, default false)`);
             if (this.jellyfinApiKey) {
-                log.info("Jellyfin API key (&jellyfin-api-key) is", this.jellyfinApiKey.replace(this.jellyfinApiKey, '***'));
+                log.info(`Jellyfin API Key: *** (&jellyfin-api-key)`);
             }
         }
 
         if (this.mediaSource === 'kodi') {
-            log.info("Kodi Host (&kodi, default 127.0.0.1) is", this.kodi);
-            log.info("Kodi JSON Port (&kodi-json, default 9090) is", this.kodiJsonPort);
-            log.info("Kodi Web Port (&kodi-web, default 8080) is", this.kodiWebPort);
-            log.info("Kodi SSL (&kodi-ssl, default false) is", this.kodiSSL);
+            log.info(`Kodi Host: ${this.kodi} (&kodi, default 127.0.0.1)`);
+            log.info(`Kodi JSON Port: ${this.kodiJsonPort} (&kodi-json, default 9090)`);
+            log.info(`Kodi Web Port: ${this.kodiWebPort} (&kodi-web, default 8080)`);
+            log.info(`Kodi SSL: ${this.kodiSSL} (&kodi-ssl, default false)`);
         }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4

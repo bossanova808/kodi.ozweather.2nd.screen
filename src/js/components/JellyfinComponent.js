@@ -1,6 +1,5 @@
 // noinspection JSUnresolvedReference
 
-import { WebSocket } from "partysocket";
 import "../utils/logger.js"
 
 const log = logger('JellyfinComponent.js');
@@ -11,19 +10,7 @@ function getJellyfinProtocols() {
 
     return {
         http: jellyfinSSL ? 'https://' : 'http://',
-        ws: jellyfinSSL ? 'wss://' : 'ws://'
     };
-}
-
-function sendJellyfinMessageOverWebSocket(rws, messageType, data = {}) {
-    const msg = {
-        MessageType: messageType,
-        Data: data
-    };
-    if (messageType !== 'ForceKeepAlive') {
-        log.info("Sending Jellyfin message:", msg);
-    }
-    rws.send(JSON.stringify(msg));
 }
 
 /**
@@ -108,46 +95,12 @@ async function getValidArtworkUrl(urls) {
 
 window.jellyfin = () => {
 
-    // globals to store our Jellyfin websocket
-    let rws = null;
-
-    // WebSocket workaround variables
-    let pingInterval = null;
+    // Polling interval reference
     let pollInterval = null;
 
-    // WebSocket workaround: Health check implementation
-    const startHealthCheck = () => {
-        if (pingInterval) {
-            clearInterval(pingInterval);
-        }
-
-        pingInterval = setInterval(() => {
-            if (rws && rws.readyState === 1) { // OPEN
-                try {
-                    sendJellyfinMessageOverWebSocket(rws, 'ForceKeepAlive');
-                } catch (error) {
-                    log.warn('Health check ping failed:', error);
-                    if (rws) {
-                        rws.close(1011, 'Closing WebSocket to Jellyfin as health check failed');
-                    }
-                }
-            }
-        }, 30000);  // Ping every 30 seconds
-    };
-
-    // Poll for active sessions since WebSocket doesn't always send notifications
-    const startSessionPolling = (component) => {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-        }
-
-        // Poll every 0.5 seconds for playback changes
-        pollInterval = setInterval(() => {
-            if (rws && rws.readyState === 1) {
-                component._requestSessionInfo();
-            }
-        }, 500);
-    };
+    // Different polling rates
+    const POLL_RATE_IDLE = 2000;      // 2 seconds when nothing playing
+    const POLL_RATE_ACTIVE = 500;     // 0.5 seconds when playing
 
     return {
         artwork: null,
@@ -157,141 +110,80 @@ window.jellyfin = () => {
         finishTime: '',
         timeRemainingAsTime: '',
 
-        _monitoringJellyfinPlayback: null,
-        _offlineHandlerRegistered: false,
         _initDelay: null,
-        _connectTimeout: null,
         _currentMediaType: null,
         _currentItemId: null,
         _currentSessionId: null,
         _apiKey: null,
+        _pollingActive: false,
+        _currentPollRate: POLL_RATE_IDLE,
 
-        createEnhancedJellyfinWebSocket() {
+        startSessionPolling(pollRate = POLL_RATE_IDLE) {
+            // If already polling at the same rate, don't restart
+            if (pollInterval && this._currentPollRate === pollRate) {
+                return;
+            }
 
-            const protocols = getJellyfinProtocols();
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+
             // Get API key from config
             this._apiKey = Alpine.store('config').jellyfinApiKey;
 
             if (!this._apiKey) {
-                log.error('Jellyfin API key not configured');
+                log.error('Jellyfin API key not supplied, hiding Jellyfin component');
+                Alpine.store('isAvailable').jellyfin = false;
                 return;
             }
 
-            // Jellyfin WebSocket format: ws://host:port/socket?api_key=KEY&deviceId=DEVICE
-            const jellyfinWebsocketUrl = `${protocols.ws}${Alpine.store('config').jellyfinUrl}/socket?api_key=${this._apiKey}&deviceId=${Alpine.store('config').jellyfinDevice}`;
+            this._currentPollRate = pollRate;
+            log.info(`Starting Jellyfin session polling (every ${pollRate}ms)`);
+            this._pollingActive = true;
 
-            const options = {
-                connectionTimeout: 2000,
-                minReconnectionDelay: 3000,
-                maxReconnectionDelay: 30000,
-                reconnectionDelayGrowFactor: 1.5,
-                maxEnqueuedMessages: 0,
-                debug: false,
-            };
+            // Initial check
+            this._requestSessionInfo();
 
-            log.info(`*** Opening new websocket connection to Jellyfin: ${jellyfinWebsocketUrl.replace(this._apiKey, '***')}`);
-
-            // Reset existing connection reference
-            if (rws) {
-                log.info('Resetting existing WebSocket reference');
-                try {
-                    if (rws.readyState < 2) rws.close(1000, 'Re-init');
-                } catch (_) { /* ignore */ }
-                rws = null;
-                if (pingInterval) {
-                    clearInterval(pingInterval);
-                    pingInterval = null;
+            // Poll at the specified rate
+            pollInterval = setInterval(() => {
+                if (this._pollingActive) {
+                    this._requestSessionInfo();
                 }
-                if (pollInterval) {
-                    clearInterval(pollInterval);
-                    pollInterval = null;
-                }
+            }, pollRate);
+        },
+
+        stopSessionPolling() {
+            log.info('Stopping Jellyfin session polling');
+            this._pollingActive = false;
+
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
             }
-
-            this._connectTimeout = setTimeout(() => {
-                try {
-                    rws = new WebSocket(jellyfinWebsocketUrl, undefined, options);
-
-                    rws.addEventListener('open', () => {
-                        log.info("Websocket [open]: Connection opened to Jellyfin");
-                        startHealthCheck();
-                        startSessionPolling(this);
-                        // & Immediately check for active sessions
-                        this._requestSessionInfo();
-                    });
-
-                    rws.addEventListener('error', (event) => {
-                        if (options.debug) log.info('WebSocket [error]:', event);
-                        this._handleDisconnectCleanup();
-                    });
-
-                    // Register offline handler once
-                    if (!this._offlineHandlerRegistered) {
-                        this._offlineHandlerRegistered = true;
-                        window.addEventListener('offline', () => {
-                            if (options.debug) log.info('Network offline');
-                            this._handleDisconnectCleanup();
-                        });
-                    }
-
-                    rws.addEventListener('close', (event) => {
-                        log.info(`Jellyfin WebSocket Disconnected:`, JSON.stringify({
-                            code: event.code,
-                            reason: event.reason || 'No reason provided',
-                            wasClean: event.wasClean,
-                            type: event.type
-                        }, null, 4));
-
-                        this._handleDisconnectCleanup({ useTimeout: false });
-
-                        log.info('WebSocket closed, PartySocket will handle reconnection automatically');
-                    });
-
-                    rws.addEventListener('message', (event) => {
-                        const message = JSON.parse(event.data);
-                        log.info(`Websocket [message]: Received ${message.MessageType}`, message);
-
-                        // Handle different message types from Jellyfin
-                        switch (message.MessageType) {
-                            case 'ForceKeepAlive':
-                                // Server requesting keepalive - already handled by health check
-                                break;
-                            case 'PlaybackStart':
-                            case 'PlaybackStopped':
-                            case 'PlaystateChange':
-                            case 'Sessions':
-                                // Trigger session info update on playback events
-                                log.info(`Playback event detected: ${message.MessageType}`);
-                                this._requestSessionInfo();
-                                break;
-                            default:
-                                // Log other message types for debugging
-                                log.info(`Unhandled message type: ${message.MessageType}`);
-                        }
-                    });
-
-                } catch (error) {
-                    log.error('Failed to create WebSocket:', error);
-                    Alpine.store('isAvailable').jellyfin = false;
-                }
-            }, 500);
         },
 
         async _requestSessionInfo() {
-            // Make HTTP request to get session details
             const protocols = getJellyfinProtocols();
             const url = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Sessions?api_key=${this._apiKey}`;
 
             try {
                 const response = await fetch(url);
-                const sessions = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
+                const sessions = await response.json();
                 const activeSession = sessions.find(s => s.NowPlayingItem);
 
                 if (activeSession) {
-
                     const item = activeSession.NowPlayingItem;
                     if (!item) return;
+
+                    // Switch to fast polling when playback is active
+                    if (this._currentPollRate !== POLL_RATE_ACTIVE) {
+                        log.info('Playback detected - switching to fast polling (500ms)');
+                        this.startSessionPolling(POLL_RATE_ACTIVE);
+                    }
 
                     // Get artwork with fallback - only when item changes
                     if (item.Id && item.Id !== this._currentItemId) {
@@ -301,60 +193,67 @@ window.jellyfin = () => {
                             Alpine.store('config').jellyfinUrl,
                             this._apiKey
                         );
-                        log.info(`Attempting artwork URLs for ${item.Type}:`, fallbackUrls.map(u => u.replace(this._apiKey, '***')));
+                        log.info(`Attempting artwork URLs for ${item.Type}:`, fallbackUrls.map(u => u.includes(this._apiKey) ? u.replace(this._apiKey, '***') : u));
 
                         this.artwork = await getValidArtworkUrl(fallbackUrls);
-                        log.info(`Artwork URL set to ${this.artwork.replace(this._apiKey, '***')}`);
+                        log.info(`Artwork URL set to ${this.artwork.includes(this._apiKey) ? this.artwork.replace(this._apiKey, '***') : this.artwork}`);
                     }
 
                     this._handlePlayback(activeSession);
                 } else {
+                    // Switch to slow polling when nothing is playing
+                    if (this._currentPollRate !== POLL_RATE_IDLE) {
+                        log.info('No playback - switching to slow polling (2s)');
+                        this.startSessionPolling(POLL_RATE_IDLE);
+                    }
+
                     // Only clear if we were previously showing jellyfin
                     if (Alpine.store('isAvailable').jellyfin) {
                         log.info("No active playback session found - hiding Jellyfin display");
-                        this._handleDisconnectCleanup({ useTimeout: false, clearPollingInterval: false });
+                        this._handleStopPlayback();
                     }
                 }
             } catch (error) {
                 log.error('Failed to fetch session info:', error);
+                // Don't stop polling on error - network might recover
             }
         },
 
         _handlePlayback(session) {
-
             const item = session.NowPlayingItem;
             if (!item) return;
 
             this._currentItemId = item.Id;
             this._currentSessionId = session.Id;
+            this._currentMediaType = item.Type;
 
             // Calculate time remaining and finish time
             this._updateTimeRemaining(session);
 
-            // @coderabbitai ignore this block of commented code
-            // The title/season etc info is not used/displayed, currently, but left here for potential later use
-            //this._currentMediaType = item.Type;
-            // // Extract info
-            // this.title = item.Name || '';
-            //
-            // // For TV episodes
-            // if (item.Type === 'Episode') {
-            //     this.season = item.ParentIndexNumber || '';
-            //     this.episode = item.IndexNumber || '';
-            //     this.title = item.SeriesName || this.title;
-            // } else {
-            //     this.season = '';
-            //     this.episode = '';
-            // }
+            // Extract title/season/episode info
+            this.title = item.Name || '';
 
+            // For TV episodes
+            if (item.Type === 'Episode') {
+                this.season = item.ParentIndexNumber || '';
+                this.episode = item.IndexNumber || '';
+                this.title = item.SeriesName || this.title;
+            } else {
+                this.season = '';
+                this.episode = '';
+            }
 
             // Show the component
             if (!Alpine.store('isAvailable').jellyfin) {
                 log.info("Showing Jellyfin component");
-                setTimeout(() => {
-                    Alpine.store('isAvailable').jellyfin = true;
-                }, 500);
+                Alpine.store('isAvailable').jellyfin = true;
             }
+        },
+
+        _handleStopPlayback() {
+            log.info("Playback stopped - clearing Jellyfin display");
+            this._clearProperties();
+            Alpine.store('isAvailable').jellyfin = false;
         },
 
         _updateTimeRemaining(session) {
@@ -392,9 +291,6 @@ window.jellyfin = () => {
                 const displayHours = finishHours % 12 || 12;
 
                 this.finishTime = `${displayHours}:${finishMinutes.toString().padStart(2, '0')}${ampm}`;
-
-                log.info("Time Remaining:", this.timeRemainingAsTime);
-                log.info("Finish Time:", this.finishTime);
             }
         },
 
@@ -407,40 +303,18 @@ window.jellyfin = () => {
             this.timeRemainingAsTime = '';
             this._currentItemId = null;
             this._currentSessionId = null;
-        },
-
-        _handleDisconnectCleanup(options = {}) {
-            const {
-                useTimeout = true,
-                clearPingInterval = true,
-                clearPollingInterval = true,
-            } = options;
-
-            if (useTimeout) {
-                setTimeout(() => {
-                    this._clearProperties();
-                }, 2000);
-            } else {
-                this._clearProperties();
-            }
-
-            Alpine.store('isAvailable').jellyfin = false;
-
-            if (clearPingInterval && pingInterval) {
-                clearInterval(pingInterval);
-                pingInterval = null;
-            }
-
-            if (clearPollingInterval && pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
+            this._currentMediaType = null;
         },
 
         init() {
+            // If we're not set up to use Jellyfin, we're done...
+            if (Alpine.store('config').mediaSource !== 'jellyfin'){
+                log.info("Media source is not set to jellyfin, doing nothing.");
+                return;
+            }
             this._initDelay = setTimeout(() => {
                 log.info("JellyfinComponent init");
-                this.createEnhancedJellyfinWebSocket();
+                this.startSessionPolling();
             }, 2000);
         },
     }
