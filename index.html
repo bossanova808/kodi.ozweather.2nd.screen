@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>Kodi Dash v2.0.0</title>
+    <title>Lounge Dash v3.0.0</title>
     <!-- Imports Tailwind & let Vite know about it -->
     <link rel="stylesheet" href="src/css/style.css">
 </head>
@@ -15,10 +15,10 @@
 <!-- Make the rest of this file reactive to changes to these components -->
 <!-- Each component has an init() method that will be called automatically for us -->
 <!-- (...there does not seem to be an easy way to consolidate this to just one div)-->
-<div x-data="clock" class="bg-black h-screen">
-    <div x-data="weather" class="weather">
-        <div x-data="kodi" class="kodi">
-            <div x-data="jellyfin" class="jellyfin">
+<div x-data="clock()" class="bg-black h-screen">
+    <div x-data="weather()" class="weather">
+        <div x-data="kodi()" class="kodi">
+            <div x-data="jellyfin()" class="jellyfin">
 
 <!-- This is the fallback if no network / weather / kodi - just show a centralised full-screen clock -->
 

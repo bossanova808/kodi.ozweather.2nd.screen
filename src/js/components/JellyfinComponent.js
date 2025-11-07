@@ -205,10 +205,9 @@ window.jellyfin = () => {
                             Alpine.store('config').jellyfinUrl,
                             this._apiKey
                         );
-                        log.info(`Attempting artwork URLs for ${item.Type}:`, fallbackUrls.map(u => u.includes(this._apiKey) ? u.replace(this._apiKey, '***') : u));
-
+                        log.info(`Attempting artwork URLs for ${item.Type}:`, fallbackUrls.map(u => u.includes(this._apiKey) ? u.replaceAll(this._apiKey, '***') : u));
                         this.artwork = await getValidArtworkUrl(fallbackUrls);
-                        log.info(`Artwork URL set to ${this.artwork.includes(this._apiKey) ? this.artwork.replace(this._apiKey, '***') : this.artwork}`);
+                        log.info(`Artwork URL set to ${this.artwork.includes(this._apiKey) ? this.artwork.replaceAll(this._apiKey, '***') : this.artwork}`);
                     }
 
                     this._handlePlayback(activeSession);
