@@ -28,7 +28,7 @@ Alpine.store('config', {
             this.bom = 'r1r11df';
         }
         // Media source - currently 'jellyfin' or 'kodi'
-        this.mediaSource = urlParams.get('media-source') || '';
+        this.mediaSource = urlParams.get('media-source') || 'kodi';
         // Jellyfin Params
         if (this.mediaSource === 'jellyfin') {
             this.jellyfin = urlParams.get('jellyfin') || 'jellyfin';
@@ -167,7 +167,7 @@ Alpine.store('isAvailable', {
 // Create the components - each are scoped to the window which is where Alpine expects to find them
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
-//Alpine.data('kodi', window.kodi);
+Alpine.data('kodi', window.kodi);
 Alpine.data('jellyfin', window.jellyfin);
 
 // Actually start Alpine

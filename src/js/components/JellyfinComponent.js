@@ -77,8 +77,16 @@ async function getValidArtworkUrl(urls) {
                 return url;
             }
 
-            // Test if the image URL is accessible
-            const response = await fetch(url, { method: 'HEAD' });
+            // Test if the image URL is accessible with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+            const response = await fetch(url, {
+                method: 'HEAD',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
             if (response.ok) {
                 return url;
             }
@@ -91,7 +99,6 @@ async function getValidArtworkUrl(urls) {
     // Final fallback (should never reach here since logo is always last)
     return '/images/jellyfin-logo.png';
 }
-
 
 window.jellyfin = () => {
 
@@ -167,7 +174,12 @@ window.jellyfin = () => {
             const url = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Sessions?api_key=${this._apiKey}`;
 
             try {
-                const response = await fetch(url);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
