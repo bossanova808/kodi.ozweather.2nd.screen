@@ -170,8 +170,12 @@ Alpine.data('weather', window.weather);
 if (Alpine.store('config').mediaSource === "kodi") {
     Alpine.data('media', window.kodi);
 }
-if (Alpine.store('config').mediaSource === "jellyfin") {
+else if (Alpine.store('config').mediaSource === "jellyfin") {
     Alpine.data('media', window.jellyfin);
+}
+else {
+    log.error(`Invalid media-source: ${Alpine.store('config').mediaSource}, falling back to kodi`);
+    Alpine.data('media', window.kodi);
 }
 // Actually start Alpine
 Alpine.start();
