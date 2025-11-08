@@ -187,9 +187,14 @@ window.jellyfin = () => {
                 const sessions = await response.json();
                 const activeSession = sessions.find(s => s.NowPlayingItem);
 
-                if (activeSession) {
+                if (activeSession && activeSession.IsActive) {
                     const item = activeSession.NowPlayingItem;
                     if (!item) return;
+
+                    if (Alpine.store('config').jellyfinDevice && Alpine.store('config').jellyfinDevice !== activeSession.DeviceName){
+                        console.info(`Not monitoring playback as jellyfin-device ${Alpine.store('config').jellyfinDevice} != ${activeSession.DeviceName}`)
+                        return;
+                    }
 
                     // Switch to fast polling when playback is active
                     if (this._currentPollRate !== POLL_RATE_ACTIVE) {

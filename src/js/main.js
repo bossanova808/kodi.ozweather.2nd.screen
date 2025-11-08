@@ -35,7 +35,7 @@ Alpine.store('config', {
             this.jellyfinPort = urlParams.get('jellyfin-port') || '8096';
             this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
             this.jellyfinApiKey = urlParams.get('jellyfin-api-key') || '';
-            this.jellyfinDevice = urlParams.get('jellyfin-device') || 'dash'
+            this.jellyfinDevice = urlParams.get('jellyfin-device') || ''
             // Not currently used, left pending another try at a web sockets approach with JF
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') === 'true';
             this.jellyfinUser = urlParams.get('jellyfin-user') ||  ''
@@ -68,6 +68,7 @@ Alpine.store('config', {
             log.info(`Media source: ${this.mediaSource} (&media-source)`);
             log.info(`Jellyfin Host: ${this.jellyfin} (&jellyfin, default jellyfin)`);
             log.info(`Jellyfin Port: ${this.jellyfinPort} (&jellyfin-port, default 8096)`);
+            log.info(`Jellyfin Device: ${this.jellyfinDevice} (&jellyfin-device, default none)`);
             log.info(`Jellyfin SSL: ${this.jellyfinSSL} (&jellyfin-ssl, default false)`);
             if (this.jellyfinApiKey) {
                 log.info(`Jellyfin API Key: *** (&jellyfin-api-key)`);
