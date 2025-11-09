@@ -343,7 +343,7 @@ Solutions:
 
 ## Development
 
-(PRs will certainly be looked at but if you're going to add something significant that you think might be generally useful, perhaps open an issue here for initial discussion). 
+(PRs will certainly be looked at, but if you're going to add something significant that you think might be generally useful, perhaps open an issue here for initial discussion). 
 
 To get going for local development/tweaking for your particular need, all you really need to do is:
 

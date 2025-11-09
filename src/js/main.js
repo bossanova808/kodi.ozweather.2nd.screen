@@ -19,7 +19,7 @@ Alpine.store('config', {
         this.size = urlParams.get('size') || 'large';
         // Weather Params
         this.bom = urlParams.get('bom') || false;
-        this.uvStation = urlParams.get('uv') || '';
+        this.uvStation = urlParams.get('uv');
         this.latitude = urlParams.get('latitude') || false;
         this.longitude = urlParams.get('longitude') || false;
         this.timezone = urlParams.get('timezone') || false;
@@ -34,12 +34,12 @@ Alpine.store('config', {
             this.jellyfin = urlParams.get('jellyfin') || 'jellyfin';
             this.jellyfinPort = urlParams.get('jellyfin-port') || '8096';
             this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
-            this.jellyfinApiKey = urlParams.get('jellyfin-api-key') || '';
-            this.jellyfinDevice = urlParams.get('jellyfin-device') || ''
+            this.jellyfinApiKey = urlParams.get('jellyfin-api-key');
+            this.jellyfinDevice = urlParams.get('jellyfin-device');
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') === 'true';
             // Not currently used, left pending another try at a web sockets approach with JF
-            this.jellyfinUser = urlParams.get('jellyfin-user') || ''
-            this.jellyfinPassword = urlParams.get('jellyfin-password') || ''
+            this.jellyfinUser = urlParams.get('jellyfin-user')
+            this.jellyfinPassword = urlParams.get('jellyfin-password')
         }
         // Kodi Params
         if (this.mediaSource === 'kodi') {
