@@ -14,6 +14,7 @@ const urlParams = new URLSearchParams(window.location.search);
 // Config comes from URL parameters
 Alpine.store('config', {
     init() {
+
         // Cosmetic Params
         this.size = urlParams.get('size') || 'large';
         // Weather Params
@@ -23,7 +24,7 @@ Alpine.store('config', {
         this.longitude = urlParams.get('longitude') || false;
         this.timezone = urlParams.get('timezone') || false;
         // Fall back to BOM weather for Ascot Vale, Victoria, Australia - if no weather location info provided
-        if (!this.bom && !this.latitude){
+        if (!this.bom && !this.latitude) {
             this.bom = 'r1r11df';
         }
         // Media source - currently 'jellyfin' or 'kodi'
@@ -35,9 +36,9 @@ Alpine.store('config', {
             this.jellyfinUrl = `${this.jellyfin}:${this.jellyfinPort}`
             this.jellyfinApiKey = urlParams.get('jellyfin-api-key') || '';
             this.jellyfinDevice = urlParams.get('jellyfin-device') || ''
-            // Not currently used, left pending another try at a web sockets approach with JF
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') === 'true';
-            this.jellyfinUser = urlParams.get('jellyfin-user') ||  ''
+            // Not currently used, left pending another try at a web sockets approach with JF
+            this.jellyfinUser = urlParams.get('jellyfin-user') || ''
             this.jellyfinPassword = urlParams.get('jellyfin-password') || ''
         }
         // Kodi Params
@@ -53,11 +54,10 @@ Alpine.store('config', {
         // Explicitly log the config / provide instructions
         log.info(`Display Size: ${this.size} (&size=small|medium|large, default large)`);
 
-        if (this.bom){
+        if (this.bom) {
             log.info(`BOM Weather Location ID: ${this.bom} (&bom, default r1r11df - Ascot Vale, Victoria)`);
-        }
-        else {
-            log.info(`OpenMeteo Weather Location Latitude: ${this.latitude}, Longitude: ${this.longitude} (&latitude=,$longitude=)`);
+        } else {
+            log.info(`OpenMeteo Weather Location Latitude: ${this.latitude}, Longitude: ${this.longitude}, , Timezone: ${this.timezone} (&latitude, $longitude, &timezone)`);
         }
         if (this.uvStation) {
             log.info(`UV station: ${this.uvStation} (&uv)`);
@@ -117,6 +117,7 @@ Alpine.store('config', {
             this.moonIconSize = 200;
             this.kodiArtworkScale = "max-w-lg"
         }
+
     },
     mediaSource: false,
     jellyfin: false,

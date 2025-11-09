@@ -21,9 +21,9 @@ export default {
             },
             manifest: {
                 // caches the assets/icons mentioned (assets/* includes all the assets present in your src/ directory)
-                includeAssets: ["images/kodi.svg", "images/weather-icons/svg/*", "assets/*"],
-                name: 'Kodi Dash',
-                short_name: 'Kodi Dash',
+                includeAssets: ["images/kodi.svg", "images/jellyfin-logo.png", "images/weather-icons/svg/*", "assets/*"],
+                name: '10 Foot Dash',
+                short_name: '10ft Dash',
                 start_url: '/?fullscreen=true',
                 background_color: '#000000',
                 theme_color: '#000000',

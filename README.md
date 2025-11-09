@@ -1,22 +1,22 @@
-# Kodi '2nd Screen'
+# 10-Foot Dash :tv:
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/bossanova808)
 
-## Introduction
+## Introduction 
 
-This is a Kodi '2nd screen' project - i.e. for a second screen that runs alongside/below your main Kodi display, and which displays useful/related information about what is playing etc.  
+This project is designed to rescue older hardware most of us have lying around - old phones and tablets in particular - and resurrect them as a handy 'under tv' information dashboard.
 
-_(Actually, if you_ just _want a nice clock with some handy key weather data, you can just ignore the Kodi side of this altogether!)._
+The interface is designed as an easy to read '10 foot' interface size - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
 
-This app provides a simple GUI dashboard which displays the current time, basic current & upcoming weather information, and - if Kodi is playing something - some simple Kodi 'Now Playing' information (Time Remaining and Poster/Thumbnail Artwork).
+It currently has 3 modes:
 
-All of this with an easy to read '10ft' interface size - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
+- Digital Clock (when unconfigured, or no network available)
+- Clock & Weather information (using [OpenMeteo](https://open-meteo.com/) or the [Australian Bureau of Meteorology](https://www.bom.gov.au/) as the data source)
+- Media Player 'Now Playing' artwork & info (Optional - tracking playbacks from [Jellyfin](https://jellyfin.org/) or [Kodi](https://kodi.tv) 
 
-The weather data is sourced from either OpenMeteo or, if you're in Australia, you get the much more accurate weather data directly from the Australian Bureau of Meteorology.
+The idea is that you can use pretty much any old tablet or smartphone for this (most of us have a few of those in the cupboard by now...).  You could also use a Raspberry Pi with a screen.   Really - just about anything you have really, as long as it can run a browser with some basic, albeit _somewhat_ modern, features.  Of course, it needs to be on the same network as your media player, if you're using the media player features - but a wireless connection is fine.
 
-The idea is that you can use pretty much any old tablet or smartphone for this (most of us have a few of those in the cupboard by now..).  You could also use a Raspberry Pi with a screen.   Really - just about anything you have really, as long as it can run a browser with some basic, albeit somewhat modern, features, and you can connect it to the same local network on which your Kodi is running).
-
-Here's a few photos / screenshots to give you an idea.
+Here's a few photos / screenshots to give you a better idea.
 
 Tablet under a TV, with Kodi playing a movie:
 
@@ -55,19 +55,19 @@ Above, displaying Kodi 'Now Playing' information:
 * Current 'Feels Like' Temperature
 * Current Time
 
-## Hardware
+## Hardware Support
 
-For my own lounge-room, I am using a Samsung A7 Lite (about AU$185 from OfficeWorks, IIRC) - which is simple but relatively high quality 8-inch tablet, and runs for weeks/months at a time, with complete stability.  I have also used a MiPad 4, which can often be found secondhand.
+Supports hardware from ~2016 on - e.g. iPad 6th gen. and above, or Android devices with a modern-ish WebView.  As Android devices are cheap and plentiful, those are used for development and testing.
 
-(With my mobile [Kodi-a-go-go travelling setup](https://github.com/bossanova808/MediaCopier), I use a much older Samsung A6 7-inch tablet, and that also works very well, although it's wireless has always been a bit flakey...). 
-
-I and friends/family have also used a variety of phones.  Really anything that runs a browser will get you going, it's a great way to re-purpose some old hardware you have lying around in a drawer somewhere...
+For my own lounge-room, I am currently using a Samsung A7 Lite tablet - which is simple but relatively good quality 8-inch tablet.  This runs for weeks/months at a time, with complete stability.  I have also used a MiPad 4 (great screen!) - which can often be found secondhand - plus sundry older phones & tablets.
 
 ## Software
 
-In practise, I use a Google Play Store app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the 2nd Screen app URL - but really any tablet and basic somewhat modern browser should work (including iOS devices of course).  
+You can use any browser, really - but for best results a 'Kiosk' type app that provides a borderless display is the nicest.  
 
-_(Fully Kiosk is just a very handy app helps with things like keeping the screen always on, and automatically re-starting the app should there be a network connection issue, and so on.  I bought a license for it (AU $15) because I am using it extensively, but the free version is all you actually need to get going with this.  If you want more advanced features like on/off schedules for the tablet, you do need the paid version.)_
+I use an Android app called [Fully Kiosk](https://www.fully-kiosk.com/) to actually load and display the 10-Foot Dash.  It's excellent and inexpensive and offers a lot of control and a seamless experience.
+
+_(Fully Kiosk is just a very handy app helps with things like keeping the screen always on, and automatically re-starting the app should there be a network connection issue, and so on.  I bought a license for it (~AU $15) because I am using it extensively - but the free version is all you actually need to get going with this.  If you want more advanced features like on/off schedules for the tablet, you do need the paid version.)_
 
 ## Tech Stack
 
@@ -78,52 +78,180 @@ This project uses, and sends thanks to, these particular giants:
 * [Vite](https://vitejs.dev/) for dev/building/packaging
 * [Alpine.js](https://alpinejs.dev/) for reactivity
 * [Tailwind CSS](https://tailwindcss.com/) for CSS
+* [CodeRabbit](https://www.coderabbit.ai/)) - for development assistance
 * (Either) [OpenMeteo](https://open-meteo.com/) for weather data
 * (Or) [Australian Bureau of Meteorology](http://www.bom.gov.au/) for weather data
 * [ARPANSA](https://www.arpansa.gov.au/) for live UV data (some Australian locations)
 * [Meteocons](https://bas.dev/work/meteocons) for the weather icons
-* [Kodi](https://kodi.tv/) - my media player of choice (since 2008!)
+* (Either) [Kodi](https://kodi.tv/) - my media player of choice (since 2008!)
+* (Or)  [Jellyfin](https://jellyfin.org/) - my media server of choice (since 2025)
 
-## Support
+## Support & Development
 
-Support for this is via this Kodi OzWeather [forum thread](<https://forum.kodi.tv/showthread.php?tid=116905>).  Or just open an issue here.
+**This project is very much a personal 'fun project'.**
 
-**Note, though - support for this will likely be quite limited as this is really just a personal project, and is very much provided 'as-is'** - in case it is handy for other people as provided, or they want to use it as a base/starting point for their own similar project.
+If you do encounter issues, feel free to open an issue here.  Please provide as much information as you can in your initial report (e.g. hardware/software, console logs etc.).  If I have time I will try and help.
 
-PRs welcome, of course.  See [Development](#development) below.
+PRs will of course be considered!  See [Development](#development) below.  E.g. for other weather services or media components.
 
 ## Installation
 
-There is no 'installation' as such - this is just a basic web app that runs in a  browser.  To get it, you just go to the app's URL (see below) - and the app should then just come up in your browser.  
+There is no 'installation' as such - this is just a basic web app that runs in a  browser.  To get it, you just go to the app's URL (see below) - and the app will then just come up in your browser.  
 
-_(If you wish, you can download the app locally and use it offline and/or install it as a PWA (i.e. Progressive Web App, via 'Add to Home Screen').  If you download/install it, then from them on, the app runs locally and only communicates within your local network.  But note PWA support can be a bit hit and miss and you may e.g. struggle to get things working correctly (e.g. in nice clean fullscreen view, without any menu bars)...the best way I have found is to use a Kiosk app, e.g. Fully Kiosk, as described above)_.
+_(If you wish, you_ can _download the app locally and use it entirely offline and/or install it as a PWA (i.e. Progressive Web App, via 'Add to Home Screen').  If you download/install it, then from them on, the app runs locally and_ only _communicates within your local network.  But note PWA support can be a bit hit-and-miss - you may e.g. struggle to get things working correctly (e.g. in nice clean fullscreen view, without any menu bars)...the cleanest way I have found to run this is to use a Kiosk app, e.g. Fully Kiosk, as described above)_.
 
-_(You can also easily set up your own version to host, locally or otherwise, with any http server, should you wish - either by cloning this repo and building locally or just by downloading my hosted version)._
+_(You can also easily set up your own version to host, locally or otherwise, with any http server, should you wish - either by cloning this repo and building locally, or just by downloading my hosted version)._
 
-### Setup Kodi
 
-In your Kodi installation's settings, you must enable the Webserver, and JSON-RPC as well as 'allow control from other systems' (which enables the websockets interface which this app uses for communication with Kodi). 
-
-_All of this is fine and essentially completely safe to do **as long as your Kodi player is (as it almost always would be) hidden behind a router's NAT**.  Do **_not_** do this if your Kodi box is corrected directly to the internet (but that would be **_bad_** anyway, for a lot of reasons...)._
-
-Of course, it must be able to contact the weather provider you choose to retrieve the weather info, and must also be able to reach your Kodi installation on your local network (wi-fi should be more than adequate for this).
-
-### The URL
+## Loading The App 
 
 This is the basic URL to visit:
 
 `https://dash.bossanova808.net/`
 
-By default you will see a large clock and then some weather info.
+Initially, you will simply see a large clock in the center of your screen.  This is the default display if the app is not configured, or the network is down.
 
-Now, you need to provide some configuration.  All configuration is done via URL parameters.  
+Now, you need to provide some configuration.  All configuration is done via URL parameters.  These follow the URL and an initial `?` character, and take the form of: `parameter=value`, with each separated by `&`, given a URL that looks like this:
 
-To use the default value, just don't supply the parameter.  You can supply the parameters in any order.
+`https://dash.bossanova808.net/?param1=value1&param2=value2` ...and so on.
 
-### URL Parameters
+Notes:
 
-#### Kodi IP & Auth
-`kodi=` Kodi IP address.  Default is `127.0.0.1` (which assumes you have auth turned off in Kodi's settings as you're not exposing your Kodi to the internet..).
+* To use a default value, simply don't supply that parameter.  
+* You can supply the parameters in any order.
+
+## Configure: User Interface Size
+
+`size=` UI size.  One of `small` `medium` or `large`.  Default is `large`. 
+
+(Large is for tablets in the 7+ inch range, and small is e.g. for phones)
+
+E.g. `size=small`
+
+## Configure: Weather Data
+
+### Weather from OpenMeteo (Worldwide :earth_americas:)
+
+If you're *not* in Australia (see below for that) - then you should provide the necessary OpenMeteo data - you need latitude, longitude and timezone.  
+
+To get these, search for these at the top of this page:
+https://open-meteo.com/en/docs
+
+**Important**: with the timezone, you must replace the `/` character with the URL encoded `%2F` value instead.
+
+Build your URL arguments from those values, e.g.:
+
+`latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
+
+### Weather from the Australian Bureau of Meteorology
+
+If you *are* in Australia, then definitely use this approach - the BOM weather data is much more accurate, and it's also easier to set up.
+
+#### BOM Location ID (geohash)
+
+`bom=` BOM location ID.  Default is `r1r11df` (Ascot Vale, Melbourne). 
+
+You can get your location ID by querying the BOM localities API - just change the search string on the end of this url: `https://api.weather.bom.gov.au/v1/locations/?search=kyneton`
+
+You'll get back some JSON, e.g. 
+
+```json
+{
+    "metadata":
+    {
+        "response_timestamp": "2023-03-27T00:33:04Z"
+    },
+    "data": [
+    {
+        "geohash": "r1qsp5d",
+        "id": "Kyneton-r1qsp5d",
+        "name": "Kyneton",
+        "postcode": "3444",
+        "state": "VIC"
+    },
+    {
+        "geohash": "r1qeyek",
+        "id": "Kyneton South-r1qeyek",
+        "name": "Kyneton South",
+        "postcode": "3444",
+        "state": "VIC"
+    }]
+}
+```
+
+...from which you can then find your geohash (`r1qsp5d` for Kyneton, in the above example).
+
+E.g. `bom=r1r11df`
+
+#### Ultraviolet (UV) Data - for Australian Cities
+
+(UV observations courtesy of [ARPANSA](https://www.arpansa.gov.au/))
+
+If your location has live UV (ultraviolet) data available from the list here: [ARPANSA](https://uvdata.arpansa.gov.au/xml/uvvalues.xml), you can add a parameter to display current UV / predicted max UV data (n.b. UV data only displays between sunrise and sunset - at night you will see Moon Phase data instead!). 
+
+`uv=` (default is no value)
+
+E.g.
+
+`uv=Melbourne`
+
+## Configure: Media Now Playing Info (Jellyfin/Kodi)
+
+Currently, 10 Foot Dash supports Jellyfin and Kodi.
+
+### Now Playing information from: Jellyfin
+
+#### Setup Jellyfin
+
+You will first need to create an API key in your Jellyfin Dashboard, if you don't have one set up already.
+
+#### Jellyfin Host
+
+`jellyfin=` Jellyfin host or IP address.  
+
+**Note**: due to a [Chromium bug](https://issues.chromium.org/issues/40259678), you may have issues with images not loading if you use IP address and your Jellyfin does not use SSL (as this bug blocks the loading of mixed content from IP addresses) - so **it is strongly recommended to use a hostname if you can!**
+
+#### Jellyfin Port
+
+`jellyfin-port=` Change if you're running Jellyfin on a different port. 
+
+Default is `8096`
+
+#### Jellyfin SSL
+
+`jellyfin-ssl` Default is `false` - set to `true` if your Jellyfin uses SSL. 
+
+#### Jellyfin API Key
+
+`jellyfin-api-key=` Your Jellyfin API key
+
+#### Jellyfin Device
+
+`jellyfin-device=`
+
+By default, this app will show _any_ Jellyfin playbacks.  
+
+If you have multiple Jellyfin clients (and especially if they are being used simultaneously), this can create issues.  Specify a device name to instead filter the displayed playback to only that device.  
+
+(Note this is the device name, NOT the device ID - in most Jellyfin apps you can set up a custom device name, if needed).
+
+e.g.
+
+`jellyfin-device=LoungeInfuse` 
+
+### Now Playing information from: Kodi
+
+#### Setup Kodi
+
+In your Kodi installation's settings, you must enable the Webserver, and JSON-RPC as well as 'allow control from other systems' (which enables the websockets interface which this app uses for communication with Kodi). 
+
+_All of this is fine and essentially completely safe to do **as long as your Kodi player is (as it almost always would be) hidden behind a router's NAT**.  Do **_not_** do this if your Kodi box is corrected directly to the internet (but that would be **_very bad_** anyway, for a lot of reasons...)._
+
+#### Kodi Host & Authorisation
+
+`kodi=` Kodi hostname or IP address.  Add the user/password if needed.
+
+Default is `127.0.0.1`
 
 .e.g.  `kodi=192.168.1.100` or `kodi=user:password@ip.address`
 
@@ -139,56 +267,7 @@ e.g. `kodi-web=8088`
 
 e.g. `kodi-json=9999`
 
-
-#### (_EITHER_) OpenMeteo Latitude, Longitude, and Timezone 
-
-If you're *not* in Australia, then you will need to provide OpenMeteo data - the latitude, longitude and timezone.
-
-You can search for these at the top of this page:
-https://open-meteo.com/en/docs
-
-And build URL arguments from those values, e.g.:
-`latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
-
-#### (_OR_) BOM Location ID (geohash)
-
-If you *ARE* in Australia, then definitely use this approach - the BOM weather data is much more accurate, and it's easier to set up.
-
-`bom=` BOM location ID.  Default is `r1r11df` (Ascot Vale, Melbourne). 
-
-You get this by querying the BOM localities API - just change the search string on the end of this url: `https://api.weather.bom.gov.au/v1/locations/?search=kyneton`
-
-You'll get back some JSON, e.g. 
-
-```
-{"metadata":{"response_timestamp":"2023-03-27T00:33:04Z"},"data":[{"geohash":"r1qsp5d","id":"Kyneton-r1qsp5d","name":"Kyneton","postcode":"3444","state":"VIC"},{"geohash":"r1qeyek","id":"Kyneton South-r1qeyek","name":"Kyneton South","postcode":"3444","state":"VIC"}]}
-```
-
-...from which you can then find your geohash (`r1qsp5d` in the above example).
-
-E.g. `bom=r1r11df`
-
-#### Ultraviolet Data for Australian Cities
-
-(UV observations courtesy of [ARPANSA](https://www.arpansa.gov.au/))
-
-If your location has live UV (ultraviolet) data available from the list here: [ARPANSA](https://uvdata.arpansa.gov.au/xml/uvvalues.xml), you can add a parameter to display current UV / predicted max UV data (n.b. this data only displays between sunrise and sunset).
-
-`uv=` (default is no value)
-
-E.g.
-
-`uv=Melbourne`
-
-#### UI Size
-
-`size=` UI size.  One of `small` `medium` or `large`.  Default is `large`. 
-
-(Large is for tablets in the 7+ inch range, and small is e.g. for phones)
-
-E.g. `size=small`
-
-## Example Configured URLs
+## Examples of Final, Configured URLs
 
 **Putting it all together...**
 
@@ -214,13 +293,15 @@ Similar, but with auth for the Kodi webserver, and specifying a non-standard por
 https://dash.bossanova808.net/?kodi=kodi:kodi@192.168.1.51&kodi-json=9999&latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney
 ```
 
-### SSL/HTTPS Support
+### SSL/HTTPS Support / Notes
 
-By default, the app connects to Kodi using HTTP and WebSocket (ws://) protocols, even when the web app itself is served over HTTPS. This supports the common scenario where the web app is served securely (e.g., via Cloudflare tunnel) but Kodi runs on the local network with HTTP only, i.e. without SSL support, as is the default Kodi behaviour.
+By default, the app connects to your Media system using plain HTTP and/or WebSocket (ws://) protocols - even though the web app itself is served over HTTPS. 
 
-See below for examples with and without SSL.
+This supports the common scenario where the web app is served securely (e.g., via Cloudflare tunnel) - but your media runs on the local network with HTTP only, i.e. without SSL support (as is the default behaviour for both Kodi and Jellyfin).
 
-### Usage Examples
+This is known as a 'mixed-content' scenario.  You will probably need to enable mixed content in your browser or Fully Kiosk settings to get things working.
+
+#### Examples
 
 #### Standard Usage (Mixed Content)
 
@@ -248,30 +329,21 @@ See below for examples with and without SSL.
 - Both web app and Kodi use HTTP protocols
 - No mixed content concerns
 
-#### URL Parameters controlling Kodi connection
+#### Mixed Content Notes
 
-| Parameter  | Default | Description |
-|------------|---------|-------------|
-| `kodi`     | `127.0.0.1` | Kodi server IP address or hostname |
-| `kodi-web` | `8080` | Kodi web server port |
-| `kodi-json` | `9090` | Kodi JSON-RPC WebSocket port |
-| `kodi-ssl` | `false` | Set to `true` for HTTPS/WSS Kodi connections |
-
-#### Mixed Content Note
-
-Most Kodi installations use HTTP only. When serving this app over HTTPS but connecting to HTTP Kodi, browsers will block mixed content by default. 
+Most Media player installations use HTTP only. When serving this app over HTTPS but connecting to HTTP/WS Jellyfin/Kodi, browsers will block mixed content by default. 
 
 Solutions:
 
 * Fully Kiosk users: Enable "Allow Mixed Content" in Advanced Web Settings → Content Blocking
 * Standard browsers: Most will show a "shield" icon in the address bar — click it and allow mixed content, for this app
-* Host the app over HTTP instead (avoids the issue entirely). As this is likely to be an entirely internal app, this is an easy and appropriate solution
-* Set up [Kodi SSL](https://kodi.wiki/view/SSL_certificates)
+* Host the app yourself over HTTP instead (avoids the issue entirely). As this is likely to be an entirely internal app, this is an easy and appropriate solution
+* Set up [Kodi SSL](https://kodi.wiki/view/SSL_certificates) or [Jellyfin SSL](https://jellyfin.org/docs/general/post-install/networking/advanced/letsencrypt/)
 
 
 ## Development
 
-(PRs will certainly be looked at but if you're going to add something you think might be generally useful perhaps open an issue here for initial discussion). 
+(PRs will certainly be looked at but if you're going to add something significant that you think might be generally useful, perhaps open an issue here for initial discussion). 
 
 To get going for local development/tweaking for your particular need, all you really need to do is:
 
