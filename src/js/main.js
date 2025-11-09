@@ -175,7 +175,8 @@ else if (mediaSource === "jellyfin") {
     Alpine.data('media', window.jellyfin);
 }
 else {
-    log.error(`Invalid media-source: ${mediaSource}, falling back to default kodi`);
+    // Potentially change this later NOT to fallback to Kodi - e.g. https://github.com/bossanova808/kodi.ozweather.2nd.screen/pull/10#issuecomment-3507258049
+    log.error(`Invalid media-source: ${mediaSource}, falling back to default kodi given that is the historical default.`);
     Alpine.data('media', window.kodi);
 }
 // Actually start Alpine

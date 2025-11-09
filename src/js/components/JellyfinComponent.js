@@ -209,7 +209,7 @@ window.jellyfin = () => {
                     if (!item) return;
 
                     if (Alpine.store('config').jellyfinDevice && Alpine.store('config').jellyfinDevice !== activeSession.DeviceName){
-                        console.info(`Not monitoring playback as jellyfin-device ${Alpine.store('config').jellyfinDevice} != ${activeSession.DeviceName}`)
+                        log.info(`Not monitoring playback as jellyfin-device ${Alpine.store('config').jellyfinDevice} != ${activeSession.DeviceName}`)
                         return;
                     }
 
