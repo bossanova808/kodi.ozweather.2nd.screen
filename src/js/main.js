@@ -9,12 +9,11 @@ import './components/JellyfinComponent';
 
 
 const log = logger('main.js');
+const urlParams = new URLSearchParams(window.location.search);
 
 // Config comes from URL parameters
 Alpine.store('config', {
     init() {
-        const urlParams = new URLSearchParams(window.location.search);
-
         // Cosmetic Params
         this.size = urlParams.get('size') || 'large';
         // Weather Params
@@ -71,7 +70,7 @@ Alpine.store('config', {
             log.info(`Jellyfin Device: ${this.jellyfinDevice} (&jellyfin-device, default none)`);
             log.info(`Jellyfin SSL: ${this.jellyfinSSL} (&jellyfin-ssl, default false)`);
             if (this.jellyfinApiKey) {
-                log.info(`Jellyfin API Key: *** (&jellyfin-api-key)`);
+                log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
             }
         }
 
@@ -168,14 +167,15 @@ Alpine.store('isAvailable', {
 // Create the components - each are scoped to the window which is where Alpine expects to find them
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
-if (Alpine.store('config').mediaSource === "kodi") {
+const mediaSource = urlParams.get('media-source')
+if (mediaSource === "kodi") {
     Alpine.data('media', window.kodi);
 }
-else if (Alpine.store('config').mediaSource === "jellyfin") {
+else if (mediaSource === "jellyfin") {
     Alpine.data('media', window.jellyfin);
 }
 else {
-    log.error(`Invalid media-source: ${Alpine.store('config').mediaSource}, falling back to kodi`);
+    log.error(`Invalid media-source: ${mediaSource}, falling back to default kodi`);
     Alpine.data('media', window.kodi);
 }
 // Actually start Alpine

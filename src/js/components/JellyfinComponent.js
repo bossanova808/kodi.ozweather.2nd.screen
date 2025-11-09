@@ -24,7 +24,7 @@ function buildArtworkFallbackUrls(item, baseUrl, apiKey) {
     // Helper to add image URL if ID exists
     const addImageUrl = (itemId, imageType) => {
         if (itemId) {
-            urls.push(`${baseImageUrl}/${itemId}/Images/${imageType}?api_key=${apiKey}`);
+            urls.push(`${baseImageUrl}/${itemId}/Images/${imageType}`);
         }
     };
 
@@ -81,9 +81,13 @@ async function getValidArtworkUrl(urls) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 2000);
 
+            const apiKey = Alpine.store('config').jellyfinApiKey;
             const response = await fetch(url, {
                 method: 'HEAD',
-                signal: controller.signal
+                signal: controller.signal,
+                headers: {
+                    'Authorization': `MediaBrowser Token="${apiKey}"`
+                }
             });
             clearTimeout(timeoutId);
 
@@ -92,6 +96,7 @@ async function getValidArtworkUrl(urls) {
             }
         } catch (error) {
             // Continue to next URL
+            log.error(error);
             continue;
         }
     }
@@ -135,11 +140,18 @@ window.jellyfin = () => {
                 clearInterval(pollInterval);
             }
 
-            // Get API key from config
+            // Get API key and URL from config
             this._apiKey = Alpine.store('config').jellyfinApiKey;
+            const jellyfinUrl = Alpine.store('config').jellyfinUrl;
 
             if (!this._apiKey) {
                 log.error('Jellyfin API key not supplied, hiding Jellyfin component');
+                Alpine.store('isAvailable').jellyfin = false;
+                return;
+            }
+
+            if (!jellyfinUrl) {
+                log.error('Jellyfin URL not configured, hiding Jellyfin component');
                 Alpine.store('isAvailable').jellyfin = false;
                 return;
             }
@@ -171,13 +183,18 @@ window.jellyfin = () => {
 
         async _requestSessionInfo() {
             const protocols = getJellyfinProtocols();
-            const url = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Sessions?api_key=${this._apiKey}`;
+            const url = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Sessions`;
 
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-                const response = await fetch(url, { signal: controller.signal });
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    headers: {
+                        'Authorization': `MediaBrowser Token="${this._apiKey}"`
+                    }
+                });
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
