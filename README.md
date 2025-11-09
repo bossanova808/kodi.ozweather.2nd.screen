@@ -59,7 +59,7 @@ Above, displaying Kodi 'Now Playing' information:
 
 Supports hardware from ~2016 on - e.g. iPad 6th gen. and above, or Android devices with a modern-ish WebView.  As Android devices are cheap and plentiful, those are used for development and testing.
 
-For my own lounge-room, I am currently using a Samsung A7 Lite tablet - which is simple but relatively good quality 8-inch tablet.  This runs for weeks/months at a time, with complete stability.  I have also used a MiPad 4 (great screen!) - which can often be found secondhand - plus sundry older phones & tablets.
+For my own lounge-room, I am currently using a Samsung A7 Lite tablet - which is a simple but relatively good quality 8-inch tablet.  This runs for weeks/months at a time, with complete stability.  I have also used a MiPad 4 (great screen!) - which can often be found secondhand - plus sundry older phones & tablets.
 
 ## Software
 

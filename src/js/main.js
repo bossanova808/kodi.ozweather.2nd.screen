@@ -168,27 +168,26 @@ Alpine.store('isAvailable', {
 // Create the components - each are scoped to the window which is where Alpine expects to find them
 Alpine.data('clock', window.clock);
 Alpine.data('weather', window.weather);
-const mediaSource = urlParams.get('media-source')
-if (mediaSource === "kodi") {
+const mediaSourceParam = urlParams.get('media-source') || 'kodi';
+if (mediaSourceParam === "kodi") {
     Alpine.data('media', window.kodi);
-}
-else if (mediaSource === "jellyfin") {
+} else if (mediaSourceParam === "jellyfin") {
     Alpine.data('media', window.jellyfin);
-}
-else {
-    // Potentially change this later NOT to fallback to Kodi - e.g. https://github.com/bossanova808/kodi.ozweather.2nd.screen/pull/10#pullrequestreview-3439392587
-    // log.warn(`Invalid media-source: ${mediaSource}, no media component will be available.`);
-    // // Provide a no-op media component
-    // Alpine.data('media', () => ({
-    //     init() {},
-    //     artwork: '',
-    //     timeRemainingAsTime: '',
-    //     finishTime: ''
-    // }));
-
-    log.error(`Invalid media-source: ${mediaSource}, falling back to default kodi given that is the historical default.`);
+} else {
+    log.error(`Invalid media-source: ${mediaSourceParam}, falling back to default kodi given that is the historical default.`);
     Alpine.data('media', window.kodi);
 }
+
+// Potentially change the above later NOT to fall-back to Kodi - e.g. https://github.com/bossanova808/kodi.ozweather.2nd.screen/pull/10#pullrequestreview-3439392587
+// log.warn(`Invalid media-source: ${mediaSource}, no media component will be available.`);
+// // Provide a no-op media component
+// Alpine.data('media', () => ({
+//     init() {},
+//     artwork: '',
+//     timeRemainingAsTime: '',
+//     finishTime: ''
+// }));
+
 // Actually start Alpine
 Alpine.start();
 
