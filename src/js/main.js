@@ -57,7 +57,7 @@ Alpine.store('config', {
         if (this.bom) {
             log.info(`BOM Weather Location ID: ${this.bom} (&bom, default r1r11df - Ascot Vale, Victoria)`);
         } else {
-            log.info(`OpenMeteo Weather Location Latitude: ${this.latitude}, Longitude: ${this.longitude}, , Timezone: ${this.timezone} (&latitude, $longitude, &timezone)`);
+            log.info(`OpenMeteo Weather Location Latitude: ${this.latitude}, Longitude: ${this.longitude}, Timezone: ${this.timezone} (&latitude, $longitude, &timezone)`);
         }
         if (this.uvStation) {
             log.info(`UV station: ${this.uvStation} (&uv)`);
