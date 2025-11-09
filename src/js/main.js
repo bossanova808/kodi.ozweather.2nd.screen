@@ -185,7 +185,7 @@ else {
     //     timeRemainingAsTime: '',
     //     finishTime: ''
     // }));
-    
+
     log.error(`Invalid media-source: ${mediaSource}, falling back to default kodi given that is the historical default.`);
     Alpine.data('media', window.kodi);
 }

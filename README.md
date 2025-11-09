@@ -143,7 +143,7 @@ Build your URL arguments from those values, e.g.:
 
 `latitude=-37.814&longitude=144.9633&timezone=Australia%2FSydney`
 
-### Weather from the Australian Bureau of Meteorology
+### Weather from the Australian Bureau of Meteorology (:australia:)
 
 If you *are* in Australia, then definitely use this approach - the BOM weather data is much more accurate, and it's also easier to set up.
 
