@@ -129,7 +129,7 @@ window.jellyfin = () => {
         _pollingActive: false,
         _currentPollRate: POLL_RATE_IDLE,
         _lastProgressUpdate: Date.now(),
-        _pausedInactivityThreshold: Alpine.store('config').jellyfinPauseTimeout,
+        _pausedInactivityThreshold: null,
 
         startSessionPolling(pollRate = POLL_RATE_IDLE) {
             // If already polling at the same rate, don't restart
@@ -144,6 +144,7 @@ window.jellyfin = () => {
             // Get API key and URL from config
             this._apiKey = Alpine.store('config').jellyfinApiKey;
             const jellyfinUrl = Alpine.store('config').jellyfinUrl;
+            this._pausedInactivityThreshold = Alpine.store('config').jellyfinPauseTimeout;
 
             if (!this._apiKey) {
                 log.error('Jellyfin API key not supplied, hiding Jellyfin component');
@@ -245,12 +246,11 @@ window.jellyfin = () => {
                         log.info(`New item detected (${item.Id}), fetching artwork`);
                         const fallbackUrls = buildArtworkFallbackUrls(
                             item,
-                            Alpine.store('config').jellyfinUrl,
-                            this._apiKey
+                            Alpine.store('config').jellyfinUrl
                         );
-                        log.info(`Attempting artwork URLs for ${item.Type}:`, fallbackUrls.map(u => u.includes(this._apiKey) ? u.replaceAll(this._apiKey, '***') : u));
+                        log.info(`Attempting artwork URLs for ${item.Type}:${fallbackUrls}`);
                         this.artwork = await getValidArtworkUrl(fallbackUrls);
-                        log.info(`Artwork URL set to ${this.artwork.includes(this._apiKey) ? this.artwork.replaceAll(this._apiKey, '***') : this.artwork}`);
+                        log.info(`Artwork URL set to ${this.artwork}`);
                     }
 
                     this._handlePlayback(activeSession);

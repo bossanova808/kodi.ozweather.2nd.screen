@@ -158,11 +158,14 @@ Alpine.data('weather', window.weather);
 const mediaSourceParam = urlParams.get('media-source') || 'kodi';
 if (mediaSourceParam === "kodi") {
     Alpine.data('media', window.kodi);
+    Alpine.store('config').mediaSource = 'kodi';
 } else if (mediaSourceParam === "jellyfin") {
     Alpine.data('media', window.jellyfin);
+    Alpine.store('config').mediaSource = 'jellyfin';
 } else {
     log.error(`Invalid media-source: ${mediaSourceParam}, falling back to default kodi given that is the historical default.`);
     Alpine.data('media', window.kodi);
+    Alpine.store('config').mediaSource = 'kodi';
 }
 
 // Potentially change the above later NOT to fall back to Kodi - e.g. https://github.com/bossanova808/kodi.ozweather.2nd.screen/pull/10#pullrequestreview-3439392587
