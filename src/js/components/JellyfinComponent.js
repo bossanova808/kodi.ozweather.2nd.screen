@@ -16,7 +16,7 @@ function getJellyfinProtocols() {
 /**
  * Builds fallback URLs for artwork based on media type
  */
-function buildArtworkFallbackUrls(item, baseUrl, apiKey) {
+function buildArtworkFallbackUrls(item, baseUrl) {
     const urls = [];
     const protocols = getJellyfinProtocols();
     const baseImageUrl = `${protocols.http}${baseUrl}/Items`;
@@ -97,7 +97,6 @@ async function getValidArtworkUrl(urls) {
         } catch (error) {
             // Continue to next URL
             log.error(error);
-            continue;
         }
     }
 
@@ -129,6 +128,8 @@ window.jellyfin = () => {
         _apiKey: null,
         _pollingActive: false,
         _currentPollRate: POLL_RATE_IDLE,
+        _lastProgressUpdate: Date.now(),
+        _pausedInactivityThreshold: Alpine.store('config').jellyfinPauseTimeout,
 
         startSessionPolling(pollRate = POLL_RATE_IDLE) {
             // If already polling at the same rate, don't restart
@@ -217,6 +218,26 @@ window.jellyfin = () => {
                     if (this._currentPollRate !== POLL_RATE_ACTIVE) {
                         log.info('Playback detected - switching to fast polling (500ms)');
                         this.startSessionPolling(POLL_RATE_ACTIVE);
+                    }
+
+                    // Has the user requested we monitor long pauses (likely the JF app has been back-grounded)
+                    if (this._pausedInactivityThreshold) {
+                        const isPaused = activeSession.PlayState?.IsPaused;
+
+                        // If playback is progressing (not paused), update last activity
+                        if (!isPaused) {
+                            this._lastProgressUpdate = Date.now();
+                        }
+
+                        // If paused, check if it's been inactive too long (likely the app has been back-grounded)
+                        if (isPaused) {
+                            const inactiveDuration = Date.now() - this._lastProgressUpdate;
+                            if (inactiveDuration > this._pausedInactivityThreshold) {
+                                log.info(`Session paused and inactive for ${inactiveDuration}ms, hiding Jellyfin display`);
+                                this._handleStopPlayback();
+                                return;
+                            }
+                        }
                     }
 
                     // Get artwork with fallback - only when item changes
@@ -346,7 +367,18 @@ window.jellyfin = () => {
                 return;
             }
             this._initDelay = setTimeout(() => {
+
                 log.info("JellyfinComponent init");
+                log.info(`Media source: ${Alpine.store('config').mediaSource} (&media-source)`);
+                log.info(`Jellyfin Host: ${Alpine.store('config').jellyfin} (&jellyfin, default jellyfin)`);
+                log.info(`Jellyfin Port: ${Alpine.store('config').jellyfinPort} (&jellyfin-port, default 8096)`);
+                log.info(`Jellyfin SSL: ${Alpine.store('config').jellyfinSSL} (&jellyfin-ssl, default false)`);
+                log.info(`Jellyfin Device: ${Alpine.store('config').jellyfinDevice} (&jellyfin-device, default none)`);
+                log.info(`Jellyfin Pause Timeout: ${Alpine.store('config').jellyfinPauseTimeout} (&jellyfin-pause-timeout, default none)`);
+                if (this.jellyfinApiKey) {
+                    log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
+                }
+
                 this.startSessionPolling();
             }, 2000);
         },

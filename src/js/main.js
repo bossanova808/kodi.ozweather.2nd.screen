@@ -37,6 +37,10 @@ Alpine.store('config', {
             this.jellyfinApiKey = urlParams.get('jellyfin-api-key');
             this.jellyfinDevice = urlParams.get('jellyfin-device');
             this.jellyfinSSL = urlParams.get('jellyfin-ssl') === 'true';
+            this.jellyfinPauseTimeout = urlParams.get('jellyfin-pause-timeout');
+            if (this.jellyfinPauseTimeout) {
+                this.jellyfinPauseTimeout = this.jellyfinPauseTimeout * 1000;
+            }
             // Not currently used, left pending another try at a web sockets approach with JF
             this.jellyfinUser = urlParams.get('jellyfin-user')
             this.jellyfinPassword = urlParams.get('jellyfin-password')
@@ -61,24 +65,6 @@ Alpine.store('config', {
         }
         if (this.uvStation) {
             log.info(`UV station: ${this.uvStation} (&uv)`);
-        }
-
-        if (this.mediaSource === 'jellyfin') {
-            log.info(`Media source: ${this.mediaSource} (&media-source)`);
-            log.info(`Jellyfin Host: ${this.jellyfin} (&jellyfin, default jellyfin)`);
-            log.info(`Jellyfin Port: ${this.jellyfinPort} (&jellyfin-port, default 8096)`);
-            log.info(`Jellyfin Device: ${this.jellyfinDevice} (&jellyfin-device, default none)`);
-            log.info(`Jellyfin SSL: ${this.jellyfinSSL} (&jellyfin-ssl, default false)`);
-            if (this.jellyfinApiKey) {
-                log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
-            }
-        }
-
-        if (this.mediaSource === 'kodi') {
-            log.info(`Kodi Host: ${this.kodi} (&kodi, default 127.0.0.1)`);
-            log.info(`Kodi JSON Port: ${this.kodiJsonPort} (&kodi-json, default 9090)`);
-            log.info(`Kodi Web Port: ${this.kodiWebPort} (&kodi-web, default 8080)`);
-            log.info(`Kodi SSL: ${this.kodiSSL} (&kodi-ssl, default false)`);
         }
 
         // 'small' = Phone size (just basic info) - FF: Galaxy S10 (760x360) DPR 4
@@ -128,6 +114,7 @@ Alpine.store('config', {
     jellyfinUser: false,
     jellyfinPassword: false,
     jellyfinDevice: false,
+    jellyfinPauseTimeout: false,
     kodi: false,
     kodiJsonPort: false,
     kodiWebPort: false,
@@ -178,7 +165,7 @@ if (mediaSourceParam === "kodi") {
     Alpine.data('media', window.kodi);
 }
 
-// Potentially change the above later NOT to fall-back to Kodi - e.g. https://github.com/bossanova808/kodi.ozweather.2nd.screen/pull/10#pullrequestreview-3439392587
+// Potentially change the above later NOT to fall back to Kodi - e.g. https://github.com/bossanova808/kodi.ozweather.2nd.screen/pull/10#pullrequestreview-3439392587
 // log.warn(`Invalid media-source: ${mediaSource}, no media component will be available.`);
 // // Provide a no-op media component
 // Alpine.data('media', () => ({
