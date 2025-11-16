@@ -6,7 +6,7 @@
 
 This project is designed to rescue older hardware most of us have lying around - old phones and tablets in particular - and resurrect them as a handy 'under tv' information dashboard.
 
-The interface is designed as an easy to read '10 foot' interface size - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
+The interface is designed as an easy to read '10 foot interface' - i.e. you should be able to see & read your screen comfortably, from a normal TV viewing position, some metres away.
 
 It currently has 3 modes:
 
