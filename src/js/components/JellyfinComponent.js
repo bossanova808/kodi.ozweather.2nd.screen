@@ -19,7 +19,9 @@ function getJellyfinProtocols() {
 function buildArtworkFallbackUrls(item, baseUrl) {
     const urls = [];
     const protocols = getJellyfinProtocols();
-    const baseImageUrl = `${protocols.http}${baseUrl}/Items`;
+    // Remove trailing slash from baseUrl if present
+    const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+    const baseImageUrl = `${protocols.http}${normalizedBaseUrl}/Items`;
 
     // Helper to add image URL if ID exists
     const addImageUrl = (itemId, imageType) => {
@@ -95,8 +97,8 @@ async function getValidArtworkUrl(urls) {
                 return url;
             }
         } catch (error) {
-            // Continue to next URL
-            log.error(error);
+            // Continue to next URL (don't log full error as it may contain auth headers)
+            log.error(`Failed to validate artwork URL: ${error.message}`);
         }
     }
 
@@ -140,6 +142,7 @@ window.jellyfin = () => {
 
             if (pollInterval) {
                 clearInterval(pollInterval);
+                pollInterval = null;  // Explicitly null to create clear guard window
             }
 
             log.info(`Start/change Jellyfin session polling to poll rate: ${pollRate}ms`);
@@ -189,7 +192,8 @@ window.jellyfin = () => {
 
         async _requestSessionInfo() {
             const protocols = getJellyfinProtocols();
-            const url = `${protocols.http}${Alpine.store('config').jellyfinUrl}/Sessions`;
+            const jellyfinUrl = Alpine.store('config').jellyfinUrl.replace(/\/$/, '');
+            const url = `${protocols.http}${jellyfinUrl}/Sessions`;
 
             try {
                 const controller = new AbortController();
