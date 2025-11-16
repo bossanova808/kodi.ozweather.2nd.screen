@@ -239,6 +239,18 @@ e.g.
 
 `jellyfin-device=LoungeInfuse` 
 
+#### Jellyfin Pause Timeout
+
+Some Jellyfin clients are pretty basic - e.g. the LG TV WebOS app is just a simple wrapper around the web UI.  
+
+Unfortunately, with these clients, it is possible to 'back out of' the Jellyfin App in a way that 10-foot Dash can't detect - there is no 'media stop' event as such.  It seems like some of these clients auto-pause the media (others jsut keep playing in the backround!) - but that's it.  It's a pretty crap but of Jellyfin 'design', really.
+
+As a work-around, you can set a 'pause timeout' that will hide the Jellyfin Now Playing display after a configurable number of seconds.  This will mean that your display doesn't get stuck on the Now Playing mode, but it has the undesired side effect of also happening with legitimate long pauses you when you _haven't_ backed out of the app. 
+
+e.g.
+
+`jellyfin-pause-timeout=30` 
+
 ### Now Playing information from: Kodi
 
 #### Setup Kodi

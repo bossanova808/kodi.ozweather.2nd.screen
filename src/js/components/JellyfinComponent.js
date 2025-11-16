@@ -387,7 +387,8 @@ window.jellyfin = () => {
                 log.info(`Jellyfin Port: ${Alpine.store('config').jellyfinPort} (&jellyfin-port, default 8096)`);
                 log.info(`Jellyfin SSL: ${Alpine.store('config').jellyfinSSL} (&jellyfin-ssl, default false)`);
                 log.info(`Jellyfin Device: ${Alpine.store('config').jellyfinDevice} (&jellyfin-device, default none)`);
-                log.info(`Jellyfin Pause Timeout: ${Alpine.store('config').jellyfinPauseTimeout/1000} (&jellyfin-pause-timeout, default none)`);
+                const pauseTimeout = Alpine.store('config').jellyfinPauseTimeout;
+                log.info(`Jellyfin Pause Timeout: ${pauseTimeout ? pauseTimeout/1000 : 'none'} (&jellyfin-pause-timeout, default none)`);
                 if (Alpine.store('config').jellyfinApiKey) {
                     log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
                 }
