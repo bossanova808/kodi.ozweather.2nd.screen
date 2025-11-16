@@ -380,7 +380,7 @@ window.jellyfin = () => {
                 log.info(`Jellyfin SSL: ${Alpine.store('config').jellyfinSSL} (&jellyfin-ssl, default false)`);
                 log.info(`Jellyfin Device: ${Alpine.store('config').jellyfinDevice} (&jellyfin-device, default none)`);
                 log.info(`Jellyfin Pause Timeout: ${Alpine.store('config').jellyfinPauseTimeout} (&jellyfin-pause-timeout, default none)`);
-                if (this.jellyfinApiKey) {
+                if (Alpine.store('config').jellyfinApiKey) {
                     log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
                 }
 
