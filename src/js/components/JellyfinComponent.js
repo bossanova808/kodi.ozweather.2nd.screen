@@ -277,7 +277,7 @@ window.jellyfin = () => {
                     }
                 }
             } catch (error) {
-                log.error('Failed to fetch session info:', error);
+                log.error(`Failed to fetch session info: ${error.message}`);
                 // Don't stop polling on error - network might recover
             }
         },
@@ -375,15 +375,19 @@ window.jellyfin = () => {
                 log.info("Media source is not set to jellyfin, doing nothing.");
                 return;
             }
-            this._initDelay = setTimeout(() => {
 
+            if (this._initDelay) {
+                clearTimeout(this._initDelay);
+            }
+
+            this._initDelay = setTimeout(() => {
                 log.info("JellyfinComponent init");
                 log.info(`Media source: ${Alpine.store('config').mediaSource} (&media-source)`);
                 log.info(`Jellyfin Host: ${Alpine.store('config').jellyfin} (&jellyfin, default jellyfin)`);
                 log.info(`Jellyfin Port: ${Alpine.store('config').jellyfinPort} (&jellyfin-port, default 8096)`);
                 log.info(`Jellyfin SSL: ${Alpine.store('config').jellyfinSSL} (&jellyfin-ssl, default false)`);
                 log.info(`Jellyfin Device: ${Alpine.store('config').jellyfinDevice} (&jellyfin-device, default none)`);
-                log.info(`Jellyfin Pause Timeout: ${Alpine.store('config').jellyfinPauseTimeout} (&jellyfin-pause-timeout, default none)`);
+                log.info(`Jellyfin Pause Timeout: ${Alpine.store('config').jellyfinPauseTimeout/1000} (&jellyfin-pause-timeout, default none)`);
                 if (Alpine.store('config').jellyfinApiKey) {
                     log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
                 }
