@@ -400,10 +400,19 @@ window.kodi = () => {
         },
 
         init() {
+            // If we're not set up to use Kodi, we're done...
+            if (Alpine.store('config').mediaSource !== 'kodi'){
+                log.info("Media source is not set to kodi, doing nothing.");
+                return;
+            }
             // Kick this off two seconds after we fire up, just to give time for things to settle a bit...
             this._initDelay = setTimeout(() => {
                 log.info("KodiComponent init");
-                this.createEnhancedKodiWebSocket(); // Use this.createEnhancedKodiWebSocket()
+                log.info(`Kodi Host: ${Alpine.store('config').kodi} (&kodi, default 127.0.0.1)`);
+                log.info(`Kodi JSON Port: ${Alpine.store('config').kodiJsonPort} (&kodi-json, default 9090)`);
+                log.info(`Kodi Web Port: ${Alpine.store('config').kodiWebPort} (&kodi-web, default 8080)`);
+                log.info(`Kodi SSL: ${Alpine.store('config').kodiSSL} (&kodi-ssl, default false)`);
+                this.createEnhancedKodiWebSocket();
             }, 2000)
         },
     }

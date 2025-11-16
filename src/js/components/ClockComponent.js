@@ -1,8 +1,10 @@
+import "../utils/logger.js"
+const log = logger('ClockComponent.js');
+
 window.clock = () => {
     return {
         time: new Date(),
         init() {
-            const log = logger('ClockComponent.js');
             log.info("ClockComponent init");
 
             setInterval(() => {

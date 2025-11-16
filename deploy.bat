@@ -1,14 +1,17 @@
 @echo off
+call deploy-common.bat
+if errorlevel 1 exit /b 1
 
-call npm install
-call npm run build
-
-echo "Deploying to: kodidash"
+echo Deploying to: kodidash
 robocopy /MIR "dist" "C:\mnt\kodidash\home\appdata\nginx\www" /xd ".git"
+if errorlevel 8 (
+    echo Robocopy to kodidash failed!
+    exit /b 1
+)
 
-echo "Deploying to: bossanova808.net"
+echo Deploying to: dash.bossanova808.net
 robocopy /MIR "dist" "C:\mnt\bossanova808-public-hs14\home\appdata\nginx\www" /xd ".git"
-
-rem echo "Deploying to: adelaide-services"
-rem robocopy /MIR "dist" "C:\mnt\adelaide-services\home\docker\config\nginx\www" /xd ".git"
-
+if errorlevel 8 (
+    echo Robocopy to dash.bossanova808.net failed!
+    exit /b 1
+)

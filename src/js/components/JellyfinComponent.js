@@ -1,0 +1,400 @@
+// noinspection JSUnresolvedReference
+
+import "../utils/logger.js"
+
+const log = logger('JellyfinComponent.js');
+
+function getJellyfinProtocols() {
+    // Read SSL setting from centralized config
+    const jellyfinSSL = Alpine.store('config').jellyfinSSL;
+
+    return {
+        http: jellyfinSSL ? 'https://' : 'http://',
+    };
+}
+
+/**
+ * Builds fallback URLs for artwork based on media type
+ */
+function buildArtworkFallbackUrls(item, baseUrl) {
+    const urls = [];
+    const protocols = getJellyfinProtocols();
+    // Remove trailing slash from baseUrl if present
+    const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+    const baseImageUrl = `${protocols.http}${normalizedBaseUrl}/Items`;
+
+    // Helper to add image URL if ID exists
+    const addImageUrl = (itemId, imageType) => {
+        if (itemId) {
+            urls.push(`${baseImageUrl}/${itemId}/Images/${imageType}`);
+        }
+    };
+
+    switch (item.Type) {
+        case 'Episode':
+            // Series Poster -> Series Logo -> Episode Primary -> Episode Thumbnail -> Jellyfin Logo
+            addImageUrl(item.SeriesId, 'Primary');
+            addImageUrl(item.SeriesId, 'Logo');
+            addImageUrl(item.Id, 'Primary');
+            addImageUrl(item.Id, 'Thumb');
+            break;
+
+        case 'Movie':
+            // Movie Poster -> Movie Thumbnail -> Jellyfin Logo
+            addImageUrl(item.Id, 'Primary');
+            addImageUrl(item.Id, 'Thumb');
+            break;
+
+        case 'Audio':
+        case 'MusicAlbum':
+        case 'AudioBook':
+        case 'Book':
+            // Album/Book cover -> Jellyfin logo
+            // Try album first if available, then item itself
+            addImageUrl(item.AlbumId || item.ParentId, 'Primary');
+            addImageUrl(item.Id, 'Primary');
+            break;
+
+        default:
+            // Generic fallback: Primary -> Thumb -> Jellyfin Logo
+            addImageUrl(item.Id, 'Primary');
+            addImageUrl(item.Id, 'Thumb');
+            break;
+    }
+
+    // Always add Jellyfin logo as final fallback
+    urls.push('/images/jellyfin-logo.png');
+
+    return urls;
+}
+
+/**
+ * Tests artwork URLs in order and returns the first valid one
+ */
+async function getValidArtworkUrl(urls) {
+    for (const url of urls) {
+        try {
+            // For local Jellyfin logo, return immediately
+            if (url.startsWith('/images/')) {
+                return url;
+            }
+
+            // Test if the image URL is accessible with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+            const apiKey = Alpine.store('config').jellyfinApiKey;
+            const response = await fetch(url, {
+                method: 'HEAD',
+                signal: controller.signal,
+                headers: {
+                    'Authorization': `MediaBrowser Token="${apiKey}"`
+                }
+            });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                return url;
+            }
+        } catch (error) {
+            // Continue to next URL (don't log full error as it may contain auth headers)
+            log.error(`Failed to validate artwork URL: ${error.message}`);
+        }
+    }
+
+    // Final fallback (should never reach here since logo is always last)
+    return '/images/jellyfin-logo.png';
+}
+
+window.jellyfin = () => {
+
+    // Polling interval reference
+    let pollInterval = null;
+
+    // Different polling rates
+    const POLL_RATE_IDLE = 2000;      // 2 seconds when nothing playing
+    const POLL_RATE_ACTIVE = 500;     // 0.5 seconds when playing
+
+    return {
+        artwork: null,
+        title: '',
+        season: '',
+        episode: '',
+        finishTime: '',
+        timeRemainingAsTime: '',
+
+        _initDelay: null,
+        _currentMediaType: null,
+        _currentItemId: null,
+        _currentSessionId: null,
+        _apiKey: null,
+        _pollingActive: false,
+        _currentPollRate: POLL_RATE_IDLE,
+        _lastProgressUpdate: Date.now(),
+        _pausedInactivityThreshold: null,
+
+        sessionPolling(pollRate = POLL_RATE_IDLE) {
+
+            // If already polling at the same rate, don't restart
+            if (pollInterval && this._currentPollRate === pollRate) {
+                return;
+            }
+
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;  // Explicitly null to create clear guard window
+            }
+
+            log.info(`Start/change Jellyfin session polling to poll rate: ${pollRate}ms`);
+
+            // Get API key and URL from config
+            this._apiKey = Alpine.store('config').jellyfinApiKey;
+            const jellyfinUrl = Alpine.store('config').jellyfinUrl;
+            this._pausedInactivityThreshold = Alpine.store('config').jellyfinPauseTimeout;
+
+            if (!this._apiKey) {
+                log.error('Jellyfin API key not supplied, hiding Jellyfin component');
+                Alpine.store('isAvailable').jellyfin = false;
+                return;
+            }
+
+            if (!jellyfinUrl) {
+                log.error('Jellyfin URL not configured, hiding Jellyfin component');
+                Alpine.store('isAvailable').jellyfin = false;
+                return;
+            }
+
+            this._currentPollRate = pollRate;
+            this._pollingActive = true;
+
+            // Initial check
+            log.info('Initial update of Jellyfin session info');
+            this._requestSessionInfo();
+
+            // Poll at the specified rate
+            pollInterval = setInterval(() => {
+                if (this._pollingActive) {
+                    log.info('Update Jellyfin session info');
+                    this._requestSessionInfo();
+                }
+            }, pollRate);
+        },
+
+        stopSessionPolling() {
+            log.info('Stopping Jellyfin session polling');
+            this._pollingActive = false;
+
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        },
+
+        async _requestSessionInfo() {
+            const protocols = getJellyfinProtocols();
+            const jellyfinUrl = Alpine.store('config').jellyfinUrl.replace(/\/$/, '');
+            const url = `${protocols.http}${jellyfinUrl}/Sessions`;
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    headers: {
+                        'Authorization': `MediaBrowser Token="${this._apiKey}"`
+                    }
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const sessions = await response.json();
+                const activeSession = sessions.find(s => s.NowPlayingItem);
+
+                if (activeSession && activeSession.IsActive) {
+                    const item = activeSession.NowPlayingItem;
+                    if (!item) return;
+
+                    if (Alpine.store('config').jellyfinDevice && Alpine.store('config').jellyfinDevice !== activeSession.DeviceName){
+                        log.info(`Not monitoring playback as jellyfin-device ${Alpine.store('config').jellyfinDevice} != ${activeSession.DeviceName}`)
+                        return;
+                    }
+
+                    // Has the user requested we monitor long pauses (likely the JF app has been back-grounded)
+                    if (this._pausedInactivityThreshold) {
+                        const isPaused = activeSession.PlayState?.IsPaused;
+
+                        // If playback is progressing (not paused), update last activity
+                        if (!isPaused) {
+                            this._lastProgressUpdate = Date.now();
+                        }
+
+                        // If paused, check if it's been inactive too long (likely the app has been back-grounded)
+                        if (isPaused) {
+                            const inactiveDuration = Date.now() - this._lastProgressUpdate;
+                            if (inactiveDuration > this._pausedInactivityThreshold) {
+                                log.info(`Session paused and inactive for ${inactiveDuration}ms, hide Jellyfin display, use idle polling: ${POLL_RATE_IDLE}ms`);
+                                this._handleStopPlayback();
+                                this.sessionPolling(POLL_RATE_IDLE);
+                                return;
+                            }
+                        }
+                    }
+
+                    // Switch to fast polling when playback is active
+                    if (this._currentPollRate !== POLL_RATE_ACTIVE) {
+                        log.info('Playback detected - switching to fast polling (500ms)');
+                        this.sessionPolling(POLL_RATE_ACTIVE);
+                    }
+
+                    // Get artwork with fallback - only when item changes
+                    if (item.Id && item.Id !== this._currentItemId) {
+                        log.info(`New item detected (${item.Id}), fetching artwork`);
+                        const fallbackUrls = buildArtworkFallbackUrls(
+                            item,
+                            Alpine.store('config').jellyfinUrl
+                        );
+                        log.info(`Attempting artwork URLs for ${item.Type}:${fallbackUrls}`);
+                        this.artwork = await getValidArtworkUrl(fallbackUrls);
+                        log.info(`Artwork URL set to ${this.artwork}`);
+                    }
+
+                    this._handlePlayback(activeSession);
+                } else {
+                    // Switch to slow polling when nothing is playing
+                    if (this._currentPollRate !== POLL_RATE_IDLE) {
+                        log.info('No playback - switching to slow polling (2s)');
+                        this.sessionPolling(POLL_RATE_IDLE);
+                    }
+
+                    // Only clear if we were previously showing jellyfin
+                    if (Alpine.store('isAvailable').jellyfin) {
+                        log.info("No active playback session found - hiding Jellyfin display");
+                        this._handleStopPlayback();
+                    }
+                }
+            } catch (error) {
+                log.error(`Failed to fetch session info: ${error.message}`);
+                // Don't stop polling on error - network might recover
+            }
+        },
+
+        _handlePlayback(session) {
+            const item = session.NowPlayingItem;
+            if (!item) return;
+
+            this._currentItemId = item.Id;
+            this._currentSessionId = session.Id;
+            this._currentMediaType = item.Type;
+
+            // Calculate time remaining and finish time
+            this._updateTimeRemaining(session);
+
+            // Extract title/season/episode info
+            this.title = item.Name || '';
+
+            // For TV episodes
+            if (item.Type === 'Episode') {
+                this.season = item.ParentIndexNumber || '';
+                this.episode = item.IndexNumber || '';
+                this.title = item.SeriesName || this.title;
+            } else {
+                this.season = '';
+                this.episode = '';
+            }
+
+            // Show the component
+            if (!Alpine.store('isAvailable').jellyfin) {
+                log.info("Showing Jellyfin component");
+                Alpine.store('isAvailable').jellyfin = true;
+            }
+        },
+
+        _handleStopPlayback() {
+            log.info("Playback stopped or on extended pause - hide Jellyfin display");
+            this._clearProperties();
+            Alpine.store('isAvailable').jellyfin = false;
+        },
+
+        _updateTimeRemaining(session) {
+            const playState = session.PlayState;
+
+            if (!playState) return;
+
+            const positionTicks = playState.PositionTicks || 0;
+            const runtimeTicks = session.NowPlayingItem?.RunTimeTicks || 0;
+
+            if (runtimeTicks > 0) {
+                // Convert ticks to seconds (10,000 ticks = 1ms)
+                const remainingSeconds = Math.floor((runtimeTicks - positionTicks) / 10000000);
+
+                // Format as HH:MM:SS or MM:SS
+                const hours = Math.floor(remainingSeconds / 3600);
+                const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                const seconds = remainingSeconds % 60;
+
+                let timeString = '';
+                if (hours > 0) {
+                    timeString = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+
+                this.timeRemainingAsTime = '-' + timeString;
+
+                // Calculate finish time
+                const now = new Date();
+                const finishDate = new Date(now.getTime() + (remainingSeconds * 1000));
+                const finishHours = finishDate.getHours();
+                const finishMinutes = finishDate.getMinutes();
+                const ampm = finishHours >= 12 ? 'pm' : 'am';
+                const displayHours = finishHours % 12 || 12;
+
+                this.finishTime = `${displayHours}:${finishMinutes.toString().padStart(2, '0')}${ampm}`;
+            }
+        },
+
+        _clearProperties() {
+            this.artwork = null;
+            this.title = '';
+            this.season = '';
+            this.episode = '';
+            this.finishTime = '';
+            this.timeRemainingAsTime = '';
+            this._currentItemId = null;
+            this._currentSessionId = null;
+            this._currentMediaType = null;
+        },
+
+        init() {
+            // If we're not set up to use Jellyfin, we're done...
+            if (Alpine.store('config').mediaSource !== 'jellyfin'){
+                log.info("Media source is not set to jellyfin, doing nothing.");
+                return;
+            }
+
+            if (this._initDelay) {
+                clearTimeout(this._initDelay);
+            }
+
+            this._initDelay = setTimeout(() => {
+                log.info("JellyfinComponent init");
+                log.info(`Media source: ${Alpine.store('config').mediaSource} (&media-source)`);
+                log.info(`Jellyfin Host: ${Alpine.store('config').jellyfin} (&jellyfin, default jellyfin)`);
+                log.info(`Jellyfin Port: ${Alpine.store('config').jellyfinPort} (&jellyfin-port, default 8096)`);
+                log.info(`Jellyfin SSL: ${Alpine.store('config').jellyfinSSL} (&jellyfin-ssl, default false)`);
+                log.info(`Jellyfin Device: ${Alpine.store('config').jellyfinDevice} (&jellyfin-device, default none)`);
+                const pauseTimeout = Alpine.store('config').jellyfinPauseTimeout;
+                log.info(`Jellyfin Pause Timeout: ${pauseTimeout ? pauseTimeout/1000 : 'none'} (&jellyfin-pause-timeout, default none)`);
+                if (Alpine.store('config').jellyfinApiKey) {
+                    log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
+                }
+
+                this.sessionPolling();
+            }, 2000);
+        },
+    }
+};
