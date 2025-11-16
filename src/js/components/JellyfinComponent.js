@@ -131,7 +131,8 @@ window.jellyfin = () => {
         _lastProgressUpdate: Date.now(),
         _pausedInactivityThreshold: null,
 
-        startSessionPolling(pollRate = POLL_RATE_IDLE) {
+        sessionPolling(pollRate = POLL_RATE_IDLE) {
+
             // If already polling at the same rate, don't restart
             if (pollInterval && this._currentPollRate === pollRate) {
                 return;
@@ -140,6 +141,8 @@ window.jellyfin = () => {
             if (pollInterval) {
                 clearInterval(pollInterval);
             }
+
+            log.info(`Start/change Jellyfin session polling to poll rate: ${pollRate}ms`);
 
             // Get API key and URL from config
             this._apiKey = Alpine.store('config').jellyfinApiKey;
@@ -159,15 +162,16 @@ window.jellyfin = () => {
             }
 
             this._currentPollRate = pollRate;
-            log.info(`Starting Jellyfin session polling (every ${pollRate}ms)`);
             this._pollingActive = true;
 
             // Initial check
+            log.info('Initial update of Jellyfin session info');
             this._requestSessionInfo();
 
             // Poll at the specified rate
             pollInterval = setInterval(() => {
                 if (this._pollingActive) {
+                    log.info('Update Jellyfin session info');
                     this._requestSessionInfo();
                 }
             }, pollRate);
@@ -215,12 +219,6 @@ window.jellyfin = () => {
                         return;
                     }
 
-                    // Switch to fast polling when playback is active
-                    if (this._currentPollRate !== POLL_RATE_ACTIVE) {
-                        log.info('Playback detected - switching to fast polling (500ms)');
-                        this.startSessionPolling(POLL_RATE_ACTIVE);
-                    }
-
                     // Has the user requested we monitor long pauses (likely the JF app has been back-grounded)
                     if (this._pausedInactivityThreshold) {
                         const isPaused = activeSession.PlayState?.IsPaused;
@@ -234,11 +232,18 @@ window.jellyfin = () => {
                         if (isPaused) {
                             const inactiveDuration = Date.now() - this._lastProgressUpdate;
                             if (inactiveDuration > this._pausedInactivityThreshold) {
-                                log.info(`Session paused and inactive for ${inactiveDuration}ms, hiding Jellyfin display`);
+                                log.info(`Session paused and inactive for ${inactiveDuration}ms, hide Jellyfin display, use idle polling: ${POLL_RATE_IDLE}ms`);
                                 this._handleStopPlayback();
+                                this.sessionPolling(POLL_RATE_IDLE);
                                 return;
                             }
                         }
+                    }
+
+                    // Switch to fast polling when playback is active
+                    if (this._currentPollRate !== POLL_RATE_ACTIVE) {
+                        log.info('Playback detected - switching to fast polling (500ms)');
+                        this.sessionPolling(POLL_RATE_ACTIVE);
                     }
 
                     // Get artwork with fallback - only when item changes
@@ -258,7 +263,7 @@ window.jellyfin = () => {
                     // Switch to slow polling when nothing is playing
                     if (this._currentPollRate !== POLL_RATE_IDLE) {
                         log.info('No playback - switching to slow polling (2s)');
-                        this.startSessionPolling(POLL_RATE_IDLE);
+                        this.sessionPolling(POLL_RATE_IDLE);
                     }
 
                     // Only clear if we were previously showing jellyfin
@@ -305,7 +310,7 @@ window.jellyfin = () => {
         },
 
         _handleStopPlayback() {
-            log.info("Playback stopped - clearing Jellyfin display");
+            log.info("Playback stopped or on extended pause - hide Jellyfin display");
             this._clearProperties();
             Alpine.store('isAvailable').jellyfin = false;
         },
@@ -379,7 +384,7 @@ window.jellyfin = () => {
                     log.info(`Jellyfin API Key supplied: *** (&jellyfin-api-key)`);
                 }
 
-                this.startSessionPolling();
+                this.sessionPolling();
             }, 2000);
         },
     }
